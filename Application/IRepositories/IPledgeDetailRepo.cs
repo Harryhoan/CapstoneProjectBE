@@ -9,5 +9,6 @@ namespace Application.IRepositories
 {
     public interface IPledgeDetailRepo : IGenericRepo<PledgeDetail>
     {
+        Task<PledgeDetail> GetByPledgeIdAsync(int id, string paymentId);
     }
 }

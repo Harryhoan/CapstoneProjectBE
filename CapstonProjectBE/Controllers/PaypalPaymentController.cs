@@ -49,6 +49,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("Refund")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> CreateRefundAsync(int pledgeId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
