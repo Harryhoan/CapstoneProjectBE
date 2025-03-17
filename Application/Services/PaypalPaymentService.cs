@@ -3,13 +3,14 @@ using Application.ServiceResponse;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using PayPal.Api;
-using PayPal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Domain.Entities;
+using Newtonsoft.Json;
+using Application.Utils;
+using PayPal;
 
 namespace Application.Services
 {
@@ -18,12 +19,14 @@ namespace Application.Services
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ExchangeRateService _exchangeRateService;
 
         public PaypalPaymentService(IConfiguration configuration, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _configuration = configuration;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _exchangeRateService = new ExchangeRateService(_configuration["ExchangeRateApiKey"]);
         }
         public async Task<ServiceResponse<string>> CreateRefundAsync(int userId, int pledgeId)
         {
@@ -51,6 +54,12 @@ namespace Application.Services
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
+                // Get the exchange rate from VND to USD
+                decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
+                //decimal totalAmountUSD = pledge.Amount * exchangeRate;
+                decimal totalAmountUSD = pledge.Amount;
+                string totalAmountInUSD = totalAmountUSD.ToString("F2");
+
                 var payout = new Payout
                 {
                     sender_batch_header = new PayoutSenderBatchHeader
@@ -59,32 +68,32 @@ namespace Application.Services
                         email_subject = "You have a refund from your pledge"
                     },
                     items = new List<PayoutItem>
-            {
-                new PayoutItem
-                {
-                    recipient_type = PayoutRecipientType.EMAIL,
-                    amount = new Currency
                     {
-                        value = pledge.Amount.ToString("F2"),
-                        currency = "USD"
-                    },
-                    receiver = user.Email,
-                    note = "Refund for your pledge",
-                    sender_item_id = pledge.PledgeId.ToString()
-                }
-            }
+                        new PayoutItem
+                        {
+                            recipient_type = PayoutRecipientType.EMAIL,
+                            amount = new Currency
+                            {
+                                value = totalAmountInUSD,
+                                currency = "USD"
+                            },
+                            receiver = user.Email,
+                            note = "Refund for your pledge",
+                            sender_item_id = pledge.PledgeId.ToString()
+                        }
+                    }
                 };
 
-                var createdPayout = payout.Create(apiContext, true);
+                var createdPayout = payout.Create(apiContext, false);
 
-                if (createdPayout.batch_header.batch_status != "SUCCESS")
-                {
-                    response.Success = false;
-                    response.Message = "Failed to create payout.";
-                    return response;
-                }
+                //if (createdPayout.batch_header.batch_status != "SUCCESS")
+                //{
+                //    response.Success = false;
+                //    response.Message = "Failed to create payout.";
+                //    return response;
+                //}
 
-                pledge.Project.TotalAmount -= pledge.Amount;
+                //pledge.Project.TotalAmount -= pledge.Amount;
                 pledge.Amount = 0;
                 await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
 
@@ -110,10 +119,9 @@ namespace Application.Services
 
             try
             {
-
-                decimal conversionRate = 23000m;
-                decimal totalAmountVND = amount;
-                decimal totalAmountUSD = totalAmountVND / conversionRate;
+                // Get the exchange rate from VND to USD
+                decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
+                decimal totalAmountUSD = amount * exchangeRate;
                 string totalAmountInUSD = totalAmountUSD.ToString("F2");
 
                 var apiContext = new APIContext(new OAuthTokenCredential(
@@ -121,25 +129,28 @@ namespace Application.Services
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
+                // Generate a unique invoice number
+                string uniqueInvoiceNumber = $"P{projectId}-U{userId}-{Guid.NewGuid()}";
+
                 var payment = new Payment
                 {
                     intent = "sale",
                     payer = new Payer { payment_method = "paypal" },
                     transactions = new List<Transaction>
-            {
-                new Transaction
-                {
-                    description = $"Pledge to project {projectId} by user {userId} - Payment",
-                    invoice_number = $"P{projectId}-U{userId}",
-                    amount = new Amount
                     {
-                        currency = "USD",
-                        total = totalAmountInUSD
+                        new Transaction
+                        {
+                            description = $"Pledge to project {projectId} by user {userId} - Payment",
+                            invoice_number = uniqueInvoiceNumber,
+                            amount = new Amount
+                            {
+                                currency = "USD",
+                                total = totalAmountInUSD
+                            },
+                            note_to_payee = projectId.ToString(),
+                            custom = userId.ToString()
+                        }
                     },
-                    note_to_payee = projectId.ToString(),
-                    custom = userId.ToString()
-                }
-            },
                     redirect_urls = new RedirectUrls
                     {
                         cancel_url = cancelUrl,
@@ -155,7 +166,6 @@ namespace Application.Services
 
                     if (approvalLink != null)
                     {
-
                         response.Success = true;
                         response.Message = "Payment created successfully.";
                         response.Data = approvalLink;
@@ -198,10 +208,25 @@ namespace Application.Services
 
                 var payment = Payment.Get(apiContext, paymentId);
 
-                if (payment == null || string.IsNullOrEmpty(payment.state) || !(payment.transactions.Count > 0) || !int.TryParse(payment.transactions.First().custom, out int userId) || !(userId > 0) || !int.TryParse(payment.transactions.First().note_to_payee, out int projectId))
+                if (payment == null || string.IsNullOrEmpty(payment.state) || payment.transactions.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "Payment not found or invalid.";
+                    return response;
+                }
+
+                var transaction = payment.transactions.FirstOrDefault();
+                if (transaction == null || string.IsNullOrEmpty(transaction.custom) || string.IsNullOrEmpty(transaction.note_to_payee))
+                {
+                    response.Success = false;
+                    response.Message = "Invalid transaction details.";
+                    return response;
+                }
+
+                if (!int.TryParse(transaction.custom, out int userId) || userId <= 0 || !int.TryParse(transaction.note_to_payee, out int projectId))
+                {
+                    response.Success = false;
+                    response.Message = "Invalid user or project ID.";
                     return response;
                 }
 
@@ -212,21 +237,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var pledgeitem = await ValidatePledge(1);
-                var pledge = pledgeitem.Item1;
-
-                if (!string.IsNullOrEmpty(errorMessage) || pledge == null)
-                {
-                    if (payment.state == "authorized")
-                    {
-                        var authorization = new Authorization() { id = payment.id };
-                        var voidResponse = authorization.Void(apiContext);
-                    }
-                    response.Success = false;
-                    response.Message = string.IsNullOrEmpty(pledgeitem.Item2) ? "The order is invalid. Please try again." : pledgeitem.Item2;
-                    return response;
-
-                }
+                decimal amount = decimal.TryParse(transaction.amount.total, out decimal parsedAmount) ? parsedAmount : 0m;
 
                 var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
@@ -235,15 +246,15 @@ namespace Application.Services
                     Domain.Entities.Pledge newPledge = new Domain.Entities.Pledge
                     {
                         UserId = userId,
-                        Amount = 0,
+                        Amount = amount,
                         ProjectId = projectId
                     };
 
-                    await _unitOfWork.PledgeRepo.AddAsync(pledge);
+                    await _unitOfWork.PledgeRepo.AddAsync(newPledge);
 
                     Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
                     {
-                        PledgeId = pledge.PledgeId,
+                        PledgeId = newPledge.PledgeId,
                         PaymentId = paymentId,
                         Status = "pledged"
                     };
@@ -252,30 +263,33 @@ namespace Application.Services
                 }
                 else
                 {
-                    existingPledge.Amount += decimal.Parse(payment.transactions.First().amount.total);
+                    decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("USD", "VND");
+                    if (exchangeRate <= 0)
+                    {
+                        response.Success = false;
+                        response.Message = "Failed to fetch exchange rate.";
+                        return response;
+                    }
+
+                    var paymentTotal = amount * exchangeRate;
+                    existingPledge.Amount += paymentTotal;
                     await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
+
+                    var getPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
                     Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
                     {
-                        PledgeId = pledge.PledgeId,
+                        PledgeId = getPledge.PledgeId,
                         PaymentId = paymentId,
                         Status = "pledged"
                     };
 
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-
                 }
 
                 // Prepare to execute the payment
                 var paymentExecution = new PaymentExecution() { payer_id = payerId };
                 var executedPayment = payment.Execute(apiContext, paymentExecution);
-
-                if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
-                {
-                    response.Success = false;
-                    response.Message = "Payment executed unsuccessfully.";
-                    return response;
-                }
 
                 if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
                 {
@@ -296,35 +310,5 @@ namespace Application.Services
             return response;
         }
 
-        private string errorMessage = string.Empty;
-
-        public async Task<(Domain.Entities.Pledge?, string)> ValidatePledge(int pledgeId)
-        {
-            try
-            {
-                var pledge = await _unitOfWork.PledgeRepo.GetPledgeByIdAsync(pledgeId);
-
-                if (pledge == null)
-                {
-                    errorMessage = "The details of the pledge have been changed and the payment cannot be proceeded with.";
-                    return (null, errorMessage);
-                }
-
-                int i = 0;
-
-                if (pledge.PledgeId == null)
-                {
-                    errorMessage = "The cart is invalid.";
-                    return (null, errorMessage);
-                }
-
-                return (pledge, string.Empty);
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ex.Message;
-                return (null, errorMessage);
-            }
-        }
     }
 }
