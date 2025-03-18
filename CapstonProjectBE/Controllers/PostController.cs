@@ -40,7 +40,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPostsByUserId(int userId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var result = user == null || (user.Role == "Customer" && userId != user.UserId) ? await _postService.GetPostsByUserId(userId, false) : await _postService.GetPostsByUserId(userId, true);
+            var result = await _postService.GetPostsByProjectId(userId, user.UserId);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -53,7 +53,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var result = user == null || (user.Role == "Customer" && userId != user.UserId) ? await _postService.GetPaginatedPostsByUserId(userId, page, pageSize, false) : await _postService.GetPaginatedPostsByUserId(userId, page, pageSize, true);
+            var result = await _postService.GetPaginatedPostsByProjectId(userId, page, pageSize, user.UserId);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -61,8 +61,9 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-        [Authorize]
+
         [HttpGet("project")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPostsByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

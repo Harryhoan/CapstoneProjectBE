@@ -16,7 +16,7 @@ namespace Domain.Entities
         public string? Phone { get; set; }
         public string Role { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
-        public bool IsDeleted { get; set; } = false;
+        //public bool IsDeleted { get; set; } = false;
         public DateTime CreatedDatetime { get; set; }
 
         // Relationships

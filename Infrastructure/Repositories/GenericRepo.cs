@@ -25,12 +25,12 @@ namespace Infrastructure.Repositories
             _ = await _context.SaveChangesAsync();
         }
 
-        public async Task<List<T>> GetAllAsync()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
 
-        public async Task<List<T>> GetAllAsNoTrackingAsync()
+        public async Task<IEnumerable<T>> GetAllAsNoTrackingAsync()
         {
             return await _dbSet.AsNoTracking().ToListAsync();
         }
@@ -74,10 +74,20 @@ namespace Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task RemoveAll(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task UpdateAsync(T entity)
         {
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
+        }
+        public async Task<bool> Find(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.AnyAsync(predicate);
         }
         public async Task DeleteTokenAsync(T entity)
         {

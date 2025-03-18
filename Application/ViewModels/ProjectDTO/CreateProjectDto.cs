@@ -8,10 +8,12 @@ namespace Application.ViewModels.ProjectDTO
 {
     public class CreateProjectDto
     {
-        public int TeamId { get; set; }
-        public string? Name { get; set; } 
+        public int CreatorId { get; set; }
+        public string? Title { get; set; }
         public string? Description { get; set; }
-        public bool Status { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public decimal MinmumAmount { get; set; }
+        public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
     }

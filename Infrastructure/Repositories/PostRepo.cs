@@ -24,7 +24,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<List<Post>> GetPostsByProjectId(int projectId)
         {
-            return await _dbContext.Posts.Include(p => p.User).Where(p => p.ProjectId == projectId && p.Project.Status != "Deleted").ToListAsync();
+            return await _dbContext.Posts.Include(p => p.User).Where(p => p.ProjectId == projectId).ToListAsync();
         }
         public async Task<List<Post>> GetPostsByUserId(int userId)
         {

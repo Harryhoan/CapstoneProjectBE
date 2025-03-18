@@ -22,10 +22,10 @@ namespace Application.Services
 
             try
             {
-                if (string.IsNullOrWhiteSpace(createProjectDto.Name))
+                if (string.IsNullOrWhiteSpace(createProjectDto.Title))
                 {
                     response.Success = false;
-                    response.Message = "Project name is required.";
+                    response.Message = "Project title is required.";
                     return response;
                 }
 

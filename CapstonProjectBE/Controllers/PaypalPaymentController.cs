@@ -47,5 +47,22 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
+
+        [HttpPost("Refund")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> CreateRefundAsync(int pledgeId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var result = await _paypalPaymentService.CreateRefundAsync(user.UserId, pledgeId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }

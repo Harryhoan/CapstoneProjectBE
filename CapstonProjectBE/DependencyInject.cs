@@ -18,6 +18,9 @@ namespace CapstonProjectBE
             services.AddScoped<IAuthenService, AuthenService>();
             services.AddScoped<IPaymentService, PaymentService>();
             services.AddScoped<IProjectService, ProjectService>();
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IRewardService, RewardService>();
+            services.AddScoped<IGoalService, GoalService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPaypalPaymentService,  PaypalPaymentService>();
             services.AddScoped<IPostService, PostService>();
