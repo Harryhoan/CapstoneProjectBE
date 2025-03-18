@@ -4,10 +4,13 @@ using Application.Utils;
 using Application.ViewModels.PostDTO;
 using AutoMapper;
 using Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -75,13 +78,31 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByProjectId(int projectId, int page = 1, int pageSize = 20)
+        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByProjectId(int projectId, int page = 1, int pageSize = 20, int? userId = null)
         {
             var response = new ServiceResponse<PaginationModel<PostDTO>>();
 
             try
             {
                 var posts = await _unitOfWork.PostRepo.GetPostsByProjectId(projectId);
+                var existingProject = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
+                if (existingProject == null)
+                {
+                    foreach (var post in posts)
+                    {
+                        await _unitOfWork.PostRepo.Remove(post);
+                    }
+                    response.Success = false;
+                    return response;
+                }
+                if (userId != null && userId > 0)
+                {
+                    var user = await _unitOfWork.UserRepo.GetByIdAsync((int)userId);
+                    if (user != null && user.Role == "Customer")
+                    {
+
+                    }
+                }
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = await Pagination.GetPagination(postDTOs, page, pageSize);
                 response.Success = true;
@@ -94,13 +115,31 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByProjectId(int projectId)
+        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByProjectId(int projectId, int? userId = null)
         {
             var response = new ServiceResponse<List<PostDTO>>();
 
             try
             {
                 var posts = await _unitOfWork.PostRepo.GetPostsByProjectId(projectId);
+                var existingProject = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
+                if (existingProject == null)
+                {
+                    foreach (var post in posts)
+                    {
+                        await _unitOfWork.PostRepo.Remove(post);
+                    }
+                    response.Success = false;
+                    return response;
+                }
+                if (userId != null && userId > 0)
+                {
+                    var user = await _unitOfWork.UserRepo.GetByIdAsync((int)userId);
+                    if (user != null && user.Role == "Customer")
+                    {
+                        
+                    }
+                }
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = postDTOs;
                 response.Success = true;
@@ -113,13 +152,27 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20)
+        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20, bool includeDeleted = false)
         {
             var response = new ServiceResponse<PaginationModel<PostDTO>>();
 
             try
             {
+                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var posts = await _unitOfWork.PostRepo.GetPostsByUserId(userId);
+                if (existingUser == null)
+                {
+                    foreach (var post in posts)
+                    {
+                        await _unitOfWork.PostRepo.Remove(post);
+                    }
+                    response.Success = false;
+                    return response;
+                }
+                if (!includeDeleted)
+                {
+                    posts.RemoveAll(p => p.Status == "Deleted");
+                }
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = await Pagination.GetPagination(postDTOs, page, pageSize);
                 response.Success = true;
@@ -132,13 +185,27 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByUserId(int userId)
+        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByUserId(int userId, bool includeDeleted = false)
         {
             var response = new ServiceResponse<List<PostDTO>>();
 
             try
             {
+                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var posts = await _unitOfWork.PostRepo.GetPostsByUserId(userId);
+                if (existingUser == null)
+                {
+                    foreach (var post in posts)
+                    {
+                        await _unitOfWork.PostRepo.Remove(post);
+                    }
+                    response.Success = false;
+                    return response;
+                }
+                if (!includeDeleted)
+                {
+                    posts.RemoveAll(p => p.Status == "Deleted");
+                }
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = postDTOs;
                 response.Success = true;
@@ -228,5 +295,77 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<string>> SoftRemovePost(int postId)
+        {
+            var response = new ServiceResponse<string>();
+
+            try
+            {
+                var existingPost = await _unitOfWork.PostRepo.GetByIdAsync(postId);
+                if (existingPost == null)
+                {
+                    response.Success = false;
+                    response.Message = "Post not found";
+                    return response;
+                }
+                //await _unitOfWork.PostRepo.Remove(existingPost);
+                existingPost.Status = "Deleted";
+                await _unitOfWork.PostRepo.UpdateAsync(existingPost);
+                response.Data = "Post removed successfully";
+                response.Success = true;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to remove post: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        public async Task<bool> CheckIfPostHasUserId(int postId, int userId)
+        {
+            try
+            {
+                var existingPost = await _unitOfWork.PostRepo.GetByIdAsync(postId);
+                return existingPost != null && existingPost.UserId == userId;
+            }
+            catch
+            {
+            }
+
+            return false;
+
+        }
+
+        public async Task<IActionResult?> CheckIfUserHasPermissionsByPostId(User user, int postId)
+        {
+            try
+            {
+                if (user == null || !(user.UserId > 0))
+                {
+                    return new UnauthorizedObjectResult("This request is not authorized.");
+                }
+                var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
+                if (existingPost == null)
+                {
+                    return new NotFoundObjectResult("The requested post cannot be found.");
+                }
+                if (user.Role == "Customer")
+                {
+                    if (!(user.UserId == existingPost.UserId))
+                    {
+                        return new ForbidResult("This request is not permitted.");
+                    }
+                }
+
+            }
+            catch
+            {
+
+            }
+            return new BadRequestObjectResult("This request cannot be processed.");
+        }
     }
+
 }

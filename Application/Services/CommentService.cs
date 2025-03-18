@@ -369,6 +369,19 @@ namespace Application.Services
 
             return response;
         }
+        public async Task<bool> CheckIfCommentHasUserId(int commentId, int userId)
+        {
+            try
+            {
+                var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(commentId);
+                return existingComment != null && existingComment.UserId == userId;
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
 
 
     }

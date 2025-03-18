@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,6 +29,34 @@ namespace Infrastructure.Repositories
         {
             return await _dbSet.ToListAsync();
         }
+
+        public async Task<List<T>> GetAllAsNoTrackingAsync()
+        {
+            return await _dbSet.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, Guid id)
+        {
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var property = Expression.Property(parameter, primaryKeyName);
+            var constant = Expression.Constant(id);
+            var equality = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equality, parameter);
+
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(lambda);
+        }
+
+        public async Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, int id)
+        {
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var property = Expression.Property(parameter, primaryKeyName);
+            var constant = Expression.Constant(id);
+            var equality = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equality, parameter);
+
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(lambda);
+        }
+
 
         public async Task<T?> GetByIdAsync(Guid id)
         {

@@ -9,6 +9,9 @@ namespace Application.IRepositories
     public interface IGenericRepo<T> where T : class
     {
         Task<List<T>> GetAllAsync();
+        public Task<List<T>> GetAllAsNoTrackingAsync();
+        public Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, Guid id);
+        public Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, int id);
         Task<T?> GetByIdAsync(int id);
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
