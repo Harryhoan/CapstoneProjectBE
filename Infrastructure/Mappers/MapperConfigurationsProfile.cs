@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Application.ViewModels.ReportDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -25,6 +26,8 @@ namespace Infrastructure.Mappers
             CreateMap<User, UpdateUserDTO>().ReverseMap();
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
+            CreateMap<Report, CreateReportDto>().ReverseMap();
+            CreateMap<Report, ReportDto>().ReverseMap();
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
             CreateMap<Goal, CreateGoal>().ReverseMap();

@@ -21,10 +21,11 @@ namespace Infrastructure
         private readonly ICommentRepo _commentRepo;
         private readonly IPostCommentRepo _postCommentRepo;
         private readonly IPledgeRepo _pledgeRepo;
+        private readonly IReportRepo _reportRepo;
         private readonly IPledgeDetailRepo _pledgeDetailRepo;
         private readonly IProjectCommentRepo _projectCommentRepo;
-        public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo,
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo)
+        public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo, 
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo, IReportRepo reportRepo)
         {
             _apiContext = apiContext;
             _tokenRepo = tokenRepo;
@@ -39,17 +40,23 @@ namespace Infrastructure
             _projectCommentRepo = projectCommentRepo;
             _pledgeRepo = pledgeRepo;
             _pledgeDetailRepo = pledgeDetailRepo;
+            _reportRepo = reportRepo;
         }
 
         public IUserRepo UserRepo => _userRepo;
 
         public ITokenRepo TokenRepo => _tokenRepo;
 
+        public IReportRepo ReportRepo => _reportRepo;
+
         public IPledgeRepo PledgeRepo => _pledgeRepo;
 
         public IProjectRepo ProjectRepo => _projectRepo;
+
         public ICategoryRepo CategoryRepo => _categoryRepo;
+
         public IRewardRepo RewardRepo => _rewardRepo;
+
         public IGoalRepo GoalRepo => _goalRepo;
 
         public IPostRepo PostRepo => _postRepo;
