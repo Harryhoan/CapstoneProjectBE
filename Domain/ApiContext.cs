@@ -75,6 +75,11 @@ namespace Infrastructure
                 .WithMany(u => u.Posts)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.Project)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(p => p.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Report>()
                 .HasOne(r => r.User)

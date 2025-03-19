@@ -21,5 +21,6 @@ namespace Application.IService
         public Task<ServiceResponse<string>> UpdateComment(int commentId, UpdateCommentDTO updateCommentDTO);
         public Task<ServiceResponse<string>> RemoveComment(int commentId);
         public Task<ServiceResponse<string>> SoftRemoveComment(int commentId);
+        public Task<bool> CheckIfCommentHasUserId(int commentId, int userId);
     }
 }

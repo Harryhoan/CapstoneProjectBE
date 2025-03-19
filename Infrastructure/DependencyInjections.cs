@@ -27,6 +27,7 @@ namespace Infrastructure
             services.AddScoped<ICommentRepo, CommentRepo>();
             services.AddScoped<IPostCommentRepo, PostCommentRepo>();
             services.AddScoped<IProjectCommentRepo, ProjectCommentRepo>();
+            services.AddScoped<ICollaboratorRepo, CollaboratorRepo>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }

@@ -30,6 +30,34 @@ namespace Infrastructure.Repositories
             return await _dbSet.ToListAsync();
         }
 
+        public async Task<IEnumerable<T>> GetAllAsNoTrackingAsync()
+        {
+            return await _dbSet.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, Guid id)
+        {
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var property = Expression.Property(parameter, primaryKeyName);
+            var constant = Expression.Constant(id);
+            var equality = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equality, parameter);
+
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(lambda);
+        }
+
+        public async Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, int id)
+        {
+            var parameter = Expression.Parameter(typeof(T), "e");
+            var property = Expression.Property(parameter, primaryKeyName);
+            var constant = Expression.Constant(id);
+            var equality = Expression.Equal(property, constant);
+            var lambda = Expression.Lambda<Func<T, bool>>(equality, parameter);
+
+            return await _dbSet.AsNoTracking().FirstOrDefaultAsync(lambda);
+        }
+
+
         public async Task<T?> GetByIdAsync(Guid id)
         {
             return await _dbSet.FindAsync(id);
@@ -43,6 +71,12 @@ namespace Infrastructure.Repositories
         public async Task RemoveAsync(T entity)
         {
             _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveAll(IEnumerable<T> entities)
+        {
+            _dbSet.RemoveRange(entities);
             await _context.SaveChangesAsync();
         }
 

@@ -24,8 +24,10 @@ namespace Infrastructure
         private readonly IReportRepo _reportRepo;
         private readonly IPledgeDetailRepo _pledgeDetailRepo;
         private readonly IProjectCommentRepo _projectCommentRepo;
+        private readonly ICollaboratorRepo _collaboratorRepo;
+
         public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo, 
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo, IReportRepo reportRepo)
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo)
         {
             _apiContext = apiContext;
             _tokenRepo = tokenRepo;
@@ -40,6 +42,7 @@ namespace Infrastructure
             _projectCommentRepo = projectCommentRepo;
             _pledgeRepo = pledgeRepo;
             _pledgeDetailRepo = pledgeDetailRepo;
+            _collaboratorRepo = collaboratorRepo;
             _reportRepo = reportRepo;
         }
 
@@ -68,6 +71,7 @@ namespace Infrastructure
         public IProjectCommentRepo ProjectCommentRepo => _projectCommentRepo;
 
         public IPledgeDetailRepo PledgeDetailRepo => _pledgeDetailRepo;
+        public ICollaboratorRepo CollaboratorRepo => _collaboratorRepo;
         public async Task<int> SaveChangeAsync()
         {
             try

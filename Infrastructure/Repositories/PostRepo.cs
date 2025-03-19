@@ -18,6 +18,10 @@ namespace Infrastructure.Repositories
             _dbContext = dbContext;
         }
 
+        public async Task<Post?> GetPostByPostIdAsNoTracking(int postId)
+        {
+            return await _dbContext.Posts.AsNoTracking().SingleOrDefaultAsync(p => p.PostId == postId);
+        }
         public async Task<List<Post>> GetPostsByProjectId(int projectId)
         {
             return await _dbContext.Posts.Include(p => p.User).Where(p => p.ProjectId == projectId).ToListAsync();
@@ -26,7 +30,5 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.Posts.Include(p => p.User).Where(p => p.UserId == userId).ToListAsync();
         }
-
-
     }
 }

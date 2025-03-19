@@ -20,6 +20,7 @@ namespace Domain.Entities
 
         // Relationships
         public virtual User User { get; set; } = null!;
+        public virtual Project Project { get; set; } = null!;
         public virtual ICollection<PostComment> PostComments { get; set; } = new List<PostComment>();
 
     }

@@ -12,9 +12,11 @@ namespace CapstonProjectBE.Controllers
     public class CommentController : Controller
     {
         private readonly ICommentService _commentService;
-        public CommentController(ICommentService commentService)
+        private readonly IAuthenService _authenService;
+        public CommentController(ICommentService commentService, IAuthenService authenService)
         {
             _commentService = commentService;
+            _authenService = authenService;
         }
         [Authorize]
         [HttpPost]
@@ -52,6 +54,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+
         [HttpGet]
         public async Task<IActionResult> GetCommentsByProjectId(int projectId)
         {
@@ -99,10 +102,19 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Customer")]
         [HttpPut]
         public async Task<IActionResult> UpdateComment(int commentId, UpdateCommentDTO updateCommentDTO)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            if (!(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            {
+                return Forbid();
+            }
             var result = await _commentService.UpdateComment(commentId, updateCommentDTO);
             if (!result.Success)
             {
@@ -112,10 +124,19 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+        [Authorize(Roles = "Customer, Staff")]
         [HttpDelete]
         public async Task<IActionResult> RemoveComment(int commentId)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            if (user.Role == "Customer" && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            {
+                return Forbid();
+            }
             var result = await _commentService.RemoveComment(commentId);
             if (!result.Success)
             {
@@ -124,10 +145,20 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-        [Authorize]
+
+        [Authorize(Roles = "Customer, Staff")]
         [HttpDelete]
         public async Task<IActionResult> SoftRemoveComment(int commentId)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            if (user.Role == "Customer" && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            {
+                return Forbid();
+            }
             var result = await _commentService.SoftRemoveComment(commentId);
             if (!result.Success)
             {
