@@ -68,7 +68,7 @@ namespace Infrastructure.Repositories
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task Remove(T entity)
+        public async Task RemoveAsync(T entity)
         {
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
@@ -88,11 +88,6 @@ namespace Infrastructure.Repositories
         public async Task<bool> Find(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AnyAsync(predicate);
-        }
-        public async Task DeleteTokenAsync(T entity)
-        {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
         }
     }
 }

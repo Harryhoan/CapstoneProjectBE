@@ -176,7 +176,7 @@ namespace Application.Services
                 }
                 if (DateTime.UtcNow > token.ExpiresAt)
                 {
-                    await _unitOfWork.TokenRepo.DeleteTokenAsync(token);
+                    await _unitOfWork.TokenRepo.RemoveAsync(token);
                     var newToken = new Token
                     {
                         TokenValue = Guid.NewGuid().ToString(),

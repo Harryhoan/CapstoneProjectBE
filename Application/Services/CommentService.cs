@@ -329,7 +329,7 @@ namespace Application.Services
                     response.Message = "Comment not found";
                     return response;
                 }
-                await _unitOfWork.CommentRepo.Remove(existingComment);
+                await _unitOfWork.CommentRepo.RemoveAsync(existingComment);
                 //existingComment.Status = "Deleted";
                 //await _unitOfWork.CommentRepo.Update(existingComment);
                 response.Data = "Comment removed successfully";

@@ -16,9 +16,8 @@ namespace Application.IRepositories
         Task<T?> GetByIdAsync(int id);
         Task AddAsync(T entity);
         Task UpdateAsync(T entity);
-        Task Remove(T entity);
         public Task RemoveAll(IEnumerable<T> entities);
+        Task RemoveAsync(T entity);
         Task<bool> Find(Expression<Func<T, bool>> predicate);
-        Task DeleteTokenAsync(T entity);
     }
 }

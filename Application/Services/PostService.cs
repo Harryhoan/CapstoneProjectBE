@@ -352,7 +352,7 @@ namespace Application.Services
                     response.Message = "Post not found";
                     return response;
                 }
-                await _unitOfWork.PostRepo.Remove(existingPost);
+                await _unitOfWork.PostRepo.RemoveAsync(existingPost);
                 //existingPost.Status = "Deleted";
                 //await _unitOfWork.PostRepo.Update(existingPost);
                 response.Data = "Post removed successfully";
