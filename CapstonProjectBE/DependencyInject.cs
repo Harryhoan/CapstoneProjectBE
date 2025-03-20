@@ -22,6 +22,7 @@ namespace CapstonProjectBE
             services.AddScoped<IRewardService, RewardService>();
             services.AddScoped<IGoalService, GoalService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IPledgeService, PledgeService>();
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IPaypalPaymentService,  PaypalPaymentService>();
             services.AddScoped<IPostService, PostService>();

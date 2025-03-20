@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Application.ViewModels.ReportDTO;
+using Application.ViewModels.PledgeDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -28,6 +29,8 @@ namespace Infrastructure.Mappers
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
             CreateMap<Report, CreateReportDto>().ReverseMap();
             CreateMap<Report, ReportDto>().ReverseMap();
+            CreateMap<Pledge, PledgeDto>().ReverseMap();
+            CreateMap<PledgeDetail, PledgeDetailDto>().ReverseMap();
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
             CreateMap<Goal, CreateGoal>().ReverseMap();

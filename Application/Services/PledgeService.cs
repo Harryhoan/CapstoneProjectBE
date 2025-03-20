@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using AutoMapper;
+using Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,12 @@ namespace Application.Services
             {
                 var pledges = await _unitOfWork.PledgeRepo.GetAllAsync();
                 var pledgeDtos = _mapper.Map<IEnumerable<PledgeDto>>(pledges);
+                foreach (var pledgeDto in pledgeDtos)
+                {
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
+                    var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                }
                 response.Data = pledgeDtos;
                 response.Success = true;
                 response.Message = "Get all pledges successfully";
@@ -52,6 +59,10 @@ namespace Application.Services
                     return response;
                 }
                 var pledgeDto = _mapper.Map<PledgeDto>(pledge);
+                var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeId);
+                var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                pledgeDto.pledgeDetail = pledgeDetailDtos;
+
                 response.Data = pledgeDto;
                 response.Success = true;
                 response.Message = "Get pledge successfully";
