@@ -16,9 +16,9 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
-        public async Task<PledgeDetail> GetByPledgeIdAsync(int id, string paymentId)
+        public async Task<List<PledgeDetail>> GetPledgeDetailByPledgeId(int pledgeId)
         {
-            return await _context.PledgeDetails.FirstOrDefaultAsync(pd => pd.PledgeId == id && pd.PaymentId == paymentId);
+            return await _context.PledgeDetails.Where(pd => pd.PledgeId == pledgeId).ToListAsync();
         }
     }
 }
