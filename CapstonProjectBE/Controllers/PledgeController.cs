@@ -17,8 +17,8 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
 
-        [HttpGet("GetAllPledgeByAdmin")]
-        [Authorize(Roles = "Admin")]
+        [HttpGet("GetAllPledges")]
+        [Authorize(Roles = "Admin, Staff")]
         public async Task<IActionResult> GetAllPledgeByAdmin()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -47,6 +47,23 @@ namespace CapstonProjectBE.Controllers
             if (!result.Success)
             {
                 return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("GetPledgeByUserId")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> GetPledgeByUserId()
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if(user == null)
+            {
+                return Unauthorized();
+            }
+            var result = await _pledgeService.GetPledgeByUserId(user.UserId);
+            if (!result.Success)
+            {
+                return BadRequest();
             }
             return Ok(result);
         }

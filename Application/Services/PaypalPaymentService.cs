@@ -217,6 +217,12 @@ namespace Application.Services
                     return response;
                 }
 
+                if (project.CreatorId == userId)
+                {
+                    response.Success = false;
+                    response.Message = "You are not allow to pledge your own Game Project.";
+                    return response;
+                }
                 var apiContext = new APIContext(new OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]

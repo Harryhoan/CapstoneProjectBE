@@ -27,6 +27,12 @@ namespace Application.Services
             try
             {
                 var pledges = await _unitOfWork.PledgeRepo.GetAllAsync();
+                if (pledges == null)
+                {
+                    response.Success = true;
+                    response.Message = "Pledge are empty.";
+                    return response;
+                }
                 var pledgeDtos = _mapper.Map<IEnumerable<PledgeDto>>(pledges);
                 foreach (var pledgeDto in pledgeDtos)
                 {
@@ -43,6 +49,41 @@ namespace Application.Services
             {
                 response.Success = false;
                 response.Message = $"Failed to get all pledges: {ex.Message}";
+                return response;
+            }
+        }
+        public async Task<ServiceResponse<List<PledgeDto>>> GetPledgeByUserId(int userId)
+        {
+            var response = new ServiceResponse<List<PledgeDto>>();
+            try
+            {
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAsync(userId);
+
+                if (pledges == null)
+                {
+                    response.Success = true;
+                    response.Message = "Pledge list is empty.";
+                    return response;
+                }
+
+                var pledgeDtos = _mapper.Map<List<PledgeDto>>(pledges);
+                foreach (var pledgeDto in pledgeDtos)
+                {
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
+                    var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                }
+
+                response.Data = pledgeDtos;
+                response.Success = true;
+                response.Message = "Get pledge successfully.";
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get pledge: {ex.Message}";
                 return response;
             }
         }

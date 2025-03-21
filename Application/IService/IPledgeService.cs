@@ -12,6 +12,6 @@ namespace Application.IService
     {
         public Task<ServiceResponse<IEnumerable<PledgeDto>>> GetAllPledgeByAdmin();
         public Task<ServiceResponse<PledgeDto>> GetPledgeById(int pledgeId);
-        //public Task<ServiceResponse<IEnumerable<PledgeDto>>> GetPledgeByUserId(int userId);
+        public Task<ServiceResponse<List<PledgeDto>>> GetPledgeByUserId(int userId);
     }
 }
