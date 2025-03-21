@@ -32,5 +32,9 @@ namespace Infrastructure.Repositories
             return await _context.Pledges
                 .Where(p => p.UserId == userId && p.ProjectId == projectId).ToListAsync();
         }
+        public async Task<List<Pledge>> GetPledgeByUserIdAsync(int userId)
+        {
+            return await _context.Pledges.Where(p => p.UserId == userId).ToListAsync();
+        }
     }
 }
