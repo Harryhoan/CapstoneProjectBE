@@ -99,6 +99,12 @@ namespace Infrastructure
                 .HasForeignKey(p => p.CreatorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Monitor)
+                .WithMany(u => u.MonitoredProjects)
+                .HasForeignKey(p => p.MonitorId)
+                .OnDelete(DeleteBehavior.Cascade); // New configuration
+
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.ParentCategory)
                 .WithMany(c => c.Categories)
