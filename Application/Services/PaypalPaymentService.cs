@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Application.Utils;
 using PayPal;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Domain.Enums;
 
 namespace Application.Services
 {
@@ -56,7 +57,12 @@ namespace Application.Services
                     response.Message = "You are not allow to do this method";
                     return response;
                 }
-
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
                 var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
                 var apiContext = new APIContext(new OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
@@ -139,6 +145,12 @@ namespace Application.Services
                     response.Message = "Project Id not found.";
                     return response;
                 }
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
 
                 var apiContext = new APIContext(new OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
@@ -216,7 +228,24 @@ namespace Application.Services
                     response.Message = "Project Id not found.";
                     return response;
                 }
-
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+                if (project.Status == ProjectEnum.HALTED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been halted.";
+                    return response;
+                }
+                if (project.StartDatetime >= project.EndDatetime)
+                {
+                    response.Success = false;
+                    response.Message = "This project has ended.";
+                    return response;
+                }
                 if (project.CreatorId == userId)
                 {
                     response.Success = false;
