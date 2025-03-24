@@ -27,6 +27,7 @@ namespace Infrastructure.Mappers
             CreateMap<User, UpdateUserDTO>().ReverseMap();
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
+            CreateMap<Project, ProjectThumbnailDto>().ReverseMap();
             CreateMap<Report, CreateReportDto>().ReverseMap();
             CreateMap<Report, ReportDto>().ReverseMap();
             CreateMap<Pledge, PledgeDto>().ReverseMap();
@@ -48,7 +49,9 @@ namespace Infrastructure.Mappers
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments))
                 .ReverseMap()
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User));
-
+            CreateMap<Project, ProjectDto>()
+                .ForMember(dest => dest.Monitor, opt => opt.MapFrom(src => src.Monitor.Fullname))
+                .ForMember(dest => dest.Creator, opt => opt.MapFrom(src => src.User.Fullname));
         }
     }
 }

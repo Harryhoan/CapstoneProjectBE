@@ -1,9 +1,14 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.ViewModels;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Domain.Entities;
-using System.Net.Http;
+using Domain.Enums;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 
 namespace Application.Services
@@ -13,27 +18,25 @@ namespace Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
-        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IHttpClientFactory httpClientFactory)
+        private readonly Cloudinary _cloudinary;
+        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IHttpClientFactory httpClientFactory, IOptions<Cloud> config)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _httpClient = httpClientFactory.CreateClient();
+            var cloudinaryAccount = new Account(
+                config.Value.CloudName,
+                config.Value.ApiKey,
+                config.Value.ApiSecret);
+            _cloudinary = new Cloudinary(cloudinaryAccount);
         }
 
-        public async Task<ServiceResponse<CreateProjectDto>> CreateProject(CreateProjectDto createProjectDto)
+        public async Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto)
         {
-            var response = new ServiceResponse<CreateProjectDto>();
-
+            var response = new ServiceResponse<ProjectDto>();
+            var user = await _unitOfWork.UserRepo.GetAllAsync();
             try
             {
-                var creatorExists = await _unitOfWork.UserRepo.Find(c => c.UserId == createProjectDto.CreatorId);
-                if (!creatorExists)
-                {
-                    response.Success = false;
-                    response.Message = "Invalid CreatorId.";
-                    return response;
-                }
-
                 if (string.IsNullOrWhiteSpace(createProjectDto.Title))
                 {
                     response.Success = false;
@@ -56,18 +59,41 @@ namespace Application.Services
                     return response;
                 }
 
-                if (createProjectDto.TotalAmount < createProjectDto.MinimumAmount)
-                {
-                    response.Success = false;
-                    response.Message = "Total amount must be greater than or equal to the minimum amount.";
-                    return response;
-                }
-
                 var project = _mapper.Map<Project>(createProjectDto);
 
-                await _unitOfWork.ProjectRepo.AddAsync(project);
 
-                response.Data = createProjectDto;
+                var staffUsers = user.Where(u => u.Role == "Staff").ToList();
+                if (!staffUsers.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No staff users available to assign as monitor.";
+                    return response;
+                }
+                var random = new Random();
+                var randomStaff = staffUsers[random.Next(staffUsers.Count)];
+
+
+                project.MonitorId = randomStaff.UserId;
+                project.CreatorId = userId;
+                project.MinimumAmount = 0;
+                project.Status = ProjectEnum.INVISIBLE;
+                project.UpdateDatetime = createProjectDto.StartDatetime;
+                await _unitOfWork.ProjectRepo.AddAsync(project);
+                var responseData = new ProjectDto
+                {
+                    ProjectId = project.ProjectId,
+                    Monitor = randomStaff.Fullname,
+                    Creator = user.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
+                    Title = project.Title,
+                    Description = project.Description,
+                    Status = project.Status,
+                    MinimumAmount = project.MinimumAmount,
+                    TotalAmount = project.TotalAmount,
+                    StartDatetime = project.StartDatetime,
+                    Backers = 0,
+                    EndDatetime = project.EndDatetime
+                };
+                response.Data = responseData;
                 response.Success = true;
                 response.Message = "Project created successfully.";
             }
@@ -110,16 +136,43 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<IEnumerable<Project>>> GetAllProjects()
+        public async Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects()
         {
-            var response = new ServiceResponse<IEnumerable<Project>>();
+            var response = new ServiceResponse<IEnumerable<ProjectDto>>();
 
             try
             {
                 var result = await _unitOfWork.ProjectRepo.GetAllAsync();
-                if (result != null && result.Any())
+                var filteredResult = result.Where(p => p.Status == ProjectEnum.INVISIBLE && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
+
+                var responseData = new List<ProjectDto>();
+                foreach (var project in filteredResult)
                 {
-                    response.Data = result;
+                    var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
+                    var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+
+                    var projectDto = new ProjectDto
+                    {
+                        ProjectId = project.ProjectId,
+                        Thumbnail = project.Thumbnail,
+                        Monitor = monitor?.Fullname ?? "Unknown",
+                        Creator = creator?.Fullname ?? "Unknown",
+                        Title = project.Title,
+                        Description = project.Description,
+                        Status = project.Status,
+                        MinimumAmount = project.MinimumAmount,
+                        TotalAmount = project.TotalAmount,
+                        StartDatetime = project.StartDatetime,
+                        EndDatetime = project.EndDatetime,
+                        Backers = project.Pledges.Count(pl => pl.ProjectId == project.ProjectId) // Calculate the total number of backers with valid ProjectId
+                    };
+
+                    responseData.Add(projectDto);
+                }
+
+                if (responseData.Any())
+                {
+                    response.Data = responseData;
                     response.Success = true;
                     response.Message = "Projects retrieved successfully.";
                 }
@@ -138,34 +191,53 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<Project>> GetProjectById(int id)
+        public async Task<ServiceResponse<ProjectDto>> GetProjectById(int id)
         {
-            var response = new ServiceResponse<Project>();
+            var response = new ServiceResponse<ProjectDto>();
 
             try
             {
                 var project = await _unitOfWork.ProjectRepo.GetProjectById(id);
-
-                if (project != null)
-                {
-                    response.Data = project;
-                    response.Success = true;
-                    response.Message = "Project retrieved successfully.";
-                }
-                else
+                if (project == null)
                 {
                     response.Success = false;
                     response.Message = "Project not found.";
+                    return response;
                 }
+                var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
+                var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+
+                var responseData = new ProjectDto
+                {
+                    ProjectId = id,
+                    Monitor = monitor?.Fullname ?? "unknown",
+                    Creator = creator?.Fullname ?? "unknown",
+                    Thumbnail = project.Thumbnail,
+                    Backers = project.Pledges.Count(pl => pl.ProjectId == id),
+                    Title = project.Title,
+                    Description = project.Description,
+                    Status = project.Status,
+                    MinimumAmount = project.MinimumAmount,
+                    TotalAmount = project.TotalAmount,
+                    StartDatetime = project.StartDatetime,
+                    EndDatetime = project.EndDatetime
+                };
+
+                response.Success = true;
+                response.Message = "Get project successfully.";
+                response.Data = responseData;
+
+                return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
+                return response;
             }
 
-            return response;
+            //return response;
         }
 
         public async Task<ServiceResponse<PaginationModel<Project>>> GetProjectsPaging(int pageNumber, int pageSize)
@@ -228,7 +300,7 @@ namespace Application.Services
 
                 _mapper.Map(updateProjectDto, existingProject);
 
-                await _unitOfWork.ProjectRepo.UpdateProject(projectId,existingProject);
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 
                 response.Data = updateProjectDto;
                 response.Success = true;
@@ -259,6 +331,113 @@ namespace Application.Services
             {
                 return $"Lỗi khi gọi API: {ex.Message}";
             }
+        }
+
+        public async Task<ServiceResponse<ProjectThumbnailDto>> UpdateProjectThumbnail(int projectId, IFormFile thumbnail)
+        {
+            var response = new ServiceResponse<ProjectThumbnailDto>();
+            var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+            if ( project == null)
+            {
+                response.Success = false;
+                response.Message = "Project not found.";
+                return response;
+            }
+
+            try
+            {
+                var uploadResult = new ImageUploadResult();
+
+                if (thumbnail.Length > 0)
+                {
+                    using (var stream = thumbnail.OpenReadStream())
+                    {
+                        var uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(thumbnail.FileName, stream),
+                            Transformation = new Transformation().Crop("fill").Gravity("face")
+                        };
+                        uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                    }
+                }
+
+                if (uploadResult.Url == null)
+                {
+                    response.Success = false;
+                    response.Message = "Could not upload image";
+                    return response;
+                }
+
+                // Update the thumbnail URL in the database
+                project.Thumbnail = uploadResult.Url.ToString();
+                project.UpdateDatetime = DateTime.UtcNow;
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+                await _unitOfWork.SaveChangeAsync();
+
+                var responseData = new ProjectThumbnailDto
+                {
+                    thumbnail = project.Thumbnail
+                };
+                response.Data = responseData;
+                response.Success = true;
+                response.Message = "Thumbnail updated successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to update thumbnail: {ex.Message}";
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason)
+        {
+            var response = new ServiceResponse<string>();
+
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+
+                if (project.MonitorId != userId && user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not authorized to approve or reject this project.";
+                    return response;
+                }
+
+                project.Status = isApproved ? ProjectEnum.ONGOING : ProjectEnum.HALTED;
+                //project.ApprovalReason = reason;
+                project.UpdateDatetime = DateTime.UtcNow;
+
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+                await _unitOfWork.SaveChangeAsync();
+
+                response.Success = true;
+                response.Message = isApproved ? "Project approved successfully." : "Project rejected successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
         }
     }
 }
