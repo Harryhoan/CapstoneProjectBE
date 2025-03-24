@@ -3,6 +3,7 @@ using System;
 using Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Domain.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    partial class ApiContextModelSnapshot : ModelSnapshot
+    [Migration("20250322082853_updateError")]
+    partial class updateError
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -277,20 +280,14 @@ namespace Domain.Migrations
                     b.Property<DateTime>("EndDatetime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("MinimumAmount")
+                    b.Property<decimal>("MinmumAmount")
                         .HasColumnType("numeric");
-
-                    b.Property<int>("MonitorId")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDatetime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Thumbnail")
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
@@ -305,8 +302,6 @@ namespace Domain.Migrations
                     b.HasKey("ProjectId");
 
                     b.HasIndex("CreatorId");
-
-                    b.HasIndex("MonitorId");
 
                     b.ToTable("Projects");
                 });
@@ -638,14 +633,6 @@ namespace Domain.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.User", "Monitor")
-                        .WithMany("MonitoredProjects")
-                        .HasForeignKey("MonitorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Monitor");
-
                     b.Navigation("User");
                 });
 
@@ -796,8 +783,6 @@ namespace Domain.Migrations
                     b.Navigation("Comments");
 
                     b.Navigation("Files");
-
-                    b.Navigation("MonitoredProjects");
 
                     b.Navigation("Pledges");
 

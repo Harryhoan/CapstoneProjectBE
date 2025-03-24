@@ -6,10 +6,17 @@ using System.Threading.Tasks;
 
 namespace Application.ViewModels.ProjectDTO
 {
-    public class CreateProjectDto
+    public class ProjectDto
     {
+        public int ProjectId { get; set; }
+        public string Thumbnail { get; set; } = string.Empty;
+        public string Monitor { get; set; } = string.Empty;
+        public string Creator { get; set; } = string.Empty;
+        public int Backers { get; set; } = 0;
         public string? Title { get; set; }
         public string? Description { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
