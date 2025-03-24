@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace Application.ViewModels.ProjectDTO
         public int Backers { get; set; } = 0;
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public ProjectEnum Status { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }

@@ -1,14 +1,15 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.ViewModels;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
-using Application.ViewModels;
+using System.Net.Http.Json;
 
 namespace Application.Services
 {
@@ -16,17 +17,17 @@ namespace Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly HttpClient _httpClient;
         private readonly Cloudinary _cloudinary;
-
-        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IOptions<Cloud> config)
+        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IHttpClientFactory httpClientFactory, IOptions<Cloud> config)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _httpClient = httpClientFactory.CreateClient();
             var cloudinaryAccount = new Account(
                 config.Value.CloudName,
                 config.Value.ApiKey,
-                config.Value.ApiSecret
-            );
+                config.Value.ApiSecret);
             _cloudinary = new Cloudinary(cloudinaryAccount);
         }
 
@@ -43,6 +44,14 @@ namespace Application.Services
                     return response;
                 }
 
+                string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
+                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                {
+                    response.Success = false;
+                    response.Message = "Description contains invalid content.";
+                    return response;
+                }
+
                 if (createProjectDto.StartDatetime >= createProjectDto.EndDatetime)
                 {
                     response.Success = false;
@@ -51,7 +60,7 @@ namespace Application.Services
                 }
 
                 var project = _mapper.Map<Project>(createProjectDto);
-                
+
 
                 var staffUsers = user.Where(u => u.Role == "Staff").ToList();
                 if (!staffUsers.Any())
@@ -67,7 +76,7 @@ namespace Application.Services
                 project.MonitorId = randomStaff.UserId;
                 project.CreatorId = userId;
                 project.MinimumAmount = 0;
-                project.Status = "Invisible";
+                project.Status = ProjectEnum.INVISIBLE;
                 project.UpdateDatetime = createProjectDto.StartDatetime;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
@@ -134,7 +143,7 @@ namespace Application.Services
             try
             {
                 var result = await _unitOfWork.ProjectRepo.GetAllAsync();
-                var filteredResult = result.Where(p => p.Status == "Visible" && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
+                var filteredResult = result.Where(p => p.Status == ProjectEnum.INVISIBLE && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
 
                 var responseData = new List<ProjectDto>();
                 foreach (var project in filteredResult)
@@ -291,7 +300,7 @@ namespace Application.Services
 
                 _mapper.Map(updateProjectDto, existingProject);
 
-                await _unitOfWork.ProjectRepo.UpdateProject(projectId,existingProject);
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 
                 response.Data = updateProjectDto;
                 response.Success = true;
@@ -306,6 +315,24 @@ namespace Application.Services
 
             return response;
         }
+
+        private async Task<string> CheckDescriptionAsync(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return "Không có mô tả";
+            var request = new { prompt = description };
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("https://gemini-ai-production.up.railway.app/GeminiAI/check-text", request);
+                var result = await response.Content.ReadAsStringAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"Lỗi khi gọi API: {ex.Message}";
+            }
+        }
+
         public async Task<ServiceResponse<ProjectThumbnailDto>> UpdateProjectThumbnail(int projectId, IFormFile thumbnail)
         {
             var response = new ServiceResponse<ProjectThumbnailDto>();
@@ -393,7 +420,7 @@ namespace Application.Services
                     return response;
                 }
 
-                project.Status = isApproved ? "Visible" : "Halted";
+                project.Status = isApproved ? ProjectEnum.ONGOING : ProjectEnum.HALTED;
                 //project.ApprovalReason = reason;
                 project.UpdateDatetime = DateTime.UtcNow;
 
