@@ -3,6 +3,8 @@ using Application.ServiceResponse;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace Application.Services
 {
@@ -10,10 +12,12 @@ namespace Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper)
+        private readonly HttpClient _httpClient;
+        public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IHttpClientFactory httpClientFactory)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
         public async Task<ServiceResponse<CreateProjectDto>> CreateProject(CreateProjectDto createProjectDto)
@@ -22,6 +26,14 @@ namespace Application.Services
 
             try
             {
+                var creatorExists = await _unitOfWork.UserRepo.Find(c => c.UserId == createProjectDto.CreatorId);
+                if (!creatorExists)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid CreatorId.";
+                    return response;
+                }
+
                 if (string.IsNullOrWhiteSpace(createProjectDto.Title))
                 {
                     response.Success = false;
@@ -29,10 +41,25 @@ namespace Application.Services
                     return response;
                 }
 
+                string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
+                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                {
+                    response.Success = false;
+                    response.Message = "Description contains invalid content.";
+                    return response;
+                }
+
                 if (createProjectDto.StartDatetime >= createProjectDto.EndDatetime)
                 {
                     response.Success = false;
                     response.Message = "Start date must be earlier than end date.";
+                    return response;
+                }
+
+                if (createProjectDto.TotalAmount < createProjectDto.MinimumAmount)
+                {
+                    response.Success = false;
+                    response.Message = "Total amount must be greater than or equal to the minimum amount.";
                     return response;
                 }
 
@@ -215,6 +242,23 @@ namespace Application.Services
             }
 
             return response;
+        }
+
+        private async Task<string> CheckDescriptionAsync(string? description)
+        {
+            if (string.IsNullOrWhiteSpace(description))
+                return "Không có mô tả";
+            var request = new { prompt = description };
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("https://gemini-ai-production.up.railway.app/GeminiAI/check-text", request);
+                var result = await response.Content.ReadAsStringAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return $"Lỗi khi gọi API: {ex.Message}";
+            }
         }
     }
 }

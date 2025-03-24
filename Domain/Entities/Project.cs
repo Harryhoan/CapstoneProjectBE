@@ -13,7 +13,7 @@ namespace Domain.Entities
         public string? Title { get; set; }
         public string? Description { get; set; }
         public string Status { get; set; } = string.Empty;
-        public decimal MinmumAmount { get; set; }
+        public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime UpdateDatetime { get; set; }

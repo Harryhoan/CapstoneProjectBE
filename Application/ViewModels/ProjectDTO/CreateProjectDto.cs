@@ -11,10 +11,18 @@ namespace Application.ViewModels.ProjectDTO
         public int CreatorId { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public string Status { get; set; } = string.Empty;
-        public decimal MinmumAmount { get; set; }
+        public Status Status { get; set; }
+        public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
+    }
+
+    public enum Status
+    {
+        Ongoing,
+        Halted,
+        Invisible,
+        Deleted
     }
 }

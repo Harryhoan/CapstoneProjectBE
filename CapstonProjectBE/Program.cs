@@ -31,7 +31,7 @@ namespace CapstonProjectBE
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
+            builder.Services.AddHttpClient();
             // Add services to the container.
             var configuration = builder.Configuration;
             var myConfig = new AppConfiguration();
