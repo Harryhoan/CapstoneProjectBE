@@ -13,8 +13,10 @@ namespace Domain.Enums
 
     public enum ProjectEnum
     {
-        VISIBLE,
-        INVISIBLE
+        ONGOING,
+        HALTED,
+        INVISIBLE,
+        DELETED
     }
     public enum FileEnum
     {

@@ -286,9 +286,8 @@ namespace Domain.Migrations
                     b.Property<DateTime>("StartDatetime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Thumbnail")
                         .HasColumnType("text");
