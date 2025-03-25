@@ -1,5 +1,4 @@
 ﻿using Application.ViewModels.CategoryDTO;
-using Application.ViewModels.GoalDTO;
 using Application.ViewModels.ProjectDTO;
 using Application.ViewModels.RewardDTO;
 ﻿using Application.ViewModels.CommentDTO;
@@ -14,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Application.ViewModels.ReportDTO;
 using Application.ViewModels.PledgeDTO;
+using Application.ViewModels.FaqDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -34,7 +34,7 @@ namespace Infrastructure.Mappers
             CreateMap<PledgeDetail, PledgeDetailDto>().ReverseMap();
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
-            CreateMap<Goal, CreateGoal>().ReverseMap();
+            CreateMap<FAQ, FaqDto>().ReverseMap();
             CreateMap<User, PostUserDTO>()
                 .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => src.Fullname))
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Avatar ?? string.Empty))
