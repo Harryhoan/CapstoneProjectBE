@@ -13,6 +13,7 @@ namespace Domain.Entities
         public string? Avatar { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string PaymentAccount { get; set; } = string.Empty;
         public string? Phone { get; set; }
         public string Role { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;

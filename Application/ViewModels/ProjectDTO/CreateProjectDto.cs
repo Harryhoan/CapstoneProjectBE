@@ -11,7 +11,7 @@ namespace Application.ViewModels.ProjectDTO
     {
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public decimal TotalAmount { get; set; }
+        public decimal MinimumAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
     }

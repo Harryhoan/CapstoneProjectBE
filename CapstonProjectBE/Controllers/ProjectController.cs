@@ -57,7 +57,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPut("UpdateProjectThumbnail")]
-        [Authorize(Roles = "Customer, Staff, Admin")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> UpdateProjectThumbnail(int projectId, IFormFile file)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -72,7 +72,17 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-
+        [HttpPut("UpdateProjectStory")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> UpdateProjectStory(int projectId, string story)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story));
+        }
         [HttpDelete("DeleteProject")]
         [Authorize(Roles = "Customer, Staff, Admin")]
         public async Task<IActionResult> DeleteProject(int id)

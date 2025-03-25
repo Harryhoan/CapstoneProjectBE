@@ -178,7 +178,6 @@ namespace CapstonProjectBE
             //var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
             //builder.WebHost.UseUrls($"http://*:{port}");
 
-            //var app = builder.Build();
 
             ////Get swagger.json following root directory 
             //app.UseSwagger(options => { options.RouteTemplate = "{documentName}/swagger.json"; });
@@ -186,7 +185,7 @@ namespace CapstonProjectBE
             //app.UseSwaggerUI(c => { c.SwaggerEndpoint("/v1/swagger.json", "GameMkt.API V1"); c.RoutePrefix = string.Empty; });
             //#endregion
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
