@@ -22,6 +22,6 @@ namespace Application.IService
         public Task<ServiceResponse<string>> SoftRemovePost(int postId);
         public Task<bool> CheckIfPostHasUserId(int postId, int userId);
         public Task<IActionResult?> CheckIfUserHasPermissionsByPostId(User user, int postId);
-
+        public Task<ServiceResponse<PostDTO>> GetPostById(int postId, int? userId = null);
     }
 }

@@ -19,6 +19,7 @@ namespace Application.ViewModels.PostDTO
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Status is required")]
+        [RegularExpression("^(Deleted|Private|Exclusive|Public)$", ErrorMessage = "Status can only be \"Deleted\", \"Private\", \"Exclusive\" or \"Public\".")] 
         public string Status { get; set; } = string.Empty;
 
     }
