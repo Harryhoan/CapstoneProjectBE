@@ -1,6 +1,7 @@
 using System.Reflection;
 using Application.Commons;
 using Infrastructure;
+using Domain;
 using Infrastructure.Mappers;
 using Microsoft.EntityFrameworkCore;
 using CapstonProjectBE.Middlewares;

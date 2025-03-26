@@ -1,5 +1,6 @@
 ﻿using Application.IRepositories;
 using Domain.Entities;
+using Domain;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

@@ -1,6 +1,7 @@
 ﻿using Application.IService;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
+using Domain;
 using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
