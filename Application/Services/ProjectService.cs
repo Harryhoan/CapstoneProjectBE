@@ -84,6 +84,7 @@ namespace Application.Services
                 {
                     ProjectId = project.ProjectId,
                     Monitor = randomStaff.Fullname,
+                    CreatorId = project.CreatorId,
                     Creator = user.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
                     Title = project.Title,
                     Description = project.Description,
@@ -198,6 +199,7 @@ namespace Application.Services
                         ProjectId = project.ProjectId,
                         Thumbnail = project.Thumbnail,
                         Monitor = monitor?.Fullname ?? "Unknown",
+                        CreatorId = project.CreatorId,
                         Creator = creator?.Fullname ?? "Unknown",
                         Title = project.Title,
                         Description = project.Description,
@@ -253,6 +255,7 @@ namespace Application.Services
                 {
                     ProjectId = id,
                     Monitor = monitor?.Fullname ?? "unknown",
+                    CreatorId = project.CreatorId,
                     Creator = creator?.Fullname ?? "unknown",
                     Thumbnail = project.Thumbnail,
                     Story = project.Story,
@@ -433,7 +436,39 @@ namespace Application.Services
 
             return response;
         }
-
+        public async Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId)
+        {
+            var response = new ServiceResponse<List<UserProjectsDto>>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                
+                var projects = await _unitOfWork.ProjectRepo.GetProjectByUserIdAsync(userId);
+                if (projects == null)
+                {
+                    response.Success = false;
+                    response.Message = "Projects not found.";
+                    return response;
+                }
+                var projectList = _mapper.Map<List<UserProjectsDto>>(projects);
+                response.Data = projectList;
+                response.Success = true;
+                response.Message = "Get projects by user id successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get project: {ex.Message}";
+                return response;
+            }
+        }
         public async Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason)
         {
             var response = new ServiceResponse<string>();

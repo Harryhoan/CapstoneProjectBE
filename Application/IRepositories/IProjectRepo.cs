@@ -1,9 +1,4 @@
 ﻿using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.IRepositories
 {
@@ -14,6 +9,6 @@ namespace Application.IRepositories
         Task<Project?> GetProjectById(int id);
         Task<int> DeleteProject(int id);
         Task<int> UpdateProject(int id, Project project);   
-        Task<Project> CreateProject(Project project);
+        Task<List<Project>> GetProjectByUserIdAsync(int userId);
     }
 }
