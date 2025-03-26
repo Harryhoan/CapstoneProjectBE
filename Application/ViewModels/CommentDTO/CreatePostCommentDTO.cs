@@ -9,8 +9,6 @@ namespace Application.ViewModels.CommentDTO
 {
     public class CreatePostCommentDTO
     {
-        [Required(ErrorMessage = "User ID is required")]
-        public int UserId { get; set; }
         public int? ParentCommentId { get; set; }
         [Required(ErrorMessage = "Post ID is required")]
         public int PostId { get; set; }
