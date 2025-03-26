@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Application.ViewModels.ReportDTO;
 using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.FaqDTO;
+using Application.ViewModels.FileDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -35,6 +36,7 @@ namespace Infrastructure.Mappers
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
             CreateMap<FAQ, FaqDto>().ReverseMap();
+            CreateMap<Domain.Entities.File, FileDTO>().ReverseMap();
             CreateMap<User, PostUserDTO>()
                 .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => src.Fullname))
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Avatar ?? string.Empty))

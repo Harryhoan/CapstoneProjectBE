@@ -1,11 +1,14 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
 using Application.Utils;
+using Application.ViewModels.FileDTO;
+using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.PostDTO;
 using AutoMapper;
 using Domain.Entities;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -76,6 +79,72 @@ namespace Application.Services
                 response.Message = $"Failed to create post: {ex.Message}";
             }
             return response;
+        }
+
+        public async Task<ServiceResponse<PostDTO>> GetPostById(int postId, int? userId = null)
+        {
+            var response = new ServiceResponse<PostDTO>();
+            try
+            {
+                var post = await _unitOfWork.PostRepo.GetByIdAsync(postId);
+                if (post == null)
+                {
+                    response.Success = false;
+                    response.Message = "Post not found";
+                    return response;
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", post.ProjectId);
+                if (existingProject == null)
+                {
+                    await _unitOfWork.PostRepo.RemoveAsync(post);
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+                if (userId != null && userId > 0)
+                {
+                    var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", (int)userId);
+                    if (user != null && user.Role == "Customer")
+                    {
+                        if (post.Status == "Private" || post.Status == "Exclusive")
+                        {
+                            var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                            if (existingCollaborator == null && user.UserId != post.UserId && user.UserId != existingProject.CreatorId)
+                            {
+                                response.Success = false;
+                                response.Message = "Post not accessible";
+                                return response;
+                            }
+                            else if (post.Status == "Exclusive")
+                            {
+                                var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
+                                if ((existingPledge == null || existingPledge.Amount <= 0))
+                                {
+                                    response.Success = false;
+                                    response.Message = "Post not accessible";
+                                    return response;
+                                }
+                            }
+                        }
+                        else if (post.Status == "Deleted")
+                        {
+                            response.Success = false;
+                            response.Message = "Post not found";
+                            return response;
+                        }
+                    }
+                }
+                response.Data = _mapper.Map<PostDTO>(post);
+                response.Success = true;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create post: {ex.Message}";
+            }
+            return response;
+
         }
 
         private async Task<List<Post>?> FilterPostsByProjectIdAndUserId(int projectId, int? userId = null)
@@ -430,21 +499,34 @@ namespace Application.Services
                 }
                 if (user.Role == "Customer")
                 {
-                    if (!(user.UserId == existingPost.UserId))
+                    if (existingPost.Status == "Private" || existingPost.Status == "Exclusive")
                     {
-                        return new ForbidResult("This request is not permitted.");
-                    }
-                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if (existingCollaborator == null)
-                    {
-                        return new ForbidResult("This request is not permitted.");
-                    }
-                }
+                        var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (existingCollaborator == null && user.UserId != existingPost.UserId && user.UserId != existingProject.CreatorId)
+                        {
+                            existingCollaborator = null;
+                            return new ForbidResult("This request is forbidden.");
+                        }
 
+                        else if (existingPost.Status == "Exclusive")
+                        {
+                            var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
+                            if ((existingPledge == null || existingPledge.Amount <= 0))
+                            {
+                                existingPledge = null;
+                                return new ForbidResult("This request is forbidden.");
+                            }
+                        }
+                    }
+                    else if (existingPost.Status == "Deleted")
+                    {
+                        return new NotFoundObjectResult("The requested post cannot be found.");
+                    }
+                    return null;
+                }
             }
             catch
             {
-
             }
             return new BadRequestObjectResult("This request cannot be processed.");
         }

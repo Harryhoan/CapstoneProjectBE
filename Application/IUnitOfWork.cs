@@ -23,6 +23,7 @@ namespace Application
         public IProjectCommentRepo ProjectCommentRepo { get; }
         public IPledgeDetailRepo PledgeDetailRepo { get; }
         public ICollaboratorRepo CollaboratorRepo { get; }
+        public IFileRepo FileRepo { get; }
 
         public Task<int> SaveChangeAsync();
     }
