@@ -11,6 +11,8 @@ using Domain.Entities;
 using Newtonsoft.Json;
 using Application.Utils;
 using PayPal;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Domain.Enums;
 
 namespace Application.Services
 {
@@ -28,12 +30,100 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _exchangeRateService = new ExchangeRateService(_configuration["ExchangeRateApiKey"]);
         }
+        public async Task<ServiceResponse<string>> TransferPledgeToCreatorAsync(int userId, int projectId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
+
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+                if (user.Role != "Staff" && user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not allow to do this method";
+                    return response;
+                }
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+                var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
+                var apiContext = new APIContext(new OAuthTokenCredential(
+                    _configuration["PayPal:ClientId"],
+                    _configuration["PayPal:ClientSecret"]
+                ).GetAccessToken());
+
+                var payout = new Payout
+                {
+                    sender_batch_header = new PayoutSenderBatchHeader
+                    {
+                        sender_batch_id = Guid.NewGuid().ToString(),
+                        email_subject = "You have received a pledge transfer"
+                    },
+                    items = new List<PayoutItem>
+            {
+                new PayoutItem
+                {
+                    recipient_type = PayoutRecipientType.EMAIL,
+                    amount = new Currency
+                    {
+                        value = project.TotalAmount.ToString(),
+                        currency = "USD"
+                    },
+                    receiver = user.Email,
+                    note = "Transfer of pledged funds",
+                    sender_item_id = projectId.ToString()
+                }
+            }
+                };
+                var createdPayout = payout.Create(apiContext, false);
+
+                foreach (var pledge in pledges)
+                {
+                    pledge.Amount = 0;
+                    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                }
+
+                response.Success = true;
+                response.Message = "Payout created successfully.";
+            }
+            catch (PayPalException paypalEx)
+            {
+                response.Success = false;
+                response.Message = $"PayPal error: {paypalEx.Message}";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create payment: {ex.Message}";
+                return response;
+            }
+            return response;
+        }
         public async Task<ServiceResponse<string>> CreateRefundAsync(int userId, int pledgeId)
         {
             var response = new ServiceResponse<string>();
             try
             {
                 var pledge = await _unitOfWork.PledgeRepo.GetPledgeByIdAsync(pledgeId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(pledge.ProjectId);
+
                 if (pledge == null)
                 {
                     response.Success = false;
@@ -49,16 +139,32 @@ namespace Application.Services
                     return response;
                 }
 
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project Id not found.";
+                    return response;
+                }
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+
                 var apiContext = new APIContext(new OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
                 // Get the exchange rate from VND to USD
-                decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
+                //decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
                 //decimal totalAmountUSD = pledge.Amount * exchangeRate;
-                decimal totalAmountUSD = pledge.Amount;
-                string totalAmountInUSD = totalAmountUSD.ToString("F2");
+                //decimal totalAmountUSD = pledge.Amount;
+
+                string totalAmountInUSD = pledge.Amount.ToString("F2");
+
+                project.TotalAmount -= pledge.Amount;
 
                 var payout = new Payout
                 {
@@ -86,15 +192,8 @@ namespace Application.Services
 
                 var createdPayout = payout.Create(apiContext, false);
 
-                //if (createdPayout.batch_header.batch_status != "SUCCESS")
-                //{
-                //    response.Success = false;
-                //    response.Message = "Failed to create payout.";
-                //    return response;
-                //}
-
-                //pledge.Project.TotalAmount -= pledge.Amount;
                 pledge.Amount = 0;
+                await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
 
                 response.Success = true;
@@ -119,11 +218,40 @@ namespace Application.Services
 
             try
             {
-                // Get the exchange rate from VND to USD
-                decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
-                decimal totalAmountUSD = amount * exchangeRate;
-                string totalAmountInUSD = totalAmountUSD.ToString("F2");
+                string totalAmount = amount.ToString("F2");
 
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project Id not found.";
+                    return response;
+                }
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+                if (project.Status == ProjectEnum.HALTED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been halted.";
+                    return response;
+                }
+                if (project.StartDatetime >= project.EndDatetime)
+                {
+                    response.Success = false;
+                    response.Message = "This project has ended.";
+                    return response;
+                }
+                if (project.CreatorId == userId)
+                {
+                    response.Success = false;
+                    response.Message = "You are not allow to pledge your own Game Project.";
+                    return response;
+                }
                 var apiContext = new APIContext(new OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
@@ -145,7 +273,7 @@ namespace Application.Services
                             amount = new Amount
                             {
                                 currency = "USD",
-                                total = totalAmountInUSD
+                                total = totalAmount
                             },
                             note_to_payee = projectId.ToString(),
                             custom = userId.ToString()
@@ -159,7 +287,6 @@ namespace Application.Services
                 };
 
                 var createdPayment = payment.Create(apiContext);
-
                 if (createdPayment != null && createdPayment.links != null)
                 {
                     var approvalLink = createdPayment.links.FirstOrDefault(link => link.rel == "approval_url")?.href;
@@ -181,6 +308,7 @@ namespace Application.Services
                     response.Success = false;
                     response.Message = "Failed to create payment.";
                 }
+
             }
             catch (PayPalException payPalEx)
             {
@@ -192,7 +320,6 @@ namespace Application.Services
                 response.Success = false;
                 response.Error = $"Failed to create payment: {ex.Message}";
             }
-
             return response;
         }
 
@@ -236,6 +363,16 @@ namespace Application.Services
                     response.Message = "Payment is not approved yet.";
                     return response;
                 }
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project Id not found.";
+                    return response;
+                }
+
+                project.TotalAmount += Convert.ToDecimal(transaction.amount.total);
 
                 decimal amount = decimal.TryParse(transaction.amount.total, out decimal parsedAmount) ? parsedAmount : 0m;
 
@@ -263,16 +400,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("USD", "VND");
-                    if (exchangeRate <= 0)
-                    {
-                        response.Success = false;
-                        response.Message = "Failed to fetch exchange rate.";
-                        return response;
-                    }
-
-                    var paymentTotal = amount * exchangeRate;
-                    existingPledge.Amount += paymentTotal;
+                    existingPledge.Amount += amount;
                     await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
 
                     var getPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
@@ -288,6 +416,8 @@ namespace Application.Services
                 }
 
                 // Prepare to execute the payment
+
+                await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 var paymentExecution = new PaymentExecution() { payer_id = payerId };
                 var executedPayment = payment.Execute(apiContext, paymentExecution);
 

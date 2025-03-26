@@ -20,8 +20,10 @@ namespace CapstonProjectBE
             services.AddScoped<IProjectService, ProjectService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IRewardService, RewardService>();
-            services.AddScoped<IGoalService, GoalService>();
+            services.AddScoped<IFAQService, FAQService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IPledgeService, PledgeService>();
+            services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IPaypalPaymentService,  PaypalPaymentService>();
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<ICommentService, CommentService>();

@@ -18,7 +18,7 @@ namespace Infrastructure
         public DbSet<Collaborator> Collaborators { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Domain.Entities.File> Files { get; set; }
-        public DbSet<Goal> Goals { get; set; }
+        public DbSet<FAQ> FAQs { get; set; }
         public DbSet<Pledge> Pledges { get; set; }
         public DbSet<PledgeDetail> PledgeDetails { get; set; }
         public DbSet<ProjectComment> ProjectComments { get; set; }
@@ -99,19 +99,26 @@ namespace Infrastructure
                 .HasForeignKey(p => p.CreatorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Project>()
+                .HasOne(p => p.Monitor)
+                .WithMany(u => u.MonitoredProjects)
+                .HasForeignKey(p => p.MonitorId)
+                .OnDelete(DeleteBehavior.Cascade); // New configuration
+
             modelBuilder.Entity<Category>()
                 .HasOne(c => c.ParentCategory)
                 .WithMany(c => c.Categories)
                 .HasForeignKey(c => c.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Goal>()
-                .HasKey(g => new { g.ProjectId, g.Amount });
-            modelBuilder.Entity<Goal>()
+            modelBuilder.Entity<FAQ>()
                 .HasOne(g => g.Project)
-                .WithMany(p => p.Goals)
+                .WithMany(p => p.Question)
                 .HasForeignKey(g => g.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FAQ>()
+                .HasKey(g => new { g.ProjectId, g.Question });
 
             modelBuilder.Entity<ProjectCategory>()
                 .HasKey(pc => new { pc.CategoryId, pc.ProjectId });

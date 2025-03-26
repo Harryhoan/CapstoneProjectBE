@@ -59,7 +59,7 @@ namespace Application.Services
                 await _unitOfWork.TokenRepo.AddAsync(confirmationToken);
 
                 // Construct Confirmation Link
-                var confirmationLink = $"https://localhost:50875/swagger/confirm?token={confirmationToken.TokenValue}";
+                var confirmationLink = $"https://marvelous-gentleness-production.up.railway.app/swagger/confirm?token={confirmationToken.TokenValue}";
 
                 // Send Mail
                 var emailSend = await EmailSender.SendConfirmationEmail(userObject.Email, confirmationLink);
@@ -176,7 +176,7 @@ namespace Application.Services
                 }
                 if (DateTime.UtcNow > token.ExpiresAt)
                 {
-                    await _unitOfWork.TokenRepo.DeleteTokenAsync(token);
+                    await _unitOfWork.TokenRepo.RemoveAsync(token);
                     var newToken = new Token
                     {
                         TokenValue = Guid.NewGuid().ToString(),

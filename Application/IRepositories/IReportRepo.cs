@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.IRepositories
 {
-    public interface IGoalRepo : IGenericRepo<Goal>
+    public interface IReportRepo : IGenericRepo<Report>
     {
+        public Task<List<Report>> GetReportsByUserIdAsync(int userId);
     }
 }

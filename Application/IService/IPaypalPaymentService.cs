@@ -14,5 +14,6 @@ namespace Application.IService
         Task<ServiceResponse<string>> CreatePaymentAsync(int userId, int projectId, decimal amount, string returnUrl, string cancelUrl);
         Task<ServiceResponse<Payment>> ExecutePaymentAsync(string paymentId, string payerId);
         Task<ServiceResponse<string>> CreateRefundAsync(int userId, int pledgeId);
+        Task<ServiceResponse<string>> TransferPledgeToCreatorAsync(int userId, int projectId);
     }
 }

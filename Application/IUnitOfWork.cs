@@ -15,8 +15,9 @@ namespace Application
         public IProjectRepo ProjectRepo { get; }
         public ICategoryRepo CategoryRepo { get; }
         public IRewardRepo RewardRepo { get; }
-        public IGoalRepo GoalRepo { get; }
+        public IFAQRepo FAQRepo { get; }
         public IPostRepo PostRepo { get; }
+        public IReportRepo ReportRepo { get; }
         public ICommentRepo CommentRepo { get; }
         public IPostCommentRepo PostCommentRepo { get; }
         public IProjectCommentRepo ProjectCommentRepo { get; }

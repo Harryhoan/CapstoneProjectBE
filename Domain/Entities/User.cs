@@ -13,10 +13,11 @@ namespace Domain.Entities
         public string? Avatar { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string PaymentAccount { get; set; } = string.Empty;
         public string? Phone { get; set; }
         public string Role { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
-        //public bool IsDeleted { get; set; } = false;
+        public bool IsDeleted { get; set; } = false;
         public DateTime CreatedDatetime { get; set; }
 
         // Relationships
@@ -28,5 +29,6 @@ namespace Domain.Entities
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
+        public virtual ICollection<Project> MonitoredProjects { get; set; } = new List<Project>(); // New relationship
     }
 }

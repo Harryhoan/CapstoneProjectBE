@@ -20,7 +20,8 @@ namespace Infrastructure
             services.AddScoped<IProjectRepo, ProjectRepo>();
             services.AddScoped<ICategoryRepo, CategoryRepo>();
             services.AddScoped<IRewardRepo, RewardRepo>();
-            services.AddScoped<IGoalRepo, GoalRepo>();
+            services.AddScoped<IReportRepo, ReportRepo>();
+            services.AddScoped<IFAQRepo, FAQRepo>();
             services.AddScoped<IPledgeDetailRepo, PledgeDetailRepo>();
             services.AddScoped<IPostRepo, PostRepo>();
             services.AddScoped<ICommentRepo, CommentRepo>();

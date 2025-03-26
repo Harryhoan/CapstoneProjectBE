@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.ViewModels.GoalDTO
+namespace Application.ViewModels.ReportDTO
 {
-    public class CreateGoal
+    public class CreateReportDto
     {
-        public decimal Amount { get; set; }
+        public string Detail { get; set; } = string.Empty;
     }
 }

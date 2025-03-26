@@ -1,6 +1,8 @@
 ﻿using Application.IService;
+using Application.Services;
 using Application.ViewModels.ProjectDTO;
 using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -11,9 +13,11 @@ namespace CapstonProjectBE.Controllers
     public class ProjectController : ControllerBase
     {
         private readonly IProjectService _projectService;
-        public ProjectController(IProjectService projectService)
+        private readonly IAuthenService _authenService;
+        public ProjectController(IProjectService projectService, IAuthenService authenService)
         {
             _projectService = projectService;
+            _authenService = authenService;
         }
         [HttpGet("GetAllProject")]
         public async Task<IActionResult> GetAllProject()
@@ -34,21 +38,68 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("CreateProject")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> CreateProject(CreateProjectDto projectDto)
         {
-            return Ok(await _projectService.CreateProject(projectDto));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(await _projectService.CreateProject(user.UserId, projectDto));
         }
 
         [HttpPut("UpdateProject")]
+        [Authorize(Roles = "Customer, Staff, Admin")]
         public async Task<IActionResult> UpdateProject(int projectId, UpdateProjectDto updateProjectDto)
         {
             return Ok(await _projectService.UpdateProject(projectId, updateProjectDto));
         }
 
+        [HttpPut("UpdateProjectThumbnail")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> UpdateProjectThumbnail(int projectId, IFormFile file)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var result = await _projectService.UpdateProjectThumbnail(projectId, file);
+            if (!result.Success)
+            {
+                return BadRequest();
+            }
+            return Ok(result);
+        }
+        [HttpPut("UpdateProjectStory")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> UpdateProjectStory(int projectId, string story)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story));
+        }
         [HttpDelete("DeleteProject")]
+        [Authorize(Roles = "Customer, Staff, Admin")]
         public async Task<IActionResult> DeleteProject(int id)
         {
             return Ok(await _projectService.DeleteProject(id));
+        }
+
+        [HttpPut("StaffApproveProject")]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> StaffApproveProject(int projectId, bool isApproved, string reason)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(await _projectService.StaffApproveAsync(projectId, user.UserId, isApproved, reason));
         }
     }
 }

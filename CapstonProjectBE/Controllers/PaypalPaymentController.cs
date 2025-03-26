@@ -64,5 +64,22 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
+
+        [HttpPost("TransferPledgeToCreator")]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> TransferPledgeToCreatorAsync(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var result = await _paypalPaymentService.TransferPledgeToCreatorAsync(user.UserId, projectId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }

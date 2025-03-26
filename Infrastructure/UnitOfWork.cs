@@ -16,16 +16,18 @@ namespace Infrastructure
         private readonly IProjectRepo _projectRepo;
         private readonly ICategoryRepo _categoryRepo;
         private readonly IRewardRepo _rewardRepo;
-        private readonly IGoalRepo _goalRepo;
+        private readonly IFAQRepo _faqRepo;
         private readonly IPostRepo _postRepo;
         private readonly ICommentRepo _commentRepo;
         private readonly IPostCommentRepo _postCommentRepo;
         private readonly IPledgeRepo _pledgeRepo;
+        private readonly IReportRepo _reportRepo;
         private readonly IPledgeDetailRepo _pledgeDetailRepo;
         private readonly IProjectCommentRepo _projectCommentRepo;
         private readonly ICollaboratorRepo _collaboratorRepo;
-        public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo,
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo, ICollaboratorRepo collaboratorRepo)
+
+        public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo, 
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo)
         {
             _apiContext = apiContext;
             _tokenRepo = tokenRepo;
@@ -33,7 +35,6 @@ namespace Infrastructure
             _projectRepo = projectRepo;
             _categoryRepo = categoryRepo;
             _rewardRepo = rewardRepo;
-            _goalRepo = goalRepo;
             _postRepo = postRepo;
             _commentRepo = commentRepo;
             _postCommentRepo = postCommentRepo;
@@ -41,18 +42,25 @@ namespace Infrastructure
             _pledgeRepo = pledgeRepo;
             _pledgeDetailRepo = pledgeDetailRepo;
             _collaboratorRepo = collaboratorRepo;
+            _reportRepo = reportRepo;
+            _faqRepo = faqRepo;
         }
 
         public IUserRepo UserRepo => _userRepo;
 
         public ITokenRepo TokenRepo => _tokenRepo;
 
+        public IReportRepo ReportRepo => _reportRepo;
+
         public IPledgeRepo PledgeRepo => _pledgeRepo;
 
         public IProjectRepo ProjectRepo => _projectRepo;
+
         public ICategoryRepo CategoryRepo => _categoryRepo;
+
         public IRewardRepo RewardRepo => _rewardRepo;
-        public IGoalRepo GoalRepo => _goalRepo;
+
+        public IFAQRepo FAQRepo => _faqRepo;
 
         public IPostRepo PostRepo => _postRepo;
 
