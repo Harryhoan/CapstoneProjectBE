@@ -37,6 +37,18 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _projectService.GetProjectById(id));
         }
 
+        [HttpGet("GetProjectByUserId")]
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> GetProjectByUserId()
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(await _projectService.GetProjectByUserIdAsync(user.UserId));
+        }
+
         [HttpPost("CreateProject")]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> CreateProject(CreateProjectDto projectDto)

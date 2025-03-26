@@ -2,11 +2,6 @@
 using Domain.Entities;
 using Domain;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
@@ -16,13 +11,6 @@ namespace Infrastructure.Repositories
         public ProjectRepo(ApiContext context) : base(context)
         {
             _context = context;
-        }
-
-        public async Task<Project> CreateProject(Project project)
-        {
-            _context.Projects.Add(project);
-            await _context.SaveChangesAsync();
-            return project;
         }
 
         public async Task<int> DeleteProject(int id)
@@ -42,6 +30,10 @@ namespace Infrastructure.Repositories
 
         }
 
+        public async Task<List<Project>> GetProjectByUserIdAsync(int userId)
+        {
+            return await _context.Projects.Where(p => p.CreatorId == userId).ToListAsync();
+        }
         public async Task<Project?> GetProjectById(int id) => await _context.Projects.FindAsync(id);
 
         public async Task<(int, int, IEnumerable<Project>)> GetProjectsPaging(int pageNumber, int pageSize)
