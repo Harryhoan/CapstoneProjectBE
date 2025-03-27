@@ -134,6 +134,21 @@ namespace Application.Services
                         }
                     }
                 }
+                else
+                {
+                    if (post.Status == "Exclusive" || post.Status == "Private")
+                    {
+                        response.Success = false;
+                        response.Message = "Post not accessible";
+                        return response;
+                    }
+                    else if (post.Status == "Deleted")
+                    {
+                        response.Success = false;
+                        response.Message = "Post not found";
+                        return response;
+                    }
+                }
                 response.Data = _mapper.Map<PostDTO>(post);
                 response.Success = true;
                 return response;
