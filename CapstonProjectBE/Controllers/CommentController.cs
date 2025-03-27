@@ -109,7 +109,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPut]
-        public async Task<IActionResult> UpdateComment(UpdateCommentDTO updateCommentDTO)
+        public async Task<IActionResult> UpdateComment([FromForm] UpdateCommentDTO updateCommentDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
