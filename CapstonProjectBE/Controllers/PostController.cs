@@ -34,6 +34,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+        [HttpGet("GetPost")]
         public async Task<IActionResult> GetPostById(int postId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -106,7 +107,7 @@ namespace CapstonProjectBE.Controllers
 
 
         [Authorize(Roles = "Customer")]
-        [HttpPut]
+        [HttpPut("Update")]
         public async Task<IActionResult> UpdatePost(int postId, CreatePostDTO createPostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -128,7 +129,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "Customer, Staff")]
-        [HttpDelete]
+        [HttpDelete("DeletePost")]
         public async Task<IActionResult> RemovePost(int postId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

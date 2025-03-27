@@ -29,7 +29,13 @@ namespace Infrastructure.Mappers
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
             CreateMap<Project, ProjectThumbnailDto>().ReverseMap();
-            CreateMap<Report, CreateReportDto>().ReverseMap();
+            CreateMap<Project, UserProjectsDto>()
+                            .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
+                            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                            .ForMember(dest => dest.Thumbnail, opt => opt.MapFrom(src => src.Thumbnail))
+                            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                            .ForMember(dest => dest.EndDatetime, opt => opt.MapFrom(src => src.EndDatetime))
+                            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status)); CreateMap<Report, CreateReportDto>().ReverseMap();
             CreateMap<Report, ReportDto>().ReverseMap();
             CreateMap<Pledge, PledgeDto>().ReverseMap();
             CreateMap<PledgeDetail, PledgeDetailDto>().ReverseMap();

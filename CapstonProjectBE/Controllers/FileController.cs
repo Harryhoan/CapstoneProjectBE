@@ -55,7 +55,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize]
-        [HttpGet("files/user/{userId}")]
+        [HttpGet("files/user/paging/{userId}")]
         public async Task<IActionResult> GetPaginatedFilesByUserId([FromRoute] int userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -63,7 +63,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize]
-        [HttpPut]
+        [HttpPut("Update")]
         public async Task<IActionResult> UpdatePost([FromBody] UpdateFileDTO updateFileDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -82,7 +82,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize]
-        [HttpDelete]
+        [HttpDelete("Remove")]
         public async Task<IActionResult> RemoveFile(int fileId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

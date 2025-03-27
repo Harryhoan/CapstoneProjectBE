@@ -1,4 +1,5 @@
 ﻿using Application.IRepositories;
+using Domain;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
