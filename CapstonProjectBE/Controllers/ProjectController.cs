@@ -19,12 +19,30 @@ namespace CapstonProjectBE.Controllers
             _projectService = projectService;
             _authenService = authenService;
         }
+
+        /// <summary>
+        /// Get all project
+        /// </summary>
+        /// <returns></returns>
         [HttpGet("GetAllProject")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllProject()
         {
             return Ok(await _projectService.GetAllProjects());
         }
 
+        /// <summary>
+        /// Retrieves all projects associated with an admin or staff user after verifying their authorization.
+        /// </summary>
+        /// <returns>Returns an Ok response with the list of projects if the user is authorized.</returns>
+        [HttpGet("GetAllProjectByMonitor")]
+        [Authorize(Roles = "Admin, Staff")]
+        public async Task<IActionResult> GetAllProjectByMonitor()
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) { return Unauthorized(); }
+            return Ok(await _projectService.GetAllProjectByAdminAsync(user.UserId));
+        }
         [HttpGet("GetProjectsPaging")]
         public async Task<IActionResult> GetProjectsPaging(int pageNumber, int pageSize)
         {

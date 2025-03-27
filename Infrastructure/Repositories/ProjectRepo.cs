@@ -30,6 +30,10 @@ namespace Infrastructure.Repositories
 
         }
 
+        public async Task<List<Project>> GetAllProjectByMonitorIdAsync(int userId)
+        {
+            return await _context.Projects.Where(p => p.MonitorId == userId).ToListAsync();
+        }
         public async Task<List<Project>> GetProjectByUserIdAsync(int userId)
         {
             return await _context.Projects.Where(p => p.CreatorId == userId).ToListAsync();

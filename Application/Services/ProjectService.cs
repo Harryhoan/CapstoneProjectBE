@@ -33,6 +33,35 @@ namespace Application.Services
             _cloudinary = new Cloudinary(cloudinaryAccount);
         }
 
+        public async Task<ServiceResponse<ProjectDto>> GetAllProjectByAdminAsync(int userId)
+        {
+            var response = new ServiceResponse<ProjectDto>();
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetAllAsync();
+                if (project == null)
+                {
+                    response.Success = true;
+                    response.Message = "There are no project here.";
+                    return response;
+                }
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user.Role == "Staff")
+                {
+                    var StaffProject = await _unitOfWork.ProjectRepo.GetAllProjectByMonitorIdAsync(userId);
+                }
+                var projectList = _mapper.Map<ProjectDto>(project);
+                response.Success = true;
+                response.Message = "Get all Project successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get all project: {ex.Message}";
+                return response;
+            }
+        }
         public async Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto)
         {
             var response = new ServiceResponse<ProjectDto>();
