@@ -26,7 +26,12 @@ namespace CapstonProjectBE.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePost(CreatePostDTO createPostDTO)
         {
-            var result = await _postService.CreatePost(createPostDTO);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) 
+            {
+                return Unauthorized();
+            }
+            var result = await _postService.CreatePost(user.UserId, createPostDTO);
             if (!result.Success)
             {
                 return BadRequest(result);

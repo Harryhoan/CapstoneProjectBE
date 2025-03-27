@@ -12,7 +12,7 @@ namespace Application.IService
 {
     public interface IPostService
     {
-        public Task<ServiceResponse<int>> CreatePost(CreatePostDTO createCardDTO);
+        public Task<ServiceResponse<int>> CreatePost(int userId, CreatePostDTO createCardDTO);
         public Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20, int? currentUserId = null);
         public Task<ServiceResponse<List<PostDTO>>> GetPostsByUserId(int userId, int? currentUserId = null);
         public Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByProjectId(int projectId, int page = 1, int pageSize = 20, int? userId = null);

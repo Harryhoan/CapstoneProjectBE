@@ -29,7 +29,7 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<int>> CreatePost(CreatePostDTO createPostDTO)
+        public async Task<ServiceResponse<int>> CreatePost(int userId, CreatePostDTO createPostDTO)
         {
             var response = new ServiceResponse<int>();
 
@@ -45,14 +45,14 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(createPostDTO.UserId);
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null)
                 {
                     response.Success = false;
                     response.Message = "User not found";
                     return response;
                 }
-                var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createPostDTO.ProjectId);
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createPostDTO.ProjectId);
                 if (existingProject == null)
                 {
                     response.Success = false;
@@ -61,7 +61,7 @@ namespace Application.Services
                 }
 
                 Post post = new Post();
-                post.UserId = createPostDTO.UserId;
+                post.UserId = userId;
                 post.ProjectId = createPostDTO.ProjectId;
                 post.Title = createPostDTO.Title;
                 post.Description = createPostDTO.Description;
