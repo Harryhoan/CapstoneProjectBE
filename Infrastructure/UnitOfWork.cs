@@ -1,5 +1,6 @@
 ﻿using Application;
 using Application.IRepositories;
+using Domain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,7 @@ namespace Infrastructure
         private readonly IProjectRepo _projectRepo;
         private readonly ICategoryRepo _categoryRepo;
         private readonly IRewardRepo _rewardRepo;
-        private readonly IGoalRepo _goalRepo;
+        private readonly IFAQRepo _faqRepo;
         private readonly IPostRepo _postRepo;
         private readonly ICommentRepo _commentRepo;
         private readonly IPostCommentRepo _postCommentRepo;
@@ -25,9 +26,10 @@ namespace Infrastructure
         private readonly IPledgeDetailRepo _pledgeDetailRepo;
         private readonly IProjectCommentRepo _projectCommentRepo;
         private readonly ICollaboratorRepo _collaboratorRepo;
+        private readonly IFileRepo _fileRepo;
 
         public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo, 
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IGoalRepo goalRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo)
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo)
         {
             _apiContext = apiContext;
             _tokenRepo = tokenRepo;
@@ -35,7 +37,6 @@ namespace Infrastructure
             _projectRepo = projectRepo;
             _categoryRepo = categoryRepo;
             _rewardRepo = rewardRepo;
-            _goalRepo = goalRepo;
             _postRepo = postRepo;
             _commentRepo = commentRepo;
             _postCommentRepo = postCommentRepo;
@@ -44,6 +45,8 @@ namespace Infrastructure
             _pledgeDetailRepo = pledgeDetailRepo;
             _collaboratorRepo = collaboratorRepo;
             _reportRepo = reportRepo;
+            _faqRepo = faqRepo;
+            _fileRepo = fileRepo;
         }
 
         public IUserRepo UserRepo => _userRepo;
@@ -60,7 +63,7 @@ namespace Infrastructure
 
         public IRewardRepo RewardRepo => _rewardRepo;
 
-        public IGoalRepo GoalRepo => _goalRepo;
+        public IFAQRepo FAQRepo => _faqRepo;
 
         public IPostRepo PostRepo => _postRepo;
 
@@ -72,6 +75,7 @@ namespace Infrastructure
 
         public IPledgeDetailRepo PledgeDetailRepo => _pledgeDetailRepo;
         public ICollaboratorRepo CollaboratorRepo => _collaboratorRepo;
+        public IFileRepo FileRepo => _fileRepo;
         public async Task<int> SaveChangeAsync()
         {
             try

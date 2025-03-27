@@ -6,7 +6,7 @@ using AutoMapper;
 using CloudinaryDotNet;
 using Domain.Entities;
 using Domain.Enums.VnpayEnums;
-using Infrastructure;
+using Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System;

@@ -22,7 +22,12 @@ namespace CapstonProjectBE.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePostComment([FromBody] CreatePostCommentDTO createPostCommentDTO)
         {
-            var result = await _commentService.CreatePostComment(createPostCommentDTO);
+            var user = _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) 
+            {
+                return Unauthorized();
+            }
+            var result = await _commentService.CreatePostComment(createPostCommentDTO, user.Id);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -104,18 +109,18 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPut]
-        public async Task<IActionResult> UpdateComment(int commentId, UpdateCommentDTO updateCommentDTO)
+        public async Task<IActionResult> UpdateComment([FromForm] UpdateCommentDTO updateCommentDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
             {
                 return Unauthorized();
             }
-            if (!(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            if (!(await _commentService.CheckIfCommentHasUserId(updateCommentDTO.CommentId, user.UserId)))
             {
                 return Forbid();
             }
-            var result = await _commentService.UpdateComment(commentId, updateCommentDTO);
+            var result = await _commentService.UpdateComment(updateCommentDTO);
             if (!result.Success)
             {
                 return BadRequest(result);

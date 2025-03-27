@@ -9,10 +9,10 @@ namespace Application.ViewModels.CommentDTO
 {
     public class CreateProjectCommentDTO
     {
-        [Required(ErrorMessage = "User ID is required")]
-        public int UserId { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Parent Comment ID must be a positive integer")]
         public int? ParentCommentId { get; set; }
         [Required(ErrorMessage = "Project ID is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Project ID must be a positive integer")]
         public int ProjectId { get; set; }
         [Required(ErrorMessage = "Content is required")]
         [StringLength(255, ErrorMessage = "Content can't be longer than 50 characters")]

@@ -23,7 +23,7 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<int>> CreatePostComment(CreatePostCommentDTO createPostCommentDTO)
+        public async Task<ServiceResponse<int>> CreatePostComment(CreatePostCommentDTO createPostCommentDTO, int userId)
         {
             var response = new ServiceResponse<int>();
 
@@ -39,7 +39,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(createPostCommentDTO.UserId);
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null)
                 {
                     response.Success = false;
@@ -65,7 +65,7 @@ namespace Application.Services
                 }
 
                 Comment comment = new Comment();
-                comment.UserId = createPostCommentDTO.UserId;
+                comment.UserId = existingUser.UserId;
                 comment.Content = createPostCommentDTO.Content;
                 comment.CommentId = 0;
                 comment.Status = "Created";
@@ -92,7 +92,7 @@ namespace Application.Services
             return response;
         }
         
-        public async Task<ServiceResponse<int>> CreateProjectComment(CreateProjectCommentDTO createProjectCommentDTO)
+        public async Task<ServiceResponse<int>> CreateProjectComment(CreateProjectCommentDTO createProjectCommentDTO, int userId)
         {
             var response = new ServiceResponse<int>();
 
@@ -108,7 +108,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(createProjectCommentDTO.UserId);
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null)
                 {
                     response.Success = false;
@@ -134,7 +134,7 @@ namespace Application.Services
                 }
 
                 Comment comment = new Comment();
-                comment.UserId = createProjectCommentDTO.UserId;
+                comment.UserId = existingUser.UserId;
                 comment.Content = createProjectCommentDTO.Content;
                 comment.CommentId = 0;
                 comment.Status = "Created";
@@ -276,7 +276,7 @@ namespace Application.Services
         }
 
 
-        public async Task<ServiceResponse<string>> UpdateComment(int commentId, UpdateCommentDTO updateCommentDTO)
+        public async Task<ServiceResponse<string>> UpdateComment(UpdateCommentDTO updateCommentDTO)
         {
             var response = new ServiceResponse<string>();
 
@@ -292,7 +292,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(commentId);
+                var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(updateCommentDTO.CommentId);
                 if (existingComment == null)
                 {
                     response.Success = false;
@@ -373,7 +373,7 @@ namespace Application.Services
         {
             try
             {
-                var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(commentId);
+                var existingComment = await _unitOfWork.CommentRepo.GetByIdNoTrackingAsync("CommentId", commentId);
                 return existingComment != null && existingComment.UserId == userId;
             }
             catch

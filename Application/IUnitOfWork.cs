@@ -15,7 +15,7 @@ namespace Application
         public IProjectRepo ProjectRepo { get; }
         public ICategoryRepo CategoryRepo { get; }
         public IRewardRepo RewardRepo { get; }
-        public IGoalRepo GoalRepo { get; }
+        public IFAQRepo FAQRepo { get; }
         public IPostRepo PostRepo { get; }
         public IReportRepo ReportRepo { get; }
         public ICommentRepo CommentRepo { get; }
@@ -23,6 +23,7 @@ namespace Application
         public IProjectCommentRepo ProjectCommentRepo { get; }
         public IPledgeDetailRepo PledgeDetailRepo { get; }
         public ICollaboratorRepo CollaboratorRepo { get; }
+        public IFileRepo FileRepo { get; }
 
         public Task<int> SaveChangeAsync();
     }

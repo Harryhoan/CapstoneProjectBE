@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.Utils;
 using Application.ViewModels;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
@@ -76,7 +77,7 @@ namespace Application.Services
 
                 project.MonitorId = randomStaff.UserId;
                 project.CreatorId = userId;
-                project.MinimumAmount = 0;
+                project.TotalAmount = 0;
                 project.Status = ProjectEnum.INVISIBLE;
                 project.UpdateDatetime = createProjectDto.StartDatetime;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
@@ -84,6 +85,7 @@ namespace Application.Services
                 {
                     ProjectId = project.ProjectId,
                     Monitor = randomStaff.Fullname,
+                    CreatorId = project.CreatorId,
                     Creator = user.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
                     Title = project.Title,
                     Description = project.Description,
@@ -136,7 +138,48 @@ namespace Application.Services
 
             return response;
         }
+        public async Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story)
+        {
+            var response = new ServiceResponse<string>();
 
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;    
+                }
+                if (user.UserId != project.CreatorId)
+                {
+                    response.Success = false;
+                    response.Message = "You are not authorized to update this project.";
+                    return response;
+                }
+
+                project.Story = story;
+                project.UpdateDatetime = DateTime.UtcNow;
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+
+                response.Success = true;
+                response.Message = "Project story updated successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to update project story: {ex.Message}";
+                return response;
+            }
+        }
         public async Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects()
         {
             var response = new ServiceResponse<IEnumerable<ProjectDto>>();
@@ -157,6 +200,7 @@ namespace Application.Services
                         ProjectId = project.ProjectId,
                         Thumbnail = project.Thumbnail,
                         Monitor = monitor?.Fullname ?? "Unknown",
+                        CreatorId = project.CreatorId,
                         Creator = creator?.Fullname ?? "Unknown",
                         Title = project.Title,
                         Description = project.Description,
@@ -192,9 +236,9 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<ProjectDto>> GetProjectById(int id)
+        public async Task<ServiceResponse<ProjectDetailDto>> GetProjectById(int id)
         {
-            var response = new ServiceResponse<ProjectDto>();
+            var response = new ServiceResponse<ProjectDetailDto>();
 
             try
             {
@@ -208,12 +252,14 @@ namespace Application.Services
                 var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                 var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
 
-                var responseData = new ProjectDto
+                var responseData = new ProjectDetailDto
                 {
                     ProjectId = id,
                     Monitor = monitor?.Fullname ?? "unknown",
+                    CreatorId = project.CreatorId,
                     Creator = creator?.Fullname ?? "unknown",
                     Thumbnail = project.Thumbnail,
+                    Story = project.Story,
                     Backers = project.Pledges.Count(pl => pl.ProjectId == id),
                     Title = project.Title,
                     Description = project.Description,
@@ -414,7 +460,39 @@ namespace Application.Services
 
             return response;
         }
-
+        public async Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId)
+        {
+            var response = new ServiceResponse<List<UserProjectsDto>>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                
+                var projects = await _unitOfWork.ProjectRepo.GetProjectByUserIdAsync(userId);
+                if (projects == null)
+                {
+                    response.Success = false;
+                    response.Message = "Projects not found.";
+                    return response;
+                }
+                var projectList = _mapper.Map<List<UserProjectsDto>>(projects);
+                response.Data = projectList;
+                response.Success = true;
+                response.Message = "Get projects by user id successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get project: {ex.Message}";
+                return response;
+            }
+        }
         public async Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason)
         {
             var response = new ServiceResponse<string>();
@@ -443,13 +521,28 @@ namespace Application.Services
                     response.Message = "You are not authorized to approve or reject this project.";
                     return response;
                 }
+                var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+                if (creator == null)
+                {
+                    response.Success = false;
+                    response.Message = "Creator not found.";
+                    return response;
+                }
 
                 project.Status = isApproved ? ProjectEnum.ONGOING : ProjectEnum.HALTED;
-                //project.ApprovalReason = reason;
                 project.UpdateDatetime = DateTime.UtcNow;
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
+
+                // Send email notification
+                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title, isApproved, reason);
+                if (!emailSend)
+                {
+                    response.Success = false;
+                    response.Message = "Error when sending email notification.";
+                    return response;
+                }
 
                 response.Success = true;
                 response.Message = isApproved ? "Project approved successfully." : "Project rejected successfully.";
@@ -462,6 +555,32 @@ namespace Application.Services
             }
 
             return response;
+        }
+
+
+        public async Task UpdateProjectStatusesAsync()
+        {
+            try
+            {
+                var projects = await _unitOfWork.ProjectRepo.GetAllAsync();
+                var currentDate = DateTime.UtcNow;
+
+                foreach (var project in projects)
+                {
+                    if (project.Status == ProjectEnum.ONGOING && project.EndDatetime <= currentDate)
+                    {
+                        project.Status = ProjectEnum.HALTED;
+                        project.UpdateDatetime = currentDate;
+                        await _unitOfWork.ProjectRepo.UpdateProject(project.ProjectId, project);
+                    }
+                }
+
+                await _unitOfWork.SaveChangeAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or handle it as needed
+            }
         }
     }
 }

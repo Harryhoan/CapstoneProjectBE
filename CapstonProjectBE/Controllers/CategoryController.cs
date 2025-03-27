@@ -24,7 +24,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("AddCategory")]
-        public async Task<IActionResult> AddCategory(AddCategory category)
+        public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
             var newCategory = await _categoryService.AddCategory(category);
             return Ok(newCategory);

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35617.110 d17.13
+VisualStudioVersion = 17.13.35617.110
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstonProjectBE", "CapstonProjectBE\CapstonProjectBE.csproj", "{CE81BE1F-18A8-4028-A980-66696E37C201}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{0B9ABEA8-DEF5-44F8-BC18-2EB2E52F8189}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\Application.csproj", "{1A2D872A-B1C4-4130-BBC6-E6FD77043485}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneProjectDashboardFE", "CapstoneProjectDashboardFE\CapstoneProjectDashboardFE.csproj", "{311120C7-69C4-4EB7-BA99-AC175D29DB16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{1A2D872A-B1C4-4130-BBC6-E6FD77043485}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A2D872A-B1C4-4130-BBC6-E6FD77043485}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A2D872A-B1C4-4130-BBC6-E6FD77043485}.Release|Any CPU.Build.0 = Release|Any CPU
+		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -24,7 +24,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPost]
-        public async Task<IActionResult> CreatePost(CreatePostDTO createPostDTO)
+        public async Task<IActionResult> CreatePost([FromForm] CreatePostDTO createPostDTO)
         {
             var result = await _postService.CreatePost(createPostDTO);
             if (!result.Success)
@@ -32,6 +32,22 @@ namespace CapstonProjectBE.Controllers
                 return BadRequest(result);
             }
 
+            return Ok(result);
+        }
+        [HttpGet("GetPost")]
+        public async Task<IActionResult> GetPostById(int postId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _postService.CheckIfUserHasPermissionsByPostId(user, postId);
+            if (check != null) 
+            {
+                return check;
+            }
+            var result = await _postService.GetPostById(postId, user == null ? null : user.UserId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
             return Ok(result);
         }
 
@@ -91,8 +107,8 @@ namespace CapstonProjectBE.Controllers
 
 
         [Authorize(Roles = "Customer")]
-        [HttpPut]
-        public async Task<IActionResult> UpdatePost(int postId, CreatePostDTO createPostDTO)
+        [HttpPut("Update")]
+        public async Task<IActionResult> UpdatePost(int postId,[FromForm] CreatePostDTO createPostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -113,7 +129,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "Customer, Staff")]
-        [HttpDelete]
+        [HttpDelete("DeletePost")]
         public async Task<IActionResult> RemovePost(int postId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

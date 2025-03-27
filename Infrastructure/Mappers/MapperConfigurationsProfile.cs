@@ -1,5 +1,4 @@
 ﻿using Application.ViewModels.CategoryDTO;
-using Application.ViewModels.GoalDTO;
 using Application.ViewModels.ProjectDTO;
 using Application.ViewModels.RewardDTO;
 ﻿using Application.ViewModels.CommentDTO;
@@ -14,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Application.ViewModels.ReportDTO;
 using Application.ViewModels.PledgeDTO;
+using Application.ViewModels.FaqDTO;
+using Application.ViewModels.FileDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -28,13 +29,20 @@ namespace Infrastructure.Mappers
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
             CreateMap<Project, ProjectThumbnailDto>().ReverseMap();
-            CreateMap<Report, CreateReportDto>().ReverseMap();
+            CreateMap<Project, UserProjectsDto>()
+                            .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
+                            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                            .ForMember(dest => dest.Thumbnail, opt => opt.MapFrom(src => src.Thumbnail))
+                            .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
+                            .ForMember(dest => dest.EndDatetime, opt => opt.MapFrom(src => src.EndDatetime))
+                            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status)); CreateMap<Report, CreateReportDto>().ReverseMap();
             CreateMap<Report, ReportDto>().ReverseMap();
             CreateMap<Pledge, PledgeDto>().ReverseMap();
             CreateMap<PledgeDetail, PledgeDetailDto>().ReverseMap();
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
-            CreateMap<Goal, CreateGoal>().ReverseMap();
+            CreateMap<FAQ, FaqDto>().ReverseMap();
+            CreateMap<Domain.Entities.File, FileDTO>().ReverseMap();
             CreateMap<User, PostUserDTO>()
                 .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => src.Fullname))
                 .ForMember(dest => dest.Avatar, opt => opt.MapFrom(src => src.Avatar ?? string.Empty))

@@ -1,6 +1,7 @@
 ﻿using Application.IRepositories;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Domain;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Mozilla;
 using System;

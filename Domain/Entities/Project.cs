@@ -12,8 +12,9 @@ namespace Domain.Entities
         public int ProjectId { get; set; }
         public int CreatorId { get; set; }
         public string? Thumbnail {  get; set; }
-        public int MonitorId { get; set; } // New field
+        public int MonitorId { get; set; }
         public string? Title { get; set; }
+        public string? Story { get; set; }
         public string? Description { get; set; }
         public ProjectEnum Status { get; set; }
         public decimal MinimumAmount { get; set; }
@@ -25,7 +26,7 @@ namespace Domain.Entities
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
         public virtual ICollection<ProjectPlatform> ProjectPlatforms { get; set; } = new List<ProjectPlatform>();
         public virtual ICollection<ProjectCategory> ProjectCategories { get; set; } = new List<ProjectCategory>();
-        public virtual ICollection<Goal> Goals { get; set; } = new List<Goal>();
+        public virtual ICollection<FAQ> Question { get; set; } = new List<FAQ>();
         public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
         public virtual User User { get; set; } = null!;
         public virtual User Monitor { get; set; } = null!; // New relationship

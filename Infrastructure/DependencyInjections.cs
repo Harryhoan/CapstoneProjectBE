@@ -21,13 +21,14 @@ namespace Infrastructure
             services.AddScoped<ICategoryRepo, CategoryRepo>();
             services.AddScoped<IRewardRepo, RewardRepo>();
             services.AddScoped<IReportRepo, ReportRepo>();
-            services.AddScoped<IGoalRepo, GoalRepo>();
+            services.AddScoped<IFAQRepo, FAQRepo>();
             services.AddScoped<IPledgeDetailRepo, PledgeDetailRepo>();
             services.AddScoped<IPostRepo, PostRepo>();
             services.AddScoped<ICommentRepo, CommentRepo>();
             services.AddScoped<IPostCommentRepo, PostCommentRepo>();
             services.AddScoped<IProjectCommentRepo, ProjectCommentRepo>();
             services.AddScoped<ICollaboratorRepo, CollaboratorRepo>();
+            services.AddScoped<IFileRepo, FileRepo>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             return services;
         }
