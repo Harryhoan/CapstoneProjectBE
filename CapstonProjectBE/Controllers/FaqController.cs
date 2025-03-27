@@ -19,7 +19,6 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetFaqProjectId")]
-        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> GetFaqByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -30,6 +29,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.GetFaqByProjectId(user.UserId, projectId));
         }
         [HttpPost("AddFaq")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> AddFaq(int projectId, FaqDto createFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

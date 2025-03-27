@@ -51,6 +51,27 @@ namespace Application.Services
             }
             return response;
         }
+        public async Task<ServiceResponse<UserDTO>> GetUserByUserIdByMonitorAsync(int userId)
+        {
+            var response = new ServiceResponse<UserDTO>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                response.Data = _mapper.Map<UserDTO>(user);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
         public async Task<ServiceResponse<IEnumerable<UserDTO>>> GetAllUserAsync()
         {
             var response = new ServiceResponse<IEnumerable<UserDTO>>();

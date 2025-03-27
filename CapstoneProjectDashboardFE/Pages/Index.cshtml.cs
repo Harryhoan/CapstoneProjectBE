@@ -1,4 +1,4 @@
-﻿using CapstoneProjectDashboardFE.ModelDTO;
+﻿using CapstoneProjectDashboardFE.ModelDTO.FeUserDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -33,7 +33,6 @@ namespace CapstoneProjectDashboardFE.Pages
                         HttpContext.Session.SetString("Token", result.Token);
                         HttpContext.Session.SetString("Role", result.Role);
                         //HttpContext.Session.SetInt32("Hint", result.Hint);
-                        HttpContext.Session.SetString("Role", result.Role);
 
                         return RedirectToPage("/Admin/UserPages/Index");
                     }

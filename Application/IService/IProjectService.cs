@@ -17,6 +17,7 @@ namespace Application.IService
         public Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason);
         public Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story);
         public Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId);
+        public Task<ServiceResponse<ProjectDto>> GetAllProjectByAdminAsync(int userId);
         public Task UpdateProjectStatusesAsync();
     }
 }   

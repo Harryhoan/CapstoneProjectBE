@@ -1,4 +1,4 @@
-﻿namespace CapstoneProjectDashboardFE.ModelDTO
+﻿namespace CapstoneProjectDashboardFE.ModelDTO.FeUserDTO
 {
     public class LoginModel
     {

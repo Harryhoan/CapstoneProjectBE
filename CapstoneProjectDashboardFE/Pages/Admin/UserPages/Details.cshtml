@@ -1,0 +1,44 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.UserPages.DetailsModel
+@{
+    ViewData["Title"] = "User Details";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<body>
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title">Account Details</h4>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+
+                </dl>
+            </div>
+            <div class="card-footer">
+                @* <a asp-page="./Edit" asp-route-id="@Model.Account?.Id" class="btn btn-primary">Edit</a> *@
+                <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/adminAssets/assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/popper.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/bootstrap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart.js/chart.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart-circle/circles.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/datatables/datatables.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/world.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+    <script src="~/adminAssets/assets/js/kaiadmin.min.js"></script>
+    <script src="~/adminAssets/assets/js/setting-demo.js"></script>
+    <script src="~/adminAssets/assets/js/demo.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/webfont/webfont.min.js"></script>
+</body>

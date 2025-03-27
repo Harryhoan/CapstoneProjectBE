@@ -136,23 +136,19 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<User> GetUserByTokenAsync(ClaimsPrincipal claims)
+        public async Task<User?> GetUserByTokenAsync(ClaimsPrincipal claims)
         {
             if (claims == null)
             {
-                throw new ArgumentNullException("Invalid token");
+                return null;
             }
             var userId = claims.FindFirst("Id")?.Value;
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
             {
-                throw new ArgumentException("No user can be found");
+                return null;
             }
 
             var user = await _unitOfWork.UserRepo.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new NullReferenceException("No user can be found");
-            }
             return user;
         }
         public async Task<ServiceResponse<string>> ResendConfirmationTokenAsync(string email)
