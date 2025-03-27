@@ -8,7 +8,7 @@ namespace Application.IService
     public interface IProjectService
     {
         public Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects();
-        public Task<ServiceResponse<PaginationModel<Project>>> GetProjectsPaging(int pageNumber, int pageSize);
+        public Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber, int pageSize);
         public Task<ServiceResponse<ProjectDto>> GetProjectById(int id);
         public Task<ServiceResponse<int>> DeleteProject(int id);
         public Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto);
