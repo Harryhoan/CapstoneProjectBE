@@ -9,8 +9,6 @@ namespace Application.ViewModels.PostDTO
 {
     public class CreatePostDTO
     {
-        [Required(ErrorMessage = "User ID is required")]
-        public int UserId { get; set; }
         [Required(ErrorMessage = "Project ID is required")]
         public int ProjectId { get; set; }
         [Required(ErrorMessage = "Title is required")]
