@@ -24,7 +24,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPost]
-        public async Task<IActionResult> CreatePost(CreatePostDTO createPostDTO)
+        public async Task<IActionResult> CreatePost([FromForm] CreatePostDTO createPostDTO)
         {
             var result = await _postService.CreatePost(createPostDTO);
             if (!result.Success)
@@ -108,7 +108,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPut("Update")]
-        public async Task<IActionResult> UpdatePost(int postId, CreatePostDTO createPostDTO)
+        public async Task<IActionResult> UpdatePost(int postId,[FromForm] CreatePostDTO createPostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)

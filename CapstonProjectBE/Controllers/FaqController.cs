@@ -30,7 +30,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.GetFaqByProjectId(user.UserId, projectId));
         }
         [HttpPost("AddFaq")]
-        public async Task<IActionResult> AddFaq(int projectId, FaqDto createFaq)
+        public async Task<IActionResult> AddFaq(int projectId,[FromForm] FaqDto createFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -40,7 +40,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.AddFaq(user.UserId, projectId, createFaq));
         }
         [HttpPut("UpdateFaq")]
-        public async Task<IActionResult> UpdateFaq(int projectId, string question, FaqDto updateFaq)
+        public async Task<IActionResult> UpdateFaq(int projectId, string question,[FromForm] FaqDto updateFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)

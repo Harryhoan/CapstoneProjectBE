@@ -11,6 +11,7 @@ using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
+using System.Threading;
 
 namespace Application.Services
 {
@@ -286,20 +287,43 @@ namespace Application.Services
             //return response;
         }
 
-        public async Task<ServiceResponse<PaginationModel<Project>>> GetProjectsPaging(int pageNumber, int pageSize)
+        public async Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber, int pageSize)
         {
-            var response = new ServiceResponse<PaginationModel<Project>>();
+            var response = new ServiceResponse<PaginationModel<ProjectDto>>();
 
             try
             {
                 var (totalRecords, totalPages, projects) = await _unitOfWork.ProjectRepo.GetProjectsPaging(pageNumber, pageSize);
+                var creator = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().CreatorId);
+                var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().MonitorId);
+                var projectDtos = new List<ProjectDto>();
 
-                response.Data = new PaginationModel<Project>
+                foreach (var project in projects)
+                {
+                    var projectDto = new ProjectDto
+                    {
+                        ProjectId = project.ProjectId,
+                        Monitor = monitor?.Fullname ?? "unknown",
+                        Creator = creator?.Fullname ?? "unknown",
+                        Thumbnail = project.Thumbnail,
+                        Backers = project.Pledges.Count(pl => pl.ProjectId == project.ProjectId),
+                        Title = project.Title,
+                        Description = project.Description,
+                        Status = project.Status,
+                        MinimumAmount = project.MinimumAmount,
+                        TotalAmount = project.TotalAmount,
+                        StartDatetime = project.StartDatetime,
+                        EndDatetime = project.EndDatetime
+                    };
+
+                    projectDtos.Add(projectDto);
+                }
+                    response.Data = new PaginationModel<ProjectDto>
                 {
                     Page = pageNumber,
                     TotalPage = totalPages,
                     TotalRecords = totalRecords,
-                    ListData = projects
+                    ListData = projectDtos
                 };
 
                 response.Success = true;
