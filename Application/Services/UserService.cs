@@ -99,11 +99,26 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                userEntity.Fullname = UpdateUser.Fullname;
-                userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
-                userEntity.Email = UpdateUser.Email;
-                userEntity.Phone = UpdateUser.Phone;
-                userEntity.Bio = UpdateUser.Bio;
+                if (!string.IsNullOrEmpty(UpdateUser.Fullname))
+                {
+                    userEntity.Fullname = UpdateUser.Fullname;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Email))
+                {
+                    userEntity.Email = UpdateUser.Email;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Password))
+                {
+                    userEntity.Password = UpdateUser.Password;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Phone))
+                {
+                    userEntity.Phone = UpdateUser.Phone;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Bio))
+                {
+                    userEntity.Bio = UpdateUser.Bio;
+                }
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
 
                 response.Success = true;

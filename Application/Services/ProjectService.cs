@@ -255,7 +255,7 @@ namespace Application.Services
             try
             {
                 var result = await _unitOfWork.ProjectRepo.GetAllAsync();
-                var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING && p.Status == ProjectEnum.HALTED && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
+                var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING || p.Status == ProjectEnum.HALTED && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
 
                 var responseData = new List<ProjectDto>();
                 foreach (var project in filteredResult)

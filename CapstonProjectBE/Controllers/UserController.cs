@@ -100,7 +100,7 @@ namespace CapstonProjectBE.Controllers
         /// <returns>Returns an action result indicating the success or failure of the update operation.</returns>
         [Authorize(Roles = "Customer, Staff, Admin")]
         [HttpPost("UpdateUser")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDTO UpdateUser)
+        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDTO UpdateUser)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
