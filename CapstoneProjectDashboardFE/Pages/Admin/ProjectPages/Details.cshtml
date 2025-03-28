@@ -1,28 +1,27 @@
 ﻿@page
-@model CapstoneProjectDashboardFE.Pages.Admin.UserPages.DetailsModel
+@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.DetailsModel
 @{
-    ViewData["Title"] = "User Details";
+    ViewData["Title"] = "Project Details";
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
-
 <body>
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
                 <div class="d-flex align-items-center">
-                    <h4 class="card-title">Account Details</h4>
+                    <h4 class="card-title">Project Details</h4>
                 </div>
             </div>
             <div class="card-body">
                 <dl class="row">
-                    <dt class="col-sm-3">User ID:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.UserId</dd>
+                    <dt class="col-sm-3">Project ID:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.ProjectId</dd>
 
-                    <dt class="col-sm-3">Avatar:</dt>
+                    <dt class="col-sm-3">Thumbnail:</dt>
                     <dd class="col-sm-9">
-                        @if (!string.IsNullOrEmpty(Model.UserDetail.Avatar))
+                        @if (!string.IsNullOrEmpty(Model.projectDetail.Thumbnail))
                         {
-                            <img src="@Model.UserDetail.Avatar" alt="User Avatar" class="img-fluid rounded-circle" width="100" height="100" />
+                            <img src="@Model.projectDetail.Thumbnail" alt="User Avatar" class="img-fluid" width="100" height="100" />
                         }
                         else
                         {
@@ -30,23 +29,35 @@
                         }
                     </dd>
 
-                    <dt class="col-sm-3">Email:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.Email</dd>
+                    <dt class="col-sm-3">Monitor:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Monitor</dd>
 
-                    <dt class="col-sm-3">Phone:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.Phone</dd>
+                    <dt class="col-sm-3">Creator:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Creator</dd>
 
-                    <dt class="col-sm-3">Full Name:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.Fullname</dd>
+                    <dt class="col-sm-3">Backers:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Backers</dd>
 
-                    <dt class="col-sm-3">Role:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.Role</dd>
+                    <dt class="col-sm-3">Title:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Title</dd>
 
-                    <dt class="col-sm-3">Bio:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.Bio</dd>
+                    <dt class="col-sm-3">Description:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Description</dd>
 
-                    <dt class="col-sm-3">Created Date:</dt>
-                    <dd class="col-sm-9">@Model.UserDetail.CreatedDatetime</dd>
+                    <dt class="col-sm-3">Status:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.Status</dd>
+
+                    <dt class="col-sm-3">Minimum amount:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.MinimumAmount</dd>
+
+                    <dt class="col-sm-3">Total amount:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.TotalAmount</dd>
+
+                    <dt class="col-sm-3">Start Date:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.StartDatetime</dd>
+
+                    <dt class="col-sm-3">End date:</dt>
+                    <dd class="col-sm-9">@Model.projectDetail.EndDatetime</dd>
                 </dl>
             </div>
             <div class="card-footer">

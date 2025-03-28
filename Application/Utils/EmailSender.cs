@@ -6,6 +6,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using System.Text;
 using System.Threading.Tasks;
+using Domain.Enums;
 
 namespace Application.Utils
 {
@@ -96,7 +97,7 @@ namespace Application.Utils
         public static async Task<bool> SendProjectResponseEmail(
             string toEmail,
             string projectTitle,
-            bool isApproved,
+            ProjectEnum projectStatus,
             string reason
         )
         {
@@ -107,7 +108,7 @@ namespace Application.Utils
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
             message.To.Add(new MailboxAddress("", toEmail));
-            message.Subject = isApproved ? "Project Approved" : "Project Rejected";
+            message.Subject = $"Notification about project {projectTitle}";
             message.Body = new TextPart("html")
             {
                 Text =
@@ -150,8 +151,8 @@ namespace Application.Utils
     </head>
     <body>
         <div class='content'>
-            <h2>Project {(isApproved ? "Approved" : "Rejected")}</h2>
-            <p>Your project <strong>{projectTitle}</strong> has been {(isApproved ? "approved" : "rejected")}.</p>
+            <h2>Project {projectStatus}</h2>
+            <p>Your project <strong>{projectTitle}</strong> has been set {projectStatus}.</p>
             <p>Reason: {reason}</p>
         </div>
     </body>

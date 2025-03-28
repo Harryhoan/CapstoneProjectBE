@@ -2,6 +2,7 @@
 using Application.Services;
 using Application.ViewModels.ProjectDTO;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -122,14 +123,18 @@ namespace CapstonProjectBE.Controllers
 
         [HttpPut("StaffApproveProject")]
         [Authorize(Roles = "Staff, Admin")]
-        public async Task<IActionResult> StaffApproveProject(int projectId, bool isApproved, string reason)
+        public async Task<IActionResult> StaffApproveProject(int projectId, ProjectEnum status, string reason)
         {
+            if (status == ProjectEnum.DELETED)
+            {
+                return BadRequest("Invalid status: DELETED is not allowed.");
+            }
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
             {
                 return Unauthorized();
             }
-            return Ok(await _projectService.StaffApproveAsync(projectId, user.UserId, isApproved, reason));
+            return Ok(await _projectService.StaffApproveAsync(projectId, user.UserId, status, reason));
         }
     }
 }

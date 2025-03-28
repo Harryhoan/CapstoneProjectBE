@@ -1,19 +1,20 @@
 using Application.ServiceResponse;
-using Application.ViewModels.UserDTO;
+using CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO;
 using CapstoneProjectDashboardFE.ModelDTO.FeUserDTO;
+using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 
-namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
+namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
 {
-    public class IndexModel : PageModel
+    public class DetailsModel : PageModel
     {
-        public IList<ResponseUserDTO> UserDTO { get; set; } = new List<ResponseUserDTO>();
+        public ProjectDetailDTO projectDetail {  get; set; } = new ProjectDetailDTO();
         public string Message { get; set; } = default!;
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(int projectId)
         {
             try
             {
@@ -32,21 +33,22 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                    var response = await httpClient.GetAsync("https://marvelous-gentleness-production.up.railway.app/api/User/GetAllUser");
+                    // Append userId as a query parameter
+                    var response = await httpClient.GetAsync($"https://marvelous-gentleness-production.up.railway.app/api/Project/GetProjectById?id={projectId}");
 
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var result = JsonConvert.DeserializeObject<ServiceResponse<List<ResponseUserDTO>>>(content);
+                        var result = JsonConvert.DeserializeObject<ServiceResponse<ProjectDetailDTO>>(content);
 
                         if (result != null && result.Success)
                         {
-                            UserDTO = result.Data ?? new List<ResponseUserDTO>();
+                            projectDetail = result.Data ?? new ProjectDetailDTO();
                             return Page();
                         }
                         else
                         {
-                            Message = result?.Message ?? "Failed to retrieve users.";
+                            Message = result?.Message ?? "Failed to retrieve user details.";
                         }
                     }
                     else
@@ -62,5 +64,6 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
 
             return Page();
         }
+
     }
 }

@@ -24,13 +24,13 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
                 var token = HttpContext.Session.GetString("Token");
                 if (string.IsNullOrEmpty(token))
                 {
-                    return RedirectToPage("/Login");
+                    return RedirectToPage("/Index");
                 }
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                    var response = await httpClient.GetAsync("https://marvelous-gentleness-production.up.railway.app/api/Project/GetAllProject");
+                    var response = await httpClient.GetAsync("https://marvelous-gentleness-production.up.railway.app/api/Project/GetAllProjectByMonitor");
 
                     if (response.IsSuccessStatusCode)
                     {

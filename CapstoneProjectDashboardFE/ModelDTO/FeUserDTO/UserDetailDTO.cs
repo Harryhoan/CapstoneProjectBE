@@ -20,7 +20,7 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeUserDTO
         public string Role { get; set; } = string.Empty;
         [JsonProperty("Bio")]
         public string Bio { get; set; } = string.Empty;
-        [JsonProperty("create-datetime")]
-        public DateTime CreatedDatetime { get; set; }
+        [JsonProperty("created-datetime")]
+        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow;
     }
 }

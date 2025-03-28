@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Runtime.InteropServices;
 using Application.ViewModels;
+using System.Text.Json.Serialization;
 
 namespace CapstonProjectBE
 {
@@ -66,6 +67,7 @@ namespace CapstonProjectBE
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
             builder.Services.AddEndpointsApiExplorer();

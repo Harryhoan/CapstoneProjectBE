@@ -33,35 +33,74 @@ namespace Application.Services
             _cloudinary = new Cloudinary(cloudinaryAccount);
         }
 
-        public async Task<ServiceResponse<ProjectDto>> GetAllProjectByAdminAsync(int userId)
+        public async Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId)
         {
-            var response = new ServiceResponse<ProjectDto>();
+            var response = new ServiceResponse<List<ProjectDto>>();
             try
             {
-                var project = await _unitOfWork.ProjectRepo.GetAllAsync();
-                if (project == null)
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
                 {
-                    response.Success = true;
-                    response.Message = "There are no project here.";
+                    response.Success = false;
+                    response.Message = "User not found.";
                     return response;
                 }
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+
+                IEnumerable<Project> projects;
                 if (user.Role == "Staff")
                 {
-                    var StaffProject = await _unitOfWork.ProjectRepo.GetAllProjectByMonitorIdAsync(userId);
+                    projects = await _unitOfWork.ProjectRepo.GetAllProjectByMonitorIdAsync(userId);
                 }
-                var projectList = _mapper.Map<ProjectDto>(project);
+                else
+                {
+                    projects = await _unitOfWork.ProjectRepo.GetAllAsync();
+                }
+
+                if (projects == null || !projects.Any())
+                {
+                    response.Success = true;
+                    response.Message = "There are no projects here.";
+                    return response;
+                }
+
+                var responseData = new List<ProjectDto>();
+                foreach (var projectItem in projects)
+                {
+                    var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.MonitorId);
+                    var creator = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.CreatorId);
+
+                    var projectDto = new ProjectDto
+                    {
+                        ProjectId = projectItem.ProjectId,
+                        Thumbnail = projectItem.Thumbnail ?? "Null",
+                        Monitor = monitor?.Fullname ?? "Unknown",
+                        CreatorId = projectItem.CreatorId,
+                        Creator = creator?.Fullname ?? "Unknown",
+                        Title = projectItem.Title,
+                        Description = projectItem.Description,
+                        Status = projectItem.Status,
+                        MinimumAmount = projectItem.MinimumAmount,
+                        TotalAmount = projectItem.TotalAmount,
+                        StartDatetime = projectItem.StartDatetime,
+                        EndDatetime = projectItem.EndDatetime,
+                        Backers = projectItem.Pledges.Count(pl => pl.ProjectId == projectItem.ProjectId) // Calculate the total number of backers with valid ProjectId
+                    };
+
+                    responseData.Add(projectDto);
+                }
+                response.Data = responseData;
                 response.Success = true;
-                response.Message = "Get all Project successfully.";
+                response.Message = "Get all projects successfully.";
                 return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Failed to get all project: {ex.Message}";
+                response.Message = $"Failed to get all projects: {ex.Message}";
                 return response;
             }
         }
+
         public async Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto)
         {
             var response = new ServiceResponse<ProjectDto>();
@@ -216,7 +255,7 @@ namespace Application.Services
             try
             {
                 var result = await _unitOfWork.ProjectRepo.GetAllAsync();
-                var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
+                var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING && p.Status == ProjectEnum.HALTED && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
 
                 var responseData = new List<ProjectDto>();
                 foreach (var project in filteredResult)
@@ -522,9 +561,9 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason)
+        public async Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectEnum projectStatus, string reason)
         {
-            var response = new ServiceResponse<string>();
+            var response = new ServiceResponse<ProjectStatusDTO>();
 
             try
             {
@@ -544,6 +583,19 @@ namespace Application.Services
                     return response;
                 }
 
+                if (project.Status == ProjectEnum.ONGOING || projectStatus == ProjectEnum.HALTED || projectStatus == ProjectEnum.INVISIBLE)
+                {
+                    response.Success = false;
+                    response.Message = $"Project has been set as {projectStatus}";
+                    return response;
+                }
+
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
                 if (project.MonitorId != userId && user.Role != "Admin")
                 {
                     response.Success = false;
@@ -558,14 +610,14 @@ namespace Application.Services
                     return response;
                 }
 
-                project.Status = isApproved ? ProjectEnum.ONGOING : ProjectEnum.HALTED;
+                project.Status = projectStatus;
                 project.UpdateDatetime = DateTime.UtcNow;
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
 
                 // Send email notification
-                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title, isApproved, reason);
+                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title, projectStatus, reason);
                 if (!emailSend)
                 {
                     response.Success = false;
@@ -573,8 +625,16 @@ namespace Application.Services
                     return response;
                 }
 
+                var responseData = new ProjectStatusDTO
+                {
+                    projectId = projectId,
+                    Reason = reason,
+                    Status = projectStatus.ToString()
+                };
                 response.Success = true;
-                response.Message = isApproved ? "Project approved successfully." : "Project rejected successfully.";
+                response.Data = responseData;
+                response.Message = "Set Project Status Successfully.";
+
             }
             catch (Exception ex)
             {

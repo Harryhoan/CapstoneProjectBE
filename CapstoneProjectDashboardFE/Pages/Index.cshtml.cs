@@ -33,7 +33,15 @@ namespace CapstoneProjectDashboardFE.Pages
                         HttpContext.Session.SetString("Token", result.Token);
                         HttpContext.Session.SetString("Role", result.Role);
                         //HttpContext.Session.SetInt32("Hint", result.Hint);
-
+                        if (result.Role != "Admin" && result.Role != "Staff")
+                        {
+                            Message = "You are not allow to access.";
+                            return Page();
+                        }
+                        if (result.Role == "Role")
+                        {
+                            return RedirectToPage("/Staff/UserPages/Index");
+                        }
                         return RedirectToPage("/Admin/UserPages/Index");
                     }
                     else

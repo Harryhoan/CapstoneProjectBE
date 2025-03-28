@@ -1,14 +1,14 @@
 ﻿@page
-@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.ProjectIndexModel
+@model CapstoneProjectDashboardFE.Pages.Admin.PledgePages.IndexModel
 @{
-    ViewData["Title"] = "Project Management";
+    ViewData["Title"] = "Pledge Management";
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 <div class="col-md-12">
     <div class="card">
         <div class="card-header">
             <div class="d-flex align-items-center">
-                <h4 class="card-title">Account Manager</h4>
+                <h4 class="card-title">Pledge Manager</h4>
             </div>
         </div>
         <div class="card-body">
@@ -31,47 +31,25 @@
                 <table id="add-row" class="display table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].ProjectId)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].Title)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].Thumbnail)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].Creator)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].Monitor)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].Status)</th>
-                            <th>@Html.DisplayNameFor(model => model.Projects[0].EndDatetime)</th>
+                            <th>@Html.DisplayNameFor(model => model.Pledges[0].PledgeId)</th>
+                            <th>@Html.DisplayNameFor(model => model.Pledges[0].UserId)</th>
+                            <th>@Html.DisplayNameFor(model => model.Pledges[0].ProjectId)</th>
+                            <th>@Html.DisplayNameFor(model => model.Pledges[0].Amount)</th>
                             <th style="width: 10%">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.Projects)
+                        @foreach (var item in Model.Pledges)
                         {
                             <tr>
+                                <td>@Html.DisplayFor(modelItem => item.PledgeId)</td>
+                                <td>@Html.DisplayFor(modelItem => item.UserId)</td>
                                 <td>@Html.DisplayFor(modelItem => item.ProjectId)</td>
-                                <td>@Html.DisplayFor(modelItem => item.Title)</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(item.Thumbnail))
-                                    {
-                                        <img src="@item.Thumbnail" alt="Thumbnail" class="img-thumbnail" width="100" height="100">
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No Thumbnail</span>
-                                    }
-                                </td>
-                                <td>@Html.DisplayFor(modelItem => item.Creator)</td>
-                                <td>@Html.DisplayFor(modelItem => item.Monitor)</td>
-                                <td>@Html.DisplayFor(modelItem => item.Status)</td>
-                                <td>@Html.DisplayFor(modelItem => item.EndDatetime)</td>
-
+                                <td>@Html.DisplayFor(modelItem => item.Amount)</td>
                                 <td>
                                     <div class="form-button-action">
-                                        @* <a type="button" asp-page="./Edit" asp-route-id="@item.ProjectId" data-bs-toggle="tooltip" title="Edit Task" class="btn btn-link btn-primary btn-lg"> *@
-                                        @*     <i class="fa fa-edit"></i> *@
-                                        @* </a> *@
-                                        <a asp-page="./Details" asp-route-projectId="@item.ProjectId" data-bs-toggle="tooltip" title="View Details" class="btn btn-link btn-primary btn-lg">
+                                        <a asp-page="./Details" asp-route-userId="@item.UserId" data-bs-toggle="tooltip" title="View Details" class="btn btn-link btn-primary btn-lg">
                                             <i class="fas fa-info-circle"></i>
-                                        </a>
-                                        <a type="button" asp-page="./Delete" asp-route-id="@item.ProjectId" data-bs-toggle="tooltip" title="Remove" class="btn btn-link btn-danger btn-lg">
-                                            <i class="fa fa-times"></i>
                                         </a>
                                     </div>
                                 </td>
