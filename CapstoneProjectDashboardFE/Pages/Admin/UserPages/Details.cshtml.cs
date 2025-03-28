@@ -10,10 +10,10 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
 {
     public class DetailsModel : PageModel
     {
-        public UserDetailDTO UserDetail {  get; set; } = new UserDetailDTO();
+        public UserDetailDTO UserDetail { get; set; } = new UserDetailDTO();
         public string Message { get; set; } = default!;
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(int userId)
         {
             try
             {
@@ -25,14 +25,15 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
                 var token = HttpContext.Session.GetString("Token");
                 if (string.IsNullOrEmpty(token))
                 {
-                    return RedirectToPage("/Login");
+                    return RedirectToPage("/Index");
                 }
 
                 using (var httpClient = new HttpClient())
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                    var response = await httpClient.GetAsync("https://marvelous-gentleness-production.up.railway.app/api/User/GetAllUser");
+                    // Append userId as a query parameter
+                    var response = await httpClient.GetAsync($"https://marvelous-gentleness-production.up.railway.app/api/User/GetUserByUserId?userId={userId}");
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -46,7 +47,7 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
                         }
                         else
                         {
-                            Message = result?.Message ?? "Failed to retrieve users.";
+                            Message = result?.Message ?? "Failed to retrieve user details.";
                         }
                     }
                     else

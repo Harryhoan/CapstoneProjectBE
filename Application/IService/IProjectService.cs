@@ -1,6 +1,7 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.ProjectDTO;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace Application.IService
@@ -14,10 +15,10 @@ namespace Application.IService
         public Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto);
         public Task<ServiceResponse<UpdateProjectDto>> UpdateProject(int projectId, UpdateProjectDto updateProjectDto);
         public Task<ServiceResponse<ProjectThumbnailDto>> UpdateProjectThumbnail(int projectId, IFormFile thumbnail);
-        public Task<ServiceResponse<string>> StaffApproveAsync(int projectId, int userId, bool isApproved, string reason);
+        public Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectEnum projectStatus, string reason);
         public Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story);
         public Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId);
-        public Task<ServiceResponse<ProjectDto>> GetAllProjectByAdminAsync(int userId);
+        public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId);
         public Task UpdateProjectStatusesAsync();
     }
 }   
