@@ -20,6 +20,9 @@ namespace Application.Services
         private readonly IMapper _mapper;
         private readonly HttpClient _httpClient;
         private readonly Cloudinary _cloudinary;
+        private static int _lastAssignedStaffIndex = -1; // Static variable to keep track of the last assigned staff member
+        private static int _lastStaffCount = 0; // Static variable to keep track of the last staff count
+
         public ProjectService(IUnitOfWork unitOfWork, IMapper mapper, IHttpClientFactory httpClientFactory, IOptions<Cloud> config)
         {
             _unitOfWork = unitOfWork;
@@ -135,14 +138,20 @@ namespace Application.Services
                 if (!staffUsers.Any())
                 {
                     response.Success = false;
-                    response.Message = "No staff users available to assign as monitor.";
+                    response.Message = "No staff available to assign as monitor.";
                     return response;
                 }
-                var random = new Random();
-                var randomStaff = staffUsers[random.Next(staffUsers.Count)];
+                if (staffUsers.Count != _lastStaffCount)
+                {
+                    _lastAssignedStaffIndex = -1;
+                    _lastStaffCount = staffUsers.Count;
+                }
+
+                _lastAssignedStaffIndex = (_lastAssignedStaffIndex + 1) % staffUsers.Count;
+                var assignedStaff = staffUsers[_lastAssignedStaffIndex];
 
 
-                project.MonitorId = randomStaff.UserId;
+                project.MonitorId = assignedStaff.UserId;
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectEnum.INVISIBLE;
@@ -151,7 +160,7 @@ namespace Application.Services
                 var responseData = new ProjectDto
                 {
                     ProjectId = project.ProjectId,
-                    Monitor = randomStaff.Fullname,
+                    Monitor = assignedStaff.Fullname,
                     CreatorId = project.CreatorId,
                     Creator = user.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
                     Title = project.Title,

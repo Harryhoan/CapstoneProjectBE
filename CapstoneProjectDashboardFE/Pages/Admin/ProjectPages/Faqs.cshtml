@@ -1,11 +1,11 @@
 ﻿@page
-@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.RewardsModel
+@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.FaqsModel
 @{
-    ViewData["Title"] = "Project Rewards";
+    ViewData["Title"] = "Project FAQs";
     Layout = "~/Pages/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Project Rewards</h2>
+<h2>Project FAQs</h2>
 
 @if (!string.IsNullOrEmpty(Model.Message))
 {
@@ -15,18 +15,20 @@
 <table class="table table-bordered">
     <thead>
         <tr>
-            <th>Amount</th>
-            <th>Details</th>
-            <th>Created date</th>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Created Date</th>
+            <th>Updated Date</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var reward in Model.Rewards)
+        @foreach (var faq in Model.Faqs)
         {
             <tr>
-                <td>$ @reward.Amount</td>
-                <td>@reward.Details</td>
-                <td>@reward.CreatedDatetime</td>
+                <td>@faq.Question</td>
+                <td>@faq.Answer</td>
+                <td>@faq.CreatedDatetime</td>
+                <td>@faq.UpdatedDatetime</td>
             </tr>
         }
     </tbody>

@@ -17,5 +17,6 @@ namespace Application.IService
         public Task<ServiceResponse<UpdateUserDTO>> UpdateUserAsync(UpdateUserDTO UpdateUser, int userId);
         Task<ServiceResponse<string>> UpdateUserAvatarAsync(int userId, IFormFile avatarFile);
         public Task<ServiceResponse<UserDTO>> GetUserByUserIdByMonitorAsync(int userId);
+        public Task<ServiceResponse<string>> DeleteUserAsync(int userId, int UserDeleteId);
     }
 }
