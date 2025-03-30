@@ -148,5 +148,22 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(new { imageUrl = AuthorizeUser.Avatar });
         }
+
+        [HttpDelete("DeleteUser")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int UserDeleteId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var response = await _userService.DeleteUserAsync(user.UserId, UserDeleteId);
+            if (response.Success == false)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
     }
 }

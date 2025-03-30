@@ -42,8 +42,17 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
+                var existFaq = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                foreach (var item in existFaq)
+                {
+                    if (item.Question == createFAQ.Question)
+                    {
+                        response.Success = false;
+                        response.Message = "This question existed.";
+                        return response;
+                    }
+                }
 
-                
                 var newFAQ = _mapper.Map<FAQ>(createFAQ);
 
                 newFAQ.ProjectId = projectId;
@@ -123,6 +132,34 @@ namespace Application.Services
                 response.Message = "Get Faq by ProjectId successfully.";
                 response.Data = FaqData;
                 return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get Faq: {ex.Message}";
+                return response;
+            }
+        }
+        public async Task<ServiceResponse<List<FaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
+        {
+            var response = new ServiceResponse<List<FaqDto>>();
+            try
+            {
+                var faqs = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                if (faqs == null)
+                {
+                    response.Success = true;
+                    response.Message = "No Faq found for this project.";
+                    return response;
+                }
+
+                var responseData = _mapper.Map<List<FaqDto>>(faqs);
+
+                response.Success = true;
+                response.Message = "Get all faq successfully.";
+                response.Data = responseData;
+                return response;
+
             }
             catch (Exception ex)
             {

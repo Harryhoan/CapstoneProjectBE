@@ -169,5 +169,40 @@ namespace Application.Services
             }
             return response;
         }
+        public async Task<ServiceResponse<string>> DeleteUserAsync(int userId, int UserDeleteId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not allow to do this.";
+                    return response;
+                }
+                var DeleteUser = await _unitOfWork.UserRepo.GetByIdAsync(UserDeleteId);
+                if (DeleteUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+
+                DeleteUser.IsDeleted = true;
+                await _unitOfWork.UserRepo.UpdateAsync(DeleteUser);
+
+                response.Success = true;
+                response.Message = "Delete User Successfully";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to delete user: {ex.Message}";
+                return response;
+            }
+        }
     }
 }
