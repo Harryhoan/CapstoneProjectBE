@@ -10,6 +10,7 @@ namespace Application.ServiceResponse
     {
         public T DataToken { get; set; }
         public string? Role { get; set; } = null;
+        public string? Avatar { get; set; } = null;
         public bool Success { get; set; } = true;
         public string? Message { get; set; } = null;
         public string? Error { get; set; } = null;
