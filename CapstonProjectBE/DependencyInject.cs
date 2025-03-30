@@ -28,6 +28,7 @@ namespace CapstonProjectBE
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IPlatformService, PlatformService>();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             services.AddHealthChecks();
