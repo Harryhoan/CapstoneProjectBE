@@ -1,6 +1,7 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.UserDTO;
 using Domain.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +17,6 @@ namespace Application.IService
         public Task<TokenResponse<string>> LoginAsync(LoginUserDTO userObject);
         public Task<User?> GetUserByTokenAsync(ClaimsPrincipal claims);
         public Task<ServiceResponse<string>> ResendConfirmationTokenAsync(string email);
+        public Task<ServiceResponse<RegisterDTO>> CreateStaffAccountAsync(int userId, RegisterDTO register);
     }
 }

@@ -62,7 +62,10 @@
             </div>
             <div class="card-footer">
                 <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+                <a asp-page="./Rewards" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-primary">View Rewards</a>
+                <a asp-page="./Faqs" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View FAQs</a>
             </div>
+
         </div>
     </div>
 

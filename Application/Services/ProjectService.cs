@@ -11,7 +11,6 @@ using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
-using System.Threading;
 
 namespace Application.Services
 {
@@ -488,15 +487,13 @@ namespace Application.Services
 
                 if (thumbnail.Length > 0)
                 {
-                    using (var stream = thumbnail.OpenReadStream())
+                    using var stream = thumbnail.OpenReadStream();
+                    var uploadParams = new ImageUploadParams()
                     {
-                        var uploadParams = new ImageUploadParams()
-                        {
-                            File = new FileDescription(thumbnail.FileName, stream),
-                            Transformation = new Transformation().Crop("fill").Gravity("face")
-                        };
-                        uploadResult = await _cloudinary.UploadAsync(uploadParams);
-                    }
+                        File = new FileDescription(thumbnail.FileName, stream),
+                        Transformation = new Transformation().Crop("fill").Gravity("face")
+                    };
+                    uploadResult = await _cloudinary.UploadAsync(uploadParams);
                 }
 
                 if (uploadResult.Url == null)
@@ -644,32 +641,6 @@ namespace Application.Services
             }
 
             return response;
-        }
-
-
-        public async Task UpdateProjectStatusesAsync()
-        {
-            try
-            {
-                var projects = await _unitOfWork.ProjectRepo.GetAllAsync();
-                var currentDate = DateTime.UtcNow;
-
-                foreach (var project in projects)
-                {
-                    if (project.Status == ProjectEnum.ONGOING && project.EndDatetime <= currentDate)
-                    {
-                        project.Status = ProjectEnum.HALTED;
-                        project.UpdateDatetime = currentDate;
-                        await _unitOfWork.ProjectRepo.UpdateProject(project.ProjectId, project);
-                    }
-                }
-
-                await _unitOfWork.SaveChangeAsync();
-            }
-            catch (Exception ex)
-            {
-                // Log the exception or handle it as needed
-            }
         }
     }
 }

@@ -56,7 +56,7 @@ namespace CapstonProjectBE.Controllers
         /// 'Customer' or 'Admin' roles.
         /// </summary>
         /// <returns>Returns an IActionResult indicating the success or failure of the user retrieval operation.</returns>
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Customer, Staff, Admin")]
         [HttpGet("GetUserById")]
         public async Task<IActionResult> GetUserById()
         {

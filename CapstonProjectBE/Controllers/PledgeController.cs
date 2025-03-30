@@ -1,4 +1,5 @@
-﻿using Application.IService;
+﻿using Application;
+using Application.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +11,13 @@ namespace CapstonProjectBE.Controllers
     public class PledgeController : ControllerBase
     {
         private readonly IPledgeService _pledgeService;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IAuthenService _authenService;
-        public PledgeController(IPledgeService pledgeService, IAuthenService authenService)
+        public PledgeController(IPledgeService pledgeService, IAuthenService authenService, IUnitOfWork unitOfWork)
         {
             _pledgeService = pledgeService;
             _authenService = authenService;
+            _unitOfWork = unitOfWork;
         }
 
         [HttpGet("GetAllPledges")]
@@ -66,6 +69,21 @@ namespace CapstonProjectBE.Controllers
                 return BadRequest();
             }
             return Ok(result);
+        }
+
+        [HttpGet("ExportPledgesToExcel/{projectId}")]
+        [Authorize(Roles = "Customer, Admin, Staff")]
+        public async Task<IActionResult> ExportPledgesToExcel(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) return Unauthorized();
+
+            var result = await _pledgeService.ExportPledgeToExcelByProjectId(projectId);
+            if (!result.Success || string.IsNullOrEmpty(result.Data)) return BadRequest(result.Message);
+            var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
+            if(project == null) return BadRequest("Project not found");
+            var fileBytes = Convert.FromBase64String(result.Data);
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Project_{project.Title}.xlsx");
         }
     }
 }

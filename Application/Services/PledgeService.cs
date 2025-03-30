@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using AutoMapper;
+using ClosedXML.Excel;
 using Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -115,6 +116,79 @@ namespace Application.Services
                 response.Message = $"Failed to get pledge: {ex.Message}";
                 return response;
             }
+        }
+        public async Task<ServiceResponse<string>> ExportPledgeToExcelByProjectId(int projectId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                if (pledges == null || !pledges.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No pledges found for the specified project.";
+                    return response;
+                }
+
+                // Dictionary to cache user data and reduce redundant calls
+                var userCache = new Dictionary<int, (string Username, string Email)>();
+
+                using (var workbook = new XLWorkbook())
+                {
+                    var worksheet = workbook.Worksheets.Add("Pledges");
+                    var currentRow = 1;
+
+                    // Add headers
+                    worksheet.Cell(currentRow, 1).Value = "Pledge ID";
+                    worksheet.Cell(currentRow, 2).Value = "Username";
+                    worksheet.Cell(currentRow, 3).Value = "Email"; // New column for Email
+                    worksheet.Cell(currentRow, 4).Value = "Amount";
+                    worksheet.Cell(currentRow, 5).Value = "Status";
+
+                    // Add pledge data
+                    foreach (var pledge in pledges)
+                    {
+                        currentRow++;
+
+                        // Get or retrieve user data (username & email)
+                        if (!userCache.TryGetValue(pledge.UserId, out var userData))
+                        {
+                            var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
+                            var username = user?.Fullname ?? "Unknown"; // Replace with actual username property
+                            var email = user?.Email ?? "Unknown"; // Replace with actual email property
+                            userData = (username, email);
+                            userCache[pledge.UserId] = userData;
+                        }
+
+                        worksheet.Cell(currentRow, 1).Value = pledge.PledgeId;
+                        worksheet.Cell(currentRow, 2).Value = userData.Username; // Use fetched username
+                        worksheet.Cell(currentRow, 3).Value = userData.Email; // Use fetched email
+                        worksheet.Cell(currentRow, 4).Value = pledge.Amount;
+
+                        var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                        var status = pledgeDetails.FirstOrDefault()?.Status ?? "Unknown";
+                        worksheet.Cell(currentRow, 5).Value = status;
+                    }
+
+                    // Save the workbook to a memory stream
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        var content = stream.ToArray();
+                        var base64 = Convert.ToBase64String(content);
+                        response.Data = base64;
+                    }
+                }
+
+                response.Success = true;
+                response.Message = "Pledges exported to Excel successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to export pledges to Excel: {ex.Message}";
+            }
+            return response;
         }
     }
 }
