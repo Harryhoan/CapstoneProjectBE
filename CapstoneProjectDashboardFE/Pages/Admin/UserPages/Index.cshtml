@@ -28,6 +28,27 @@
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
+                        <div class="modal-body">
+                            <form id="createAccountForm">
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Password</label>
+                                    <input type="password" class="form-control" id="password" name="password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirm-password">Confirm Password</label>
+                                    <input type="password" class="form-control" id="confirm-password" name="confirm-password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fullname">Full Name</label>
+                                    <input type="text" class="form-control" id="fullname" name="fullname" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Create Account</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -58,9 +79,6 @@
                                 <td>@Html.DisplayFor(modelItem => item.Role)</td>
                                 <td>
                                     <div class="form-button-action">
-                                        @* <a type="button" asp-page="./Edit" asp-route-id="@item.UserId" data-bs-toggle="tooltip" title="Edit Task" class="btn btn-link btn-primary btn-lg"> *@
-                                        @*     <i class="fa fa-edit"></i> *@
-                                        @* </a> *@
                                         <a asp-page="./Details" asp-route-userId="@item.UserId" data-bs-toggle="tooltip" title="View Details" class="btn btn-link btn-primary btn-lg">
                                             <i class="fas fa-info-circle"></i>
                                         </a>
@@ -148,54 +166,56 @@
         lineColor: "#ffa534",
         fillColor: "rgba(255, 165, 52, .14)",
     });
-</script>
+    function getCookie(name) {
+        let matches = document.cookie.match(new RegExp(
+            "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+        ));
+        return matches ? decodeURIComponent(matches[1]) : null;
+    }
 
-<script>
-    $(document).ready(function () {
-        $("#basic-datatables").DataTable({});
-
-        $("#multi-filter-select").DataTable({
-            pageLength: 5,
-            initComplete: function () {
-                this.api()
-                    .columns()
-                    .every(function () {
-                        var column = this;
-                        var select = $(
-                            '<select class="form-select"><option value=""></option></select>'
-                        )
-                            .appendTo($(column.footer()).empty())
-                            .on("change", function () {
-                                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-
-                                column
-                                    .search(val ? "^" + val + "$" : "", true, false)
-                                    .draw();
-                            });
-
-                        column
-                            .data()
-                            .unique()
-                            .sort()
-                            .each(function (d, j) {
-                                select.append(
-                                    '<option value="' + d + '">' + d + "</option>"
-                                );
-                            });
-                    });
-            },
-        });
-
-        // Add Row
-        $("#add-row").DataTable({
-            pageLength: 5,
-        });
-
-        var action =
-            '<td> <div class="form-button-action"> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-primary btn-lg" data-original-title="Edit Task"> <i class="fa fa-edit"></i> </button> <button type="button" data-bs-toggle="tooltip" title="" class="btn btn-link btn-danger" data-original-title="Remove"> <i class="fa fa-times"></i> </button> </div> </td>';
+        $(document).ready(function () {
+        $("#add-row").DataTable({ pageLength: 5 });
 
         $("#addRowButton").click(function () {
             $("#addRowModal").modal("hide");
+        });
+
+        // Handle form submission
+        $("#createAccountForm").submit(function (event) {
+            event.preventDefault();
+
+            var formData = {
+                email: $("#email").val(),
+                password: $("#password").val(),
+                "confirm-password": $("#confirm-password").val(), // FIXED: No hyphen
+                fullname: $("#fullname").val()
+            };
+
+            var token = sessionStorage.getItem("AuthToken") || getCookie("AuthToken"); // Get token from session or cookie
+
+            if (!token) {
+                alert("Authentication token is missing! Please log in again.");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "https://marvelous-gentleness-production.up.railway.app/api/Authentication/CreateStaff", // FIXED: Update backend API URL
+                data: JSON.stringify(formData),
+                contentType: "application/json",
+                headers: {
+                    "Authorization": "Bearer " + token
+                },
+                success: function (response) {
+                    alert("Account created successfully!");
+                    $("#addRowModal").modal("hide");
+                    location.reload(); // Reload to refresh user list
+                },
+                error: function (xhr) {
+                    let errorMessage = xhr.responseText ? JSON.parse(xhr.responseText).message : "An error occurred";
+                    alert("Error: " + errorMessage);
+                }
+            });
         });
     });
 </script>

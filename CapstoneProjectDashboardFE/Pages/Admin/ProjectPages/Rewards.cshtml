@@ -1,0 +1,35 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.RewardsModel
+@{
+    ViewData["Title"] = "Project Rewards";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Project Rewards</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-danger">@Model.Message</div>
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var reward in Model.Rewards)
+        {
+            <tr>
+                <td>@reward.Amount</td>
+                <td>@reward.Details</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-page="./Details" asp-route-projectId="@Request.Query["projectId"]" class="btn btn-secondary">Back to Details</a>

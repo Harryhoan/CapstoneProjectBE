@@ -23,7 +23,7 @@ namespace Infrastructure.Repositories
         {
             return await _context.Pledges.FindAsync(id);
         }
-        public async Task<Pledge> GetPledgeByUserIdAndProjectIdAsync(int userId, int projectId)
+        public async Task<Pledge?> GetPledgeByUserIdAndProjectIdAsync(int userId, int projectId)
         {
             return await _context.Pledges
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
@@ -36,6 +36,10 @@ namespace Infrastructure.Repositories
         public async Task<List<Pledge>> GetPledgeByUserIdAsync(int userId)
         {
             return await _context.Pledges.Where(p => p.UserId == userId).ToListAsync();
+        }
+        public async Task<List<Pledge>> GetPledgeByProjectIdAsync(int projectId)
+        {
+            return await _context.Pledges.Where(p => p.ProjectId == projectId).ToListAsync();
         }
     }
 }

@@ -211,5 +211,53 @@ namespace Application.Services
             }
             return response;
         }
+        public async Task<ServiceResponse<RegisterDTO>> CreateStaffAccountAsync(int userId, RegisterDTO register)
+        {
+            var response = new ServiceResponse<RegisterDTO>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not allowed.";
+                    return response;
+                }
+                var existEmail = await _unitOfWork.UserRepo.CheckEmailAddressExisted(register.Email);
+                if (existEmail)
+                {
+                    response.Success = false;
+                    response.Message = "Email is already existed";
+                    return response;
+                }
+                var staffAccount = _mapper.Map<User>(register);
+                staffAccount.Role = "Staff";
+                staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
+                staffAccount.CreatedDatetime = DateTime.UtcNow;
+
+                await _unitOfWork.UserRepo.AddAsync(staffAccount);
+
+                var token = new Token
+                {
+                    TokenValue = "success",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow,
+                    Type = "confirmation",
+                    UserId = staffAccount.UserId
+                };
+
+                await _unitOfWork.TokenRepo.AddAsync(token);
+
+                response.Success = true;
+                response.Message = "Staff account created successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create account: {ex.Message}";
+                return response;
+            }
+        }
     }
 }

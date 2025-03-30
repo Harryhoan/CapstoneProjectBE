@@ -19,6 +19,5 @@ namespace Application.IService
         public Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story);
         public Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId);
         public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId);
-        public Task UpdateProjectStatusesAsync();
     }
 }   

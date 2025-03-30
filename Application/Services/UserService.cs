@@ -109,7 +109,7 @@ namespace Application.Services
                 }
                 if (!string.IsNullOrEmpty(UpdateUser.Password))
                 {
-                    userEntity.Password = UpdateUser.Password;
+                    userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
                 }
                 if (!string.IsNullOrEmpty(UpdateUser.Phone))
                 {

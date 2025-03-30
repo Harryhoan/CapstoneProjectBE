@@ -33,6 +33,14 @@ namespace CapstoneProjectDashboardFE.Pages
                         HttpContext.Session.SetString("Token", result.Token);
                         HttpContext.Session.SetString("Role", result.Role);
                         //HttpContext.Session.SetInt32("Hint", result.Hint);
+
+                        Response.Cookies.Append("AuthToken", result.Token, new CookieOptions
+                        {
+                            HttpOnly = false, // Change to true if frontend should not access directly
+                            Secure = true,    // Use only with HTTPS
+                            SameSite = SameSiteMode.Strict
+                        });
+
                         if (result.Role != "Admin" && result.Role != "Staff")
                         {
                             Message = "You are not allow to access.";
