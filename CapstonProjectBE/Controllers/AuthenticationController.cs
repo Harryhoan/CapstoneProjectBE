@@ -72,6 +72,7 @@ namespace CapstonProjectBE.Controllers
                         message = result.Message,
                         token = result.DataToken,
                         role = result.Role,
+                        avatar = result.Avatar,
                         hint = result.HintId,
                     }
                 );
