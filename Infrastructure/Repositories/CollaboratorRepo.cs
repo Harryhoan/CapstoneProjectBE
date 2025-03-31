@@ -23,5 +23,10 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.Collaborators.SingleOrDefaultAsync(c => c.UserId == userId && c.ProjectId == projectId);
         }
+        public async Task<Collaborator?> GetCollaboratorByUserIdAndProjectIdAsNoTracking(int userId, int projectId)
+        {
+            return await _dbContext.Collaborators.AsNoTracking().SingleOrDefaultAsync(c => c.UserId == userId && c.ProjectId == projectId);
+        }
+
     }
 }

@@ -68,6 +68,7 @@ namespace CapstonProjectBE
                 {
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
+            builder.Services.AddHostedService<Background>();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddCors(options =>
             {

@@ -10,5 +10,6 @@ namespace Application.IRepositories
     public interface ICollaboratorRepo : IGenericRepo<Collaborator>
     {
         public Task<Collaborator?> GetCollaboratorByUserIdAndProjectId(int userId, int projectId);
+        public Task<Collaborator?> GetCollaboratorByUserIdAndProjectIdAsNoTracking(int userId, int projectId);
     }
 }

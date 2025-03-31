@@ -51,10 +51,10 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (user.Role != "Staff" && user.Role != "Admin")
+                if (user.Role != "Staff" && user.Role != "Admin" && user.UserId != project.CreatorId)
                 {
                     response.Success = false;
-                    response.Message = "You are not allow to do this method";
+                    response.Message = "You are not allowed to do this method";
                     return response;
                 }
                 if (project.Status == ProjectEnum.DELETED)
