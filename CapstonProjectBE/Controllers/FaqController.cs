@@ -1,4 +1,5 @@
 ﻿using Application.IService;
+using Application.ServiceResponse;
 using Application.ViewModels.FaqDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +14,17 @@ namespace CapstonProjectBE.Controllers
     {
         private readonly IFAQService _faqService;
         private readonly IAuthenService _authenService;
-        public FaqController(IFAQService faqService)
+        public FaqController(IFAQService faqService, IAuthenService authenService)
         {
             _faqService = faqService;
+            _authenService = authenService;
+        }
+
+        [HttpGet("GetFaqByProjectId")]
+        [AllowAnonymous]
+        public async Task<ServiceResponse<List<FaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
+        {
+            return await _faqService.GetAllFaqByProjectIdAsync(projectId);
         }
 
         [HttpGet("GetFaqProjectId")]
@@ -30,7 +39,8 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.GetFaqByProjectId(user.UserId, projectId));
         }
         [HttpPost("AddFaq")]
-        public async Task<IActionResult> AddFaq(int projectId, FaqDto createFaq)
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> AddFaq(int projectId,[FromForm] FaqDto createFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -40,7 +50,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.AddFaq(user.UserId, projectId, createFaq));
         }
         [HttpPut("UpdateFaq")]
-        public async Task<IActionResult> UpdateFaq(int projectId, string question, FaqDto updateFaq)
+        public async Task<IActionResult> UpdateFaq(int projectId, string question,[FromForm] FaqDto updateFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -49,7 +59,8 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(await _faqService.UpdateFaq(user.UserId, projectId, question, updateFaq));
         }
-        [HttpDelete]
+        [HttpDelete("DeleteFaq")]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> DeleteFaq(int projectId, string question)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

@@ -113,10 +113,12 @@ namespace Application.Services
                 }
                 var auth = userLogin.Role;
                 var userId = userLogin.UserId;
+                var avatar = userLogin.Avatar;
                 var tokenJWT = userLogin.GenerateJsonWebToken(_config, _config.JWTSection.SecretKey, DateTime.Now);
                 response.Success = true;
                 response.Message = "Login successfully";
                 response.DataToken = tokenJWT;
+                response.Avatar = avatar;
                 response.Role = auth;
                 response.HintId = userId;
             }
@@ -136,23 +138,19 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<User> GetUserByTokenAsync(ClaimsPrincipal claims)
+        public async Task<User?> GetUserByTokenAsync(ClaimsPrincipal claims)
         {
             if (claims == null)
             {
-                throw new ArgumentNullException("Invalid token");
+                return null;
             }
             var userId = claims.FindFirst("Id")?.Value;
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
             {
-                throw new ArgumentException("No user can be found");
+                return null;
             }
 
             var user = await _unitOfWork.UserRepo.GetByIdAsync(id);
-            if (user == null)
-            {
-                throw new NullReferenceException("No user can be found");
-            }
             return user;
         }
         public async Task<ServiceResponse<string>> ResendConfirmationTokenAsync(string email)
@@ -214,6 +212,54 @@ namespace Application.Services
                 response.ErrorMessages = new List<string> { e.Message };
             }
             return response;
+        }
+        public async Task<ServiceResponse<RegisterDTO>> CreateStaffAccountAsync(int userId, RegisterDTO register)
+        {
+            var response = new ServiceResponse<RegisterDTO>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not allowed.";
+                    return response;
+                }
+                var existEmail = await _unitOfWork.UserRepo.CheckEmailAddressExisted(register.Email);
+                if (existEmail)
+                {
+                    response.Success = false;
+                    response.Message = "Email is already existed";
+                    return response;
+                }
+                var staffAccount = _mapper.Map<User>(register);
+                staffAccount.Role = "Staff";
+                staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
+                staffAccount.CreatedDatetime = DateTime.UtcNow;
+
+                await _unitOfWork.UserRepo.AddAsync(staffAccount);
+
+                var token = new Token
+                {
+                    TokenValue = "success",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow,
+                    Type = "confirmation",
+                    UserId = staffAccount.UserId
+                };
+
+                await _unitOfWork.TokenRepo.AddAsync(token);
+
+                response.Success = true;
+                response.Message = "Staff account created successfully.";
+                return response;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create account: {ex.Message}";
+                return response;
+            }
         }
     }
 }

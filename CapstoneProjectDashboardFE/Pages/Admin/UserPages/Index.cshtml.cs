@@ -1,55 +1,66 @@
+using Application.ServiceResponse;
 using Application.ViewModels.UserDTO;
+using CapstoneProjectDashboardFE.ModelDTO.FeUserDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
+using System.Net.Http.Headers;
 
 namespace CapstoneProjectDashboardFE.Pages.Admin.UserPages
 {
     public class IndexModel : PageModel
     {
-        public IList<UserDTO> UserDTO { get; set; } = new List<UserDTO>();
+        public IList<ResponseUserDTO> UserDTO { get; set; } = new List<ResponseUserDTO>();
         public string Message { get; set; } = default!;
+
         public async Task<IActionResult> OnGetAsync()
         {
             try
             {
-                if(TempData["Message"] != null)
+                if (TempData["Message"] != null)
                 {
                     Message = TempData["Message"].ToString();
                 }
+
                 var token = HttpContext.Session.GetString("Token");
                 if (string.IsNullOrEmpty(token))
                 {
-                    return RedirectToPage("/Login");
+                    return RedirectToPage("/Index");
                 }
+
                 using (var httpClient = new HttpClient())
                 {
-                    httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                    var query = new List<string>();
-
-
-                    var queryString = string.Join("&", query);
                     var response = await httpClient.GetAsync("https://marvelous-gentleness-production.up.railway.app/api/User/GetAllUser");
 
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var result = JsonConvert.DeserializeObject<List<UserDTO>>(content);
-                        UserDTO = result;
-                        return Page();
+                        var result = JsonConvert.DeserializeObject<ServiceResponse<List<ResponseUserDTO>>>(content);
+
+                        if (result != null && result.Success)
+                        {
+                            UserDTO = result.Data ?? new List<ResponseUserDTO>();
+                            return Page();
+                        }
+                        else
+                        {
+                            Message = result?.Message ?? "Failed to retrieve users.";
+                        }
                     }
                     else
                     {
-                        return RedirectToPage("/Index");
+                        Message = $"Error: {response.StatusCode}";
                     }
                 }
             }
             catch (Exception ex)
             {
                 Message = ex.Message;
-                return Page();
             }
+
+            return Page();
         }
     }
 }

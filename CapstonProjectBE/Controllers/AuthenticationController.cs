@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowAll")]
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
@@ -70,6 +72,7 @@ namespace CapstonProjectBE.Controllers
                         message = result.Message,
                         token = result.DataToken,
                         role = result.Role,
+                        avatar = result.Avatar,
                         hint = result.HintId,
                     }
                 );
@@ -94,6 +97,21 @@ namespace CapstonProjectBE.Controllers
             {
                 return Ok(result);
             }
+        }
+
+        [HttpPost("CreateStaff")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateStaffAccount(RegisterDTO register)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+
+            if (user == null) return BadRequest(); 
+
+            var result = await _authenService.CreateStaffAccountAsync(user.UserId, register);
+
+            if (!result.Success) return BadRequest(result);
+
+            return Ok(result);
         }
     }
 }

@@ -1,0 +1,37 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.FaqsModel
+@{
+    ViewData["Title"] = "Project FAQs";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Project FAQs</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-danger">@Model.Message</div>
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Question</th>
+            <th>Answer</th>
+            <th>Created Date</th>
+            <th>Updated Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var faq in Model.Faqs)
+        {
+            <tr>
+                <td>@faq.Question</td>
+                <td>@faq.Answer</td>
+                <td>@faq.CreatedDatetime</td>
+                <td>@faq.UpdatedDatetime</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-page="./Details" asp-route-projectId="@Request.Query["projectId"]" class="btn btn-secondary">Back to Details</a>

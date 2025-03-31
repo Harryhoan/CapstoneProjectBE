@@ -51,6 +51,27 @@ namespace Application.Services
             }
             return response;
         }
+        public async Task<ServiceResponse<UserDTO>> GetUserByUserIdByMonitorAsync(int userId)
+        {
+            var response = new ServiceResponse<UserDTO>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                response.Data = _mapper.Map<UserDTO>(user);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
         public async Task<ServiceResponse<IEnumerable<UserDTO>>> GetAllUserAsync()
         {
             var response = new ServiceResponse<IEnumerable<UserDTO>>();
@@ -78,11 +99,26 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                userEntity.Fullname = UpdateUser.Fullname;
-                userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
-                userEntity.Email = UpdateUser.Email;
-                userEntity.Phone = UpdateUser.Phone;
-                userEntity.Bio = UpdateUser.Bio;
+                if (!string.IsNullOrEmpty(UpdateUser.Fullname))
+                {
+                    userEntity.Fullname = UpdateUser.Fullname;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Email))
+                {
+                    userEntity.Email = UpdateUser.Email;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Password))
+                {
+                    userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Phone))
+                {
+                    userEntity.Phone = UpdateUser.Phone;
+                }
+                if (!string.IsNullOrEmpty(UpdateUser.Bio))
+                {
+                    userEntity.Bio = UpdateUser.Bio;
+                }
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
 
                 response.Success = true;
@@ -132,6 +168,41 @@ namespace Application.Services
                 response.Message = ex.Message;
             }
             return response;
+        }
+        public async Task<ServiceResponse<string>> DeleteUserAsync(int userId, int UserDeleteId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user.Role != "Admin")
+                {
+                    response.Success = false;
+                    response.Message = "You are not allow to do this.";
+                    return response;
+                }
+                var DeleteUser = await _unitOfWork.UserRepo.GetByIdAsync(UserDeleteId);
+                if (DeleteUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+
+                DeleteUser.IsDeleted = true;
+                await _unitOfWork.UserRepo.UpdateAsync(DeleteUser);
+
+                response.Success = true;
+                response.Message = "Delete User Successfully";
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to delete user: {ex.Message}";
+                return response;
+            }
         }
     }
 }

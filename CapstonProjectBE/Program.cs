@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Runtime.InteropServices;
 using Application.ViewModels;
+using System.Text.Json.Serialization;
 
 namespace CapstonProjectBE
 {
@@ -66,6 +67,7 @@ namespace CapstonProjectBE
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
             builder.Services.AddHostedService<Background>();
@@ -144,6 +146,7 @@ namespace CapstonProjectBE
                 });
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
                 c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement()
                 {
@@ -180,10 +183,9 @@ namespace CapstonProjectBE
             //var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
             //builder.WebHost.UseUrls($"http://*:{port}");
 
-
-            ////Get swagger.json following root directory 
+            ////Get swagger.json following root directory
             //app.UseSwagger(options => { options.RouteTemplate = "{documentName}/swagger.json"; });
-            ////Load swagger.json following root directory 
+            ////Load swagger.json following root directory
             //app.UseSwaggerUI(c => { c.SwaggerEndpoint("/v1/swagger.json", "GameMkt.API V1"); c.RoutePrefix = string.Empty; });
             //#endregion
 

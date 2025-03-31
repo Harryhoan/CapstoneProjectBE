@@ -1,0 +1,74 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.UserPages.DetailsModel
+@{
+    ViewData["Title"] = "User Details";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<body>
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title">Account Details</h4>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">User ID:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.UserId</dd>
+
+                    <dt class="col-sm-3">Avatar:</dt>
+                    <dd class="col-sm-9">
+                        @if (!string.IsNullOrEmpty(Model.UserDetail.Avatar))
+                        {
+                            <img src="@Model.UserDetail.Avatar" alt="User Avatar" class="img-fluid rounded-circle" width="100" height="100" />
+                        }
+                        else
+                        {
+                            <span>No Avatar</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-3">Email:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.Email</dd>
+
+                    <dt class="col-sm-3">Phone:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.Phone</dd>
+
+                    <dt class="col-sm-3">Full Name:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.Fullname</dd>
+
+                    <dt class="col-sm-3">Role:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.Role</dd>
+
+                    <dt class="col-sm-3">Bio:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.Bio</dd>
+
+                    <dt class="col-sm-3">Created Date:</dt>
+                    <dd class="col-sm-9">@Model.UserDetail.CreatedDatetime</dd>
+                </dl>
+            </div>
+            <div class="card-footer">
+                <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/adminAssets/assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/popper.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/bootstrap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart.js/chart.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart-circle/circles.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/datatables/datatables.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/world.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+    <script src="~/adminAssets/assets/js/kaiadmin.min.js"></script>
+    <script src="~/adminAssets/assets/js/setting-demo.js"></script>
+    <script src="~/adminAssets/assets/js/demo.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/webfont/webfont.min.js"></script>
+</body>

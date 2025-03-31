@@ -51,8 +51,12 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(response);
         }
-
-        [Authorize(Roles = "Customer, Admin")]
+        /// <summary>
+        /// Retrieves user information based on the authenticated user's token. Access is restricted to users with
+        /// 'Customer' or 'Admin' roles.
+        /// </summary>
+        /// <returns>Returns an IActionResult indicating the success or failure of the user retrieval operation.</returns>
+        [Authorize(Roles = "Customer, Staff, Admin")]
         [HttpGet("GetUserById")]
         public async Task<IActionResult> GetUserById()
         {
@@ -68,10 +72,35 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(response);
         }
-
-        [Authorize(Roles = "Customer")]
+        /// <summary>
+        /// Retrieves user information based on a specified identifier for authorized staff or admin users.
+        /// </summary>
+        /// <param name="userId">The identifier used to look up the user in the system.</param>
+        /// <returns>Returns an action result indicating the success or failure of the user retrieval operation.</returns>
+        [Authorize(Roles = "Staff, Admin")]
+        [HttpGet("GetUserByUserId")]
+        public async Task<IActionResult> GetUserByUserIdByMonitor(int userId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var response = await _userService.GetUserByIdAsync(userId);
+            if (response.Success == false)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+        /// <summary>
+        /// Handles the update of user information based on the provided data and the authenticated user's context.
+        /// </summary>
+        /// <param name="UpdateUser">Contains the new user information to be updated in the system.</param>
+        /// <returns>Returns an action result indicating the success or failure of the update operation.</returns>
+        [Authorize(Roles = "Customer, Staff, Admin")]
         [HttpPost("UpdateUser")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDTO UpdateUser)
+        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDTO UpdateUser)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -118,6 +147,23 @@ namespace CapstonProjectBE.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { imageUrl = AuthorizeUser.Avatar });
+        }
+
+        [HttpDelete("DeleteUser")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int UserDeleteId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var response = await _userService.DeleteUserAsync(user.UserId, UserDeleteId);
+            if (response.Success == false)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
         }
     }
 }

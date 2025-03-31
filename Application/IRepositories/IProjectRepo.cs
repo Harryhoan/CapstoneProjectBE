@@ -10,5 +10,6 @@ namespace Application.IRepositories
         Task<int> DeleteProject(int id);
         Task<int> UpdateProject(int id, Project project);   
         Task<List<Project>> GetProjectByUserIdAsync(int userId);
+        Task<List<Project>> GetAllProjectByMonitorIdAsync(int userId);
     }
 }

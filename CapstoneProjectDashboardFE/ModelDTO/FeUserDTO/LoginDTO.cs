@@ -1,8 +1,12 @@
-﻿namespace CapstoneProjectDashboardFE.ModelDTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CapstoneProjectDashboardFE.ModelDTO.FeUserDTO
 {
     public class LoginModel
     {
+        [Required(ErrorMessage = "Email is required")]
         public string Username { get; set; }
+        [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
     }
     public class LoginResponseModel
