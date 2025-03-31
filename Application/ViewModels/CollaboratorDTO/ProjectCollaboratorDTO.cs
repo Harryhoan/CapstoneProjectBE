@@ -1,5 +1,4 @@
 ﻿using Application.ViewModels.ProjectDTO;
-using Application.ViewModels.UserDTO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,12 +7,11 @@ using System.Threading.Tasks;
 
 namespace Application.ViewModels.CollaboratorDTO
 {
-    public class CollaboratorDTO
+    public class ProjectCollaboratorDTO
     {
         public int UserId { get; set; }
         public int ProjectId { get; set; }
         public string Role { get; set; } = string.Empty;
-        public ProjectDto Project {get; set;} = new ProjectDto();
-        public PostUserDTO User { get; set; } = new PostUserDTO();
+        public ProjectDto Project { get; set; } = new ProjectDto();
     }
 }

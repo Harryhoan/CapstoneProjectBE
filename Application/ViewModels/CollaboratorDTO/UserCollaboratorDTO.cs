@@ -8,12 +8,11 @@ using System.Threading.Tasks;
 
 namespace Application.ViewModels.CollaboratorDTO
 {
-    public class CollaboratorDTO
+    public class UserCollaboratorDTO
     {
         public int UserId { get; set; }
         public int ProjectId { get; set; }
         public string Role { get; set; } = string.Empty;
-        public ProjectDto Project {get; set;} = new ProjectDto();
         public PostUserDTO User { get; set; } = new PostUserDTO();
     }
 }

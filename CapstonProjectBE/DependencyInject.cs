@@ -3,6 +3,7 @@ using Application.IService;
 using Application.Services;
 using Application.Utils.Vnpay;
 using Infrastructure;
+using Infrastructure.Repositories;
 
 namespace CapstonProjectBE
 {
@@ -27,6 +28,7 @@ namespace CapstonProjectBE
             services.AddScoped<IPaypalPaymentService,  PaypalPaymentService>();
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<ICollaboratorService, CollaboratorService>();
             services.AddScoped<IFileService, FileService>();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
