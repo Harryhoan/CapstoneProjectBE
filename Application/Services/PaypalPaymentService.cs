@@ -157,11 +157,6 @@ namespace Application.Services
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
-                // Get the exchange rate from VND to USD
-                //decimal exchangeRate = await _exchangeRateService.GetExchangeRateAsync("VND", "USD");
-                //decimal totalAmountUSD = pledge.Amount * exchangeRate;
-                //decimal totalAmountUSD = pledge.Amount;
-
                 string totalAmountInUSD = pledge.Amount.ToString("F2");
 
                 project.TotalAmount -= pledge.Amount;
@@ -208,6 +203,108 @@ namespace Application.Services
             {
                 response.Success = false;
                 response.Message = $"Failed to create payout: {ex.Message}";
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<string>> RefundAllPledgesForProjectAsync(int projectId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+
+                if (project.Status == ProjectEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                if (pledges == null || !pledges.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No pledges found for this project.";
+                    return response;
+                }
+
+                var apiContext = new APIContext(new OAuthTokenCredential(
+                    _configuration["PayPal:ClientId"],
+                    _configuration["PayPal:ClientSecret"]
+                ).GetAccessToken());
+
+                var payoutItems = new List<PayoutItem>();
+
+                foreach (var pledge in pledges)
+                {
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+
+                    foreach (var pledgeDetail in pledgeDetails)
+                    {
+                        if ( pledgeDetail.Status == "pledged")
+                        {
+                            var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
+                            if (user == null)
+                            {
+                                continue;
+                            }
+
+                            string totalAmountInUSD = pledge.Amount.ToString("F2");
+
+                            payoutItems.Add(new PayoutItem
+                            {
+                                recipient_type = PayoutRecipientType.EMAIL,
+                                amount = new Currency
+                                {
+                                    value = totalAmountInUSD,
+                                    currency = "USD"
+                                },
+                                receiver = user.Email,
+                                note = "Refund for your pledge",
+                                sender_item_id = pledge.PledgeId.ToString()
+                            });
+
+                            pledgeDetail.Status = "refunded";
+                            pledge.Amount = 0;
+                            await _unitOfWork.SaveChangeAsync();
+                        }
+                    }
+                    
+                }
+
+                var payout = new Payout
+                {
+                    sender_batch_header = new PayoutSenderBatchHeader
+                    {
+                        sender_batch_id = Guid.NewGuid().ToString(),
+                        email_subject = "You have a refund from your pledge"
+                    },
+                    items = payoutItems
+                };
+
+                var createdPayout = payout.Create(apiContext, false);
+
+                project.TotalAmount = 0;
+                await _unitOfWork.ProjectRepo.UpdateAsync(project);
+
+                response.Success = true;
+                response.Message = "All pledges refunded successfully.";
+            }
+            catch (PayPalException payPalEx)
+            {
+                response.Success = false;
+                response.Message = $"PayPal error: {payPalEx.Message}";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to refund pledges: {ex.Message}";
             }
             return response;
         }

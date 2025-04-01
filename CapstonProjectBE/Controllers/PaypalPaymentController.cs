@@ -81,5 +81,17 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
+
+        [HttpPost("RefundAllPledgesForProject")]
+        [Authorize(Roles = "Staff, Admin")]
+        public async Task<IActionResult> RefundAllPledgesForProjectAsync(int projectId)
+        {
+            var result = await _paypalPaymentService.RefundAllPledgesForProjectAsync(projectId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }
