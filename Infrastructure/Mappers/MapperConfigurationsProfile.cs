@@ -1,7 +1,7 @@
 ﻿using Application.ViewModels.CategoryDTO;
 using Application.ViewModels.ProjectDTO;
 using Application.ViewModels.RewardDTO;
-﻿using Application.ViewModels.CommentDTO;
+using Application.ViewModels.CommentDTO;
 using Application.ViewModels.PostDTO;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
@@ -15,6 +15,7 @@ using Application.ViewModels.ReportDTO;
 using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.FaqDTO;
 using Application.ViewModels.FileDTO;
+using Application.ViewModels.CollaboratorDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -62,6 +63,15 @@ namespace Infrastructure.Mappers
                 .ForMember(dest => dest.Creator, opt => opt.MapFrom(src => src.User.Fullname));
             CreateMap<Category, UpdateCategory>().ReverseMap();
             CreateMap<ProjectCategory, AddCategoryToProject>().ReverseMap();
+            CreateMap<Collaborator, CollaboratorDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Project, opt => opt.MapFrom(src => src.Project));
+
+            CreateMap<Collaborator, ProjectCollaboratorDTO>()
+                .ForMember(dest => dest.Project, opt => opt.MapFrom(src => src.Project));
+
+            CreateMap<Collaborator, UserCollaboratorDTO>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User));
         }
     }
 }

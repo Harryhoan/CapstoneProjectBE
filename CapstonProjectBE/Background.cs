@@ -1,0 +1,130 @@
+﻿
+using Application;
+using Application.IService;
+using Application.Utils;
+using Domain;
+using Domain.Entities;
+using Infrastructure;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using System.Drawing;
+
+namespace CapstonProjectBE
+{
+    public class Background : BackgroundService
+    {
+        private readonly ILogger<Background> _logger;
+        private readonly IServiceProvider _serviceProvider;
+
+        public Background(ILogger<Background> logger, IServiceProvider serviceProvider)
+        {
+            _logger = logger;
+            _serviceProvider = serviceProvider;
+        }
+
+        private async Task updateProductAsync()
+        {
+            if (_serviceProvider != null)
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<ApiContext>();
+
+                if (dbContext != null)
+                {
+                    using var transaction = await dbContext.Database.BeginTransactionAsync();
+                    try
+                    {
+                        var paypalPaymentService = scope.ServiceProvider.GetRequiredService<IPaypalPaymentService>();
+                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !String.IsNullOrEmpty(p.User.Email) &&  p.Status != Domain.Enums.ProjectEnum.DELETED).ToListAsync();
+                        foreach (var project in projects)
+                        {
+                            //What about invisible projects? Can't the money from invisible projects be transferred as well?
+                            if (project.Status == Domain.Enums.ProjectEnum.ONGOING && DateTime.UtcNow >= project.EndDatetime)
+                            {
+                                project.Status = Domain.Enums.ProjectEnum.HALTED;
+                                dbContext.Update(project);
+                                if (paypalPaymentService != null)
+                                {
+                                    if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)
+                                    {
+                                        var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
+                                        foreach (var pledge in pledges)
+                                        {
+                                            await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
+                                        }
+                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
+                                        if (!emailSend)
+                                        {
+
+                                        }
+                                        if (project.Monitor != null && !(String.IsNullOrEmpty(project.Monitor.Email)))
+                                        {
+                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
+                                        }
+                                    }
+                                    else if (project.TotalAmount > 0)
+                                    {
+                                        await paypalPaymentService.TransferPledgeToCreatorAsync(project.CreatorId, project.ProjectId);
+                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, true);
+                                        if (!emailSend)
+                                        {
+
+                                        }
+                                        if (project.Monitor != null && !(String.IsNullOrEmpty(project.Monitor.Email)))
+                                        {
+                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
+                                        }
+                                    }
+                                }
+                            }
+                            var projectCategories = await dbContext.ProjectCategories.Include(pc => pc.Category).ThenInclude(c => c.ParentCategory).Where(pc => pc.ProjectId == project.ProjectId && pc.Category != null && pc.Category.ParentCategory != null && !(pc.Category.ParentCategory.ParentCategoryId > 0)).ToListAsync();
+                            if (projectCategories.Any())
+                            {
+                                foreach (ProjectCategory projectCategory in projectCategories)
+                                {
+                                    if (projectCategory.Category.ParentCategoryId > 0 && projectCategory.Category.ParentCategory != null && projectCategory.Category.ParentCategory.ParentCategoryId > 0 && projectCategories.FirstOrDefault(pc => pc.CategoryId == projectCategory.Category.ParentCategoryId) == null)
+                                    {
+                                        var newProjectCategory = new ProjectCategory
+                                        {
+                                            ProjectId = project.ProjectId,
+                                            CategoryId = (int)projectCategory.Category.ParentCategoryId
+                                        };
+                                        await dbContext.AddAsync(newProjectCategory);
+                                    }
+                                }
+                            }
+                            await dbContext.SaveChangesAsync();
+                        }
+                        await transaction.CommitAsync();
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Background Service is starting.");
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                    await updateProductAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background processing failed");
+                    Console.WriteLine($"Background processing failed: {ex.Message}");
+                }
+                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+            }
+
+        }
+    }
+}

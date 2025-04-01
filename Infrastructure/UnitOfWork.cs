@@ -28,9 +28,13 @@ namespace Infrastructure
         private readonly ICollaboratorRepo _collaboratorRepo;
         private readonly IFileRepo _fileRepo;
         private readonly IProjectCategoryRepo _projectCategoryRepo;
+        private readonly IPlatformRepo _platformRepo;
+        private readonly IProjectPlatformRepo _projectPlatformRepo;
 
         public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo, 
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo, IProjectCategoryRepo projectCategoryRepo)
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo, IProjectCategoryRepo projectCategoryRepo, IPlatformRepo platformRepo, IProjectPlatformRepo projectPlatformRepo)
+
+
         {
             _apiContext = apiContext;
             _tokenRepo = tokenRepo;
@@ -49,6 +53,8 @@ namespace Infrastructure
             _faqRepo = faqRepo;
             _fileRepo = fileRepo;
             _projectCategoryRepo = projectCategoryRepo;
+            _platformRepo = platformRepo;
+            _projectPlatformRepo = projectPlatformRepo;
         }
 
         public IUserRepo UserRepo => _userRepo;
@@ -79,6 +85,8 @@ namespace Infrastructure
         public ICollaboratorRepo CollaboratorRepo => _collaboratorRepo;
         public IFileRepo FileRepo => _fileRepo;
         public IProjectCategoryRepo ProjectCategoryRepo => _projectCategoryRepo;
+        public IPlatformRepo PlatformRepo => _platformRepo;
+        public IProjectPlatformRepo ProjectPlatformRepo => _projectPlatformRepo;
         public async Task<int> SaveChangeAsync()
         {
             try

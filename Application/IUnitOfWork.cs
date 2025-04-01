@@ -25,6 +25,9 @@ namespace Application
         public ICollaboratorRepo CollaboratorRepo { get; }
         public IFileRepo FileRepo { get; }
         public IProjectCategoryRepo ProjectCategoryRepo { get; }
+        public IPlatformRepo PlatformRepo { get; }
+        public IProjectPlatformRepo ProjectPlatformRepo { get; }
+
         public Task<int> SaveChangeAsync();
     }
 }

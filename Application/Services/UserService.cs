@@ -72,20 +72,32 @@ namespace Application.Services
             }
             return response;
         }
-        public async Task<ServiceResponse<IEnumerable<UserDTO>>> GetAllUserAsync()
+        public async Task<ServiceResponse<IEnumerable<UserDTO>>> GetAllUserAsync(int userId)
         {
             var response = new ServiceResponse<IEnumerable<UserDTO>>();
             try
             {
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var users = await _userRepo.GetAllUser();
+                if (user.Role == "Staff")
+                {
+                    var staffUser = _mapper.Map<IEnumerable<UserDTO>>(users).Where(u => u.Role == "Customer");
+                    response.Data = staffUser;
+                    response.Success = true;
+                    response.Message = "Get all user successfully";
+                    return response;
+                }
                 response.Data = _mapper.Map<IEnumerable<UserDTO>>(users);
+                response.Success = true;
+                response.Message = "Get all user successfully";
+                return response;
             }
             catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = ex.Message;
+                return response;
             }
-            return response;
         }
         public async Task<ServiceResponse<UpdateUserDTO>> UpdateUserAsync(UpdateUserDTO UpdateUser, int userId)
         {
