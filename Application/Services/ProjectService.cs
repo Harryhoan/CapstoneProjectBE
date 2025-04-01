@@ -232,7 +232,7 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "User not found.";
-                    return response;    
+                    return response;
                 }
                 if (user.UserId != project.CreatorId)
                 {
@@ -394,7 +394,7 @@ namespace Application.Services
 
                     projectDtos.Add(projectDto);
                 }
-                    response.Data = new PaginationModel<ProjectDto>
+                response.Data = new PaginationModel<ProjectDto>
                 {
                     Page = pageNumber,
                     TotalPage = totalPages,
@@ -483,7 +483,7 @@ namespace Application.Services
         {
             var response = new ServiceResponse<ProjectThumbnailDto>();
             var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
-            if ( project == null)
+            if (project == null)
             {
                 response.Success = false;
                 response.Message = "Project not found.";
@@ -546,7 +546,7 @@ namespace Application.Services
                     response.Message = "User not found.";
                     return response;
                 }
-                
+
                 var projects = await _unitOfWork.ProjectRepo.GetProjectByUserIdAsync(userId);
                 if (projects == null)
                 {
@@ -641,6 +641,70 @@ namespace Application.Services
                 response.Data = responseData;
                 response.Message = "Set Project Status Successfully.";
 
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
+        }
+
+        public async Task<ServiceResponse<ProjectCategoryDto>> AddCategoryToProject(AddCategoryToProject addCategory)
+        {
+            var response = new ServiceResponse<ProjectCategoryDto>();
+
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(addCategory.ProjectId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Error = "Project not found!";
+                    return response;
+                }
+
+                var category = await _unitOfWork.CategoryRepo.GetByIdAsync(addCategory.CategoryId);
+                if (category == null)
+                {
+                    response.Success = false;
+                    response.Error = "Category not found!";
+                    return response;
+                }
+
+                var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+
+                var addCate = _mapper.Map<ProjectCategory>(addCategory);
+                addCate.ProjectId = addCategory.ProjectId;
+
+                await _unitOfWork.ProjectCategoryRepo.AddAsync(addCate);
+
+                var responseData = new ProjectCategoryDto
+                {
+                    CategoryId = addCate.CategoryId,
+                    ParentCategoryId = category.ParentCategoryId,
+                    Name = category.Name,
+                    CategoryDescription = category.Description,
+                    ProjectId = addCategory.ProjectId,
+                    Thumbnail = project.Thumbnail ?? "Null",
+                    Monitor = project.Monitor?.Fullname ?? "Unknown", 
+                    CreatorId = project.CreatorId,
+                    Creator = creator?.Fullname ?? "Unknown",
+                    Backers = project.Pledges?.Count(pl => pl.ProjectId == project.ProjectId) ?? 0,
+                    Title = project.Title,
+                    ProjectDescription = project.Description,
+                    Status = project.Status,
+                    MinimumAmount = project.MinimumAmount,
+                    TotalAmount = project.TotalAmount,
+                    StartDatetime = project.StartDatetime,
+                    EndDatetime = project.EndDatetime,
+                };
+
+                response.Data = responseData;
+                response.Success = true;
+                response.Message = "Category added to project successfully.";
             }
             catch (Exception ex)
             {

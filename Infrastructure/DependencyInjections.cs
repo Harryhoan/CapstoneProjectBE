@@ -30,7 +30,7 @@ namespace Infrastructure
             services.AddScoped<ICollaboratorRepo, CollaboratorRepo>();
             services.AddScoped<IFileRepo, FileRepo>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IPlatformRepo, PlatformRepo>();
+            services.AddScoped<IProjectCategoryRepo, ProjectCategoryRepo>();
             return services;
         }
     }

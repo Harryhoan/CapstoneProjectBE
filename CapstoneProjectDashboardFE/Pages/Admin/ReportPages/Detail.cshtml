@@ -1,0 +1,53 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.ReportPages.DetailModel
+@{
+    ViewData["Title"] = "Report Management";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+<body>
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h4 class="card-title">Report Details</h4>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Report ID:</dt>
+                    <dd class="col-sm-9">@Model.reportDetail.ReportId</dd>
+
+                    <dt class="col-sm-3">Username:</dt>
+                    <dd class="col-sm-9">@Model.reportDetail.Username</dd>
+
+                    <dt class="col-sm-3">Detail:</dt>
+                    <dd class="col-sm-9">@Model.reportDetail.Detail</dd>
+
+                    <dt class="col-sm-3">Create DateTime:</dt>
+                    <dd class="col-sm-9">@Model.reportDetail.CreateDatetime</dd>
+                </dl>
+            </div>
+            <div class="card-footer">
+                <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="~/adminAssets/assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/popper.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/bootstrap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart.js/chart.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/chart-circle/circles.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/datatables/datatables.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/jsvectormap/world.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+    <script src="~/adminAssets/assets/js/kaiadmin.min.js"></script>
+    <script src="~/adminAssets/assets/js/setting-demo.js"></script>
+    <script src="~/adminAssets/assets/js/demo.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/webfont/webfont.min.js"></script>
+</body>

@@ -5,11 +5,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.ViewModels.PlatformDTO
+namespace Application.ViewModels.ProjectDTO
 {
-    public class ViewPlatformDto
+    public class ProjectCategoryDto
     {
-        public int PlatformId { get; set; }
+        public int CategoryId { get; set; }
+        public int ParentCategoryId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string? CategoryDescription { get; set; }
+        /// <summary>
+        ///     
+        /// </summary>
         public int ProjectId { get; set; }
         public string Thumbnail { get; set; } = string.Empty;
         public string Monitor { get; set; } = string.Empty;
@@ -17,7 +23,7 @@ namespace Application.ViewModels.PlatformDTO
         public string Creator { get; set; } = string.Empty;
         public int Backers { get; set; } = 0;
         public string? Title { get; set; }
-        public string? Description { get; set; }
+        public string? ProjectDescription { get; set; }
         public ProjectEnum Status { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }

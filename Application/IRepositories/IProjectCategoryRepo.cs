@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Application.IRepositories
 {
-    public interface IPlatformRepo : IGenericRepo<Platform>
+    public interface IProjectCategoryRepo : IGenericRepo<ProjectCategory>
     {
     }
 }

@@ -44,21 +44,54 @@ namespace Application.Services
             return response;
         }
 
-        public Task<ServiceResponse<int>> DeleteCategory(int categoryId)
+        public async Task<ServiceResponse<int>> DeleteCategory(int categoryId)
         {
-            throw new NotImplementedException();
+            var response = new ServiceResponse<int>();
+
+            try
+            {
+                var category = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
+
+                if (category == null)
+                {
+                    response.Success = false;
+                    response.Message = "Category not found.";
+                    return response;
+                }
+
+             
+                await _unitOfWork.CategoryRepo.RemoveAsync(category);
+
+                response.Success = true;
+                response.Message = "Category deleted successfully.";
+                response.Data = categoryId;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
         }
 
-        public async Task<ServiceResponse<IEnumerable<Category>>> GetAllCategory()
+        public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory()
         {
-            var response = new ServiceResponse<IEnumerable<Category>>();
+            var response = new ServiceResponse<IEnumerable<ViewCategory>>();
 
             try
             {
                 var result = await _unitOfWork.CategoryRepo.GetAllAsync();
                 if (result != null && result.Any())
                 {
-                    response.Data = result;
+                    response.Data = result.Select ( c => new ViewCategory
+                    {
+                        CategoryId = c.CategoryId, 
+                        Name = c.Name,
+                        Description = c.Description,
+                        ParentCategoryId = c.ParentCategoryId,
+                    });
                     response.Success = true;
                     response.Message = "Categories retrieved successfully.";
                 }
@@ -77,9 +110,45 @@ namespace Application.Services
             return response;
         }
 
-        public Task<ServiceResponse<Category>> UpdateCategory()
+        public async Task<ServiceResponse<ViewCategory>> UpdateCategory(int categoryId, UpdateCategory updateCategory)
         {
-            throw new NotImplementedException();
+            var response = new ServiceResponse<ViewCategory>();
+
+            try
+            {
+                var result = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
+                if (result == null)
+                {
+                    response.Success = false;
+                    response.Message = "Category not found.";
+                    return response;
+                }
+
+                var updateCate = _mapper.Map<Category>(updateCategory);
+                updateCate.ParentCategoryId = result.ParentCategoryId;
+                await _unitOfWork.CategoryRepo.UpdateAsync(updateCate);
+
+                var category = new ViewCategory
+                {
+                    CategoryId = categoryId,
+                    Name = updateCategory.Name,
+                    Description = updateCategory.Description,
+                    ParentCategoryId = updateCate.ParentCategoryId,
+                };
+                response.Data = category;
+                response.Success = true;
+                response.Message = "Category updated successfully";
+
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
         }
     }
 }

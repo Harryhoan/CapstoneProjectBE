@@ -15,7 +15,6 @@ using Application.ViewModels.ReportDTO;
 using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.FaqDTO;
 using Application.ViewModels.FileDTO;
-using Application.ViewModels.PlatformDTO;
 
 namespace Infrastructure.Mappers
 {
@@ -61,7 +60,8 @@ namespace Infrastructure.Mappers
             CreateMap<Project, ProjectDto>()
                 .ForMember(dest => dest.Monitor, opt => opt.MapFrom(src => src.Monitor.Fullname))
                 .ForMember(dest => dest.Creator, opt => opt.MapFrom(src => src.User.Fullname));
-            CreateMap<Platform, CreatePlatformDto>().ReverseMap();
+            CreateMap<Category, UpdateCategory>().ReverseMap();
+            CreateMap<ProjectCategory, AddCategoryToProject>().ReverseMap();
         }
     }
 }

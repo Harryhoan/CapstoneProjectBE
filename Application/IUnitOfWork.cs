@@ -24,8 +24,7 @@ namespace Application
         public IPledgeDetailRepo PledgeDetailRepo { get; }
         public ICollaboratorRepo CollaboratorRepo { get; }
         public IFileRepo FileRepo { get; }
-        public IPlatformRepo PlatformRepo { get; }
-
+        public IProjectCategoryRepo ProjectCategoryRepo { get; }
         public Task<int> SaveChangeAsync();
     }
 }

@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {
-    public class PlatformRepo : GenericRepo<Platform>, IPlatformRepo
+    public class ProjectCategoryRepo : GenericRepo<ProjectCategory>, IProjectCategoryRepo
     {
-        public PlatformRepo(ApiContext context) : base(context)
+        public ProjectCategoryRepo(ApiContext context) : base(context)
         {
         }
     }
