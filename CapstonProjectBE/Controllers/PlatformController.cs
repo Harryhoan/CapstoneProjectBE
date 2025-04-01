@@ -1,0 +1,125 @@
+﻿using Application.IService;
+using Application.Services;
+using Application.ViewModels.PlatformDTO;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CapstonProjectBE.Controllers
+{
+    [EnableCors("AllowAll")]
+    [Route("api/[controller]")]
+    [ApiController]
+
+    public class PlatformController : ControllerBase
+    {
+        private readonly IPlatformService _platformService;
+        private readonly IAuthenService _authenService;
+        public PlatformController(IPlatformService platformService, IAuthenService authenService)
+        {
+            _platformService = platformService;
+            _authenService = authenService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPlatforms(string? query = null)
+        {
+            var result = await _platformService.GetPlatforms(query);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+
+        [HttpGet("pagination")]
+        public async Task<IActionResult> GetPaginatedPlatforms(string? query = null, int page = 1, int pageSize = 20)
+        {
+            var result = await _platformService.GetPaginatedPlatforms(query, page, pageSize);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Staff")]
+        [HttpPost("create")]
+        public async Task<IActionResult> CreatePlatform(CreatePlatformDTO createPlatformDTO)
+        {
+            var result = await _platformService.CreatePlatform(createPlatformDTO);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Staff")]
+        [HttpPut]
+        public async Task<IActionResult> UpdatePlatform(int platformId, [FromForm] CreatePlatformDTO createPlatformDTO)
+        {
+            var result = await _platformService.UpdatePlatform(platformId, createPlatformDTO);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Staff")]
+        [HttpDelete]
+        public async Task<IActionResult> RemovePlatform(int platformId)
+        {
+            var result = await _platformService.RemovePlatform(platformId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Staff, Customer")]
+        [HttpPost("project/add")]
+        public async Task<IActionResult> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _platformService.CreateProjectPlatform(projectPlatformDTO);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Staff, Customer")]
+        [HttpDelete("project/delete")]
+        public async Task<IActionResult> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _platformService.RemoveProjectPlatform(projectPlatformDTO);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+    }
+
+}
+

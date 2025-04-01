@@ -520,7 +520,7 @@ namespace Application.Services
 
                 var responseData = new ProjectThumbnailDto
                 {
-                    thumbnail = project.Thumbnail
+                    Thumbnail = project.Thumbnail
                 };
                 response.Data = responseData;
                 response.Success = true;
