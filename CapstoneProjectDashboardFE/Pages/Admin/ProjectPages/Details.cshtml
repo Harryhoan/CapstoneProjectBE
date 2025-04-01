@@ -64,8 +64,44 @@
                 <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
                 <a asp-page="./Rewards" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-primary">View Rewards</a>
                 <a asp-page="./Faqs" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View FAQs</a>
+                <a asp-page="./Story" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View Story</a>
+                <button class="btn btn-success btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#approveProjectModal">
+                    <i class="fa fa-check"></i> Approve Project
+                </button>
             </div>
+        </div>
+    </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="approveProjectModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <span class="fw-mediumbold"> Approve</span> <span class="fw-light"> Project </span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="approveProjectForm">
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select class="form-control" id="status" name="status" required>
+                                <option value="ONGOING">Ongoing</option>
+                                <option value="HALTED">Halted</option>
+                                <option value="INVISIBLE">Invisible</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reason">Reason</label>
+                            <input type="text" class="form-control" id="reason" name="reason" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Approve Project</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -85,4 +121,51 @@
     <script src="~/adminAssets/assets/js/setting-demo.js"></script>
     <script src="~/adminAssets/assets/js/demo.js"></script>
     <script src="~/adminAssets/assets/js/plugin/webfont/webfont.min.js"></script>
+
+    <script>
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : null;
+        }
+
+        $(document).ready(function () {
+            $('#approveProjectForm').submit(function (event) {
+                event.preventDefault();
+
+                var projectId = @Model.projectDetail.ProjectId;
+                var status = $('#status').val();
+                var reason = $('#reason').val();
+                var token = sessionStorage.getItem("AuthToken") || getCookie("AuthToken"); // Get token from session or cookie
+
+                if (!token) {
+                    alert("Authentication token is missing! Please log in again.");
+                    return;
+                }
+
+                $.ajax({
+                    url: `https://marvelous-gentleness-production.up.railway.app/api/Project/StaffApproveProject?projectId=${projectId}&status=${status}&reason=${reason}`,
+                    type: 'PUT',
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    },
+                    success: function (response) {
+                        alert(response.message);
+                        $('#approveProjectModal').modal('hide');
+                        $('body').removeClass('modal-open');
+                        $('.modal-backdrop').remove();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Error approving project: ' + xhr.responseText);
+                    }
+                });
+            });
+
+            $('#approveProjectModal').on('hidden.bs.modal', function () {
+                $('body').removeClass('modal-open');
+                $('.modal-backdrop').remove();
+            });
+        });
+    </script>
 </body>

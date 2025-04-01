@@ -40,15 +40,21 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
 
-        [Authorize(Roles = "Admin")]
+        /// <summary>
+        /// Get all user for admin and get user from specific project for staff
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "Admin, Staff")]
         [HttpGet("GetAllUser")]
         public async Task<IActionResult> GetAllUser()
         {
-            var response = await _userService.GetAllUserAsync();
-            if (response.Success == false)
-            {
-                return BadRequest(response);
-            }
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+
+            if (user == null) return Unauthorized();
+
+            var response = await _userService.GetAllUserAsync(user.UserId);
+
+            if (response.Success == false) return BadRequest(response);
             return Ok(response);
         }
         /// <summary>
