@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Application.IRepositories
 {
-    public interface IProjectCommentRepo : IGenericRepo<ProjectComment>
+    public interface IPlatformRepo : IGenericRepo<Platform>
     {
-        public Task<ProjectComment?> GetProjectCommentByCommentId(int commentId);
+        public Task<List<Platform>> GetPlatformsByNameOrDescriptionAsNoTracking(string query);
     }
 }

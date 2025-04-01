@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Domain.Entities
@@ -16,6 +17,7 @@ namespace Domain.Entities
         public string? Title { get; set; }
         public string? Story { get; set; }
         public string? Description { get; set; }
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProjectEnum Status { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }

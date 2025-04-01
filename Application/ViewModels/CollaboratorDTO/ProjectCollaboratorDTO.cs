@@ -1,4 +1,5 @@
 ﻿using Application.ViewModels.ProjectDTO;
+using Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace Application.ViewModels.CollaboratorDTO
     {
         public int UserId { get; set; }
         public int ProjectId { get; set; }
-        public string Role { get; set; } = string.Empty;
+        public CollaboratorEnum Role { get; set; }
         public ProjectDto Project { get; set; } = new ProjectDto();
     }
 }

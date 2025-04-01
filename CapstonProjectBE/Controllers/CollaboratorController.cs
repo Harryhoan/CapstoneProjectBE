@@ -1,4 +1,5 @@
 ﻿using Application.IService;
+using Application.ViewModels.CollaboratorDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ namespace CapstonProjectBE.Controllers
     [EnableCors("AllowAll")]
     [Route("api/[controller]")]
     [ApiController]
-    public class CollaboratorController : Controller
+    public class CollaboratorController : ControllerBase
     {
         private readonly ICollaboratorService _collaboratorService;
         private readonly IAuthenService _authenService;
@@ -20,7 +21,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpPost]
-        public async Task<IActionResult> CreateCollaborator(int userId, int projectId)
+        public async Task<IActionResult> CreateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -28,7 +29,7 @@ namespace CapstonProjectBE.Controllers
                 return Unauthorized();
             }
 
-            var result = await _collaboratorService.CreateCollaborator(userId, projectId, user);
+            var result = await _collaboratorService.CreateCollaborator(createCollaboratorDTO, user);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -144,14 +145,33 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+        [Authorize(Roles = "Customer, Staff")]
+        [HttpPut]
+        public async Task<IActionResult> UpdateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _collaboratorService.CheckIfUserCanUpdateByProjectId(createCollaboratorDTO.Role, createCollaboratorDTO.UserId, createCollaboratorDTO.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _collaboratorService.UpdateCollaborator(createCollaboratorDTO);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
 
 
-        [Authorize(Roles = "Customer")]
+
+        [Authorize(Roles = "Customer, Staff")]
         [HttpDelete]
         public async Task<IActionResult> RemoveCollaborator(int userId, int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _collaboratorService.CheckIfUserCanRemoveByProjectId(projectId, user);
+            var check = await _collaboratorService.CheckIfUserCanRemoveByProjectId(userId, projectId, user);
             if (check != null)
             {
                 return check;

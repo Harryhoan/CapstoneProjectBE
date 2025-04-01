@@ -2,8 +2,10 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.CollaboratorDTO;
+using Application.ViewModels.CommentDTO;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using System;
@@ -25,20 +27,30 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<int>> CreateCollaborator(int userId, int projectId, Domain.Entities.User user)
+        public async Task<ServiceResponse<CollaboratorDTO>> CreateCollaborator(CreateCollaboratorDTO createCollaboratorDTO, Domain.Entities.User user)
         {
-            var response = new ServiceResponse<int>();
+            var response = new ServiceResponse<CollaboratorDTO>();
 
             try
             {
-                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                var validationContext = new ValidationContext(createCollaboratorDTO);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(createCollaboratorDTO, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", createCollaboratorDTO.UserId);
                 if (existingUser == null)
                 {
                     response.Success = false;
                     response.Message = "User not found";
                     return response;
                 }
-                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
                 if (existingProject == null)
                 {
                     response.Success = false;
@@ -48,7 +60,7 @@ namespace Application.Services
                 if (existingProject.CreatorId != user.UserId)
                 {
                     var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
-                    if (userCollaborator == null || userCollaborator.Role != "Administrator")
+                    if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
                     {
                         response.Success = false;
                         response.Message = "This request is not permitted";
@@ -62,10 +74,16 @@ namespace Application.Services
                     response.Message = "Collaborator already exists";
                     return response;
                 }
-                Collaborator collaborator = new Collaborator();
-                collaborator.ProjectId = existingProject.ProjectId;
-                collaborator.UserId = existingUser.UserId;
+                Collaborator collaborator = new()
+                {
+                    ProjectId = existingProject.ProjectId,
+                    UserId = existingUser.UserId,
+                    Role = createCollaboratorDTO.Role
+                };
                 await _unitOfWork.CollaboratorRepo.AddAsync(collaborator);
+                collaborator.Project = existingProject;
+                collaborator.User = existingUser;
+                response.Data = _mapper.Map<CollaboratorDTO>(collaborator);
                 response.Success = true;
                 response.Message = "Collaborator created successfully";
             }
@@ -318,7 +336,7 @@ namespace Application.Services
             return new BadRequestObjectResult("This request cannot be processed.");
         }
 
-        public async Task<IActionResult?> CheckIfUserCanRemoveByProjectId(int projectId, User? user = null)
+        public async Task<IActionResult?> CheckIfUserCanRemoveByProjectId(int userId, int projectId, User? user = null)
         {
             try
             {
@@ -331,12 +349,27 @@ namespace Application.Services
                 {
                     return new NotFoundObjectResult("The project cannot be found.");
                 }
-                if (user.Role == "Customer")
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                if (existingUser == null || existingUser.IsDeleted)
+                {
+                    return new NotFoundObjectResult("The user cannot be found.");
+                }
+                if (user.Role == "Customer" && existingUser.UserId != user.UserId)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && existingCollaborator.Role != "Administrator"))
+                    if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR))
                     {
                         return new ForbidResult("This request is forbidden.");
+                    }
+                }
+                else
+                {
+                    if (user.Role == "Staff")
+                    {
+                        if (user.UserId != existingProject.MonitorId)
+                        {
+                            return new ForbidResult("This request is forbidden.");
+                        }
                     }
                 }
                 return null;
@@ -345,6 +378,131 @@ namespace Application.Services
             {
             }
             return new BadRequestObjectResult("This request cannot be processed.");
+        }
+
+        public async Task<IActionResult?> CheckIfUserCanUpdateByProjectId(CollaboratorEnum role, int userId, int projectId, User? user = null)
+        {
+            try
+            {
+                if (user == null || !(user.UserId > 0))
+                {
+                    return new UnauthorizedObjectResult("This request is not authorized.");
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null || (user.Role == "Customer" && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                {
+                    return new NotFoundObjectResult("The project cannot be found.");
+                }
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                if (existingUser == null || existingUser.IsDeleted)
+                {
+                    return new NotFoundObjectResult("The user cannot be found.");
+                }
+                if (user.Role == "Customer")
+                {
+                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                    //if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && ((existingCollaborator.UserId != user.UserId && existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR) || (existingCollaborator.UserId == userId && (int) role < (int)existingCollaborator.Role))))
+                    //{
+                    //    return new ForbidResult("This request is forbidden.");
+                    //}
+                    if (existingCollaborator == null)
+                    {
+                        if (user.UserId != existingProject.CreatorId)
+                        {
+                            return new ForbidResult("This request is forbidden.");
+                        }
+                    }
+                    else if (user.UserId != existingProject.CreatorId)
+                    {
+                        if (existingCollaborator.UserId != user.UserId)
+                        {
+                            if (existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR)
+                            {
+                                return new ForbidResult("This request is forbidden.");
+
+                            }
+                        }
+                        else if ((int)role < (int)existingCollaborator.Role)
+                        {
+                            return new ForbidResult("This request is forbidden.");
+                        }
+                    }
+                }
+                else
+                {
+                    if (user.Role == "Staff")
+                    {
+                        if (user.UserId != existingProject.MonitorId)
+                        {
+                            return new ForbidResult("This request is forbidden.");
+                        }
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+            }
+            return new BadRequestObjectResult("This request cannot be processed.");
+        }
+
+
+        public async Task<ServiceResponse<CollaboratorDTO>> UpdateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
+        {
+            var response = new ServiceResponse<CollaboratorDTO>();
+
+            try
+            {
+                var validationContext = new ValidationContext(createCollaboratorDTO);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(createCollaboratorDTO, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", createCollaboratorDTO.UserId);
+                if (existingUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+                var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(existingUser.UserId, existingProject.ProjectId);
+                if (existingCollaborator == null)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator not found";
+                    return response;
+                }
+                Collaborator collaborator = new()
+                {
+                    ProjectId = existingProject.ProjectId,
+                    UserId = existingUser.UserId,
+                    Role = createCollaboratorDTO.Role
+                };
+                await _unitOfWork.CollaboratorRepo.UpdateAsync(collaborator);
+                collaborator.Project = existingProject;
+                collaborator.User = existingUser;
+                response.Data = _mapper.Map<CollaboratorDTO>(collaborator);
+                response.Success = true;
+                response.Message = "Collaborator updated successfully";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create collaborator: {ex.Message}";
+            }
+            return response;
         }
 
 
