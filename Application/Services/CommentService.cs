@@ -329,6 +329,16 @@ namespace Application.Services
                     response.Message = "Comment not found";
                     return response;
                 }
+                var existingProjectComment = await _unitOfWork.ProjectCommentRepo.GetProjectCommentByCommentId(commentId);
+                if (existingProjectComment != null)
+                {
+                    await _unitOfWork.ProjectCommentRepo.RemoveAsync(existingProjectComment);
+                }
+                var existingPostComment = await _unitOfWork.PostCommentRepo.GetPostCommentByCommentId(commentId);
+                if (existingPostComment != null)
+                {
+                    await _unitOfWork.PostCommentRepo.RemoveAsync(existingPostComment);
+                }
                 await _unitOfWork.CommentRepo.RemoveAsync(existingComment);
                 //existingComment.Status = "Deleted";
                 //await _unitOfWork.CommentRepo.Update(existingComment);

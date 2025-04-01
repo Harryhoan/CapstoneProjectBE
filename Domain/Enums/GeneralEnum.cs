@@ -22,4 +22,11 @@ namespace Domain.Enums
     {
 
     }
+
+    public enum CollaboratorEnum
+    {
+        ADMINISTRATOR,
+        EDITOR,
+        VIEWER
+    }
 }
