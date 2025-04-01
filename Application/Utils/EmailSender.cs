@@ -132,6 +132,13 @@ namespace Application.Utils
                 border-radius: 10px;
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
             }}
+            .reason {{
+                text-align: left;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
             .button {{
                 display: inline-block;
                 padding: 12px 24px;
@@ -153,7 +160,9 @@ namespace Application.Utils
         <div class='content'>
             <h2>Project {projectStatus}</h2>
             <p>Your project <strong>{projectTitle}</strong> has been set {projectStatus}.</p>
-            <p>Reason: {reason}</p>
+        </div>
+        <div class='reason'>
+            <p><Strong>Reason:</strong> <Italic>{reason}</Italic></p>
         </div>
     </body>
 </html>

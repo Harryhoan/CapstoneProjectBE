@@ -589,7 +589,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.Status == ProjectEnum.ONGOING || projectStatus == ProjectEnum.HALTED || projectStatus == ProjectEnum.INVISIBLE)
+                if (project.Status == projectStatus)
                 {
                     response.Success = false;
                     response.Message = $"Project has been set as {projectStatus}";
@@ -620,7 +620,6 @@ namespace Application.Services
                 project.UpdateDatetime = DateTime.UtcNow;
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
-                await _unitOfWork.SaveChangeAsync();
 
                 // Send email notification
                 var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title, projectStatus, reason);
