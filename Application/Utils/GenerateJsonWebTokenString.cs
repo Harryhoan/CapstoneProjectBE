@@ -1,13 +1,9 @@
 ﻿using Application.Commons;
 using Domain.Entities;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Utils
 {
@@ -26,7 +22,7 @@ namespace Application.Utils
             {
                 new Claim("Id", user.UserId.ToString()),
                 new Claim("Email" ,user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
             var token = new JwtSecurityToken(
                 issuer: appSettingConfiguration.JWTSection.Issuer,

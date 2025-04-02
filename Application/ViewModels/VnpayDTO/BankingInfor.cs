@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Application.ViewModels.VnpayDTO
+﻿namespace Application.ViewModels.VnpayDTO
 {
     /// <summary>
     /// Thông tin về ngân hàng liên quan đến giao dịch.

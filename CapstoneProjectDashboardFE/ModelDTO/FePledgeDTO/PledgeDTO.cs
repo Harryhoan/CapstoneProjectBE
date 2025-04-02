@@ -1,5 +1,4 @@
-﻿using Application.ViewModels.PledgeDTO;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace CapstoneProjectDashboardFE.ModelDTO.FePledgeDTO
 {

@@ -1,15 +1,8 @@
-﻿using Application.IRepositories;
-using Application.IService;
+﻿using Application.IService;
 using Application.ServiceResponse;
-using Application.ViewModels.CategoryDTO;
 using Application.ViewModels.FaqDTO;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {

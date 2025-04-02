@@ -1,15 +1,8 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
 using Application.ViewModels.CategoryDTO;
-using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -59,7 +52,7 @@ namespace Application.Services
                     return response;
                 }
 
-             
+
                 await _unitOfWork.CategoryRepo.RemoveAsync(category);
 
                 response.Success = true;
@@ -85,9 +78,9 @@ namespace Application.Services
                 var result = await _unitOfWork.CategoryRepo.GetAllAsync();
                 if (result != null && result.Any())
                 {
-                    response.Data = result.Select ( c => new ViewCategory
+                    response.Data = result.Select(c => new ViewCategory
                     {
-                        CategoryId = c.CategoryId, 
+                        CategoryId = c.CategoryId,
                         Name = c.Name,
                         Description = c.Description,
                         ParentCategoryId = c.ParentCategoryId,

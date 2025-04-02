@@ -1,6 +1,5 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.ProjectDTO;
-using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
@@ -21,4 +20,4 @@ namespace Application.IService
         public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId);
         public Task<ServiceResponse<ProjectCategoryDto>> AddCategoryToProject(AddCategoryToProject addCategory);
     }
-}   
+}

@@ -1,18 +1,12 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
 using Application.Utils;
-using Application.ViewModels.CommentDTO;
 using Application.ViewModels.PlatformDTO;
 using AutoMapper;
-using CloudinaryDotNet;
 using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -195,7 +189,7 @@ namespace Application.Services
                 {
                     await _unitOfWork.ProjectPlatformRepo.RemoveAll(existingProjectPlatforms);
                 }
-                
+
                 await _unitOfWork.PlatformRepo.RemoveAsync(existingPlatform);
                 response.Data = "Platform removed successfully";
                 response.Success = true;
@@ -220,7 +214,7 @@ namespace Application.Services
             {
                 return new NotFoundObjectResult("The project associated with the request cannot be found.");
             }
-            if (user.Role == "Customer")
+            if (user.Role == UserEnum.CUSTOMER)
             {
                 if (user.UserId != existingProject.CreatorId)
                 {
@@ -233,13 +227,13 @@ namespace Application.Services
             }
             else
             {
-                if (user.Role == "Staff" && user.UserId != existingProject.MonitorId) 
+                if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
                 {
                     return new ForbidResult("This request is forbidden.");
                 }
             }
 
-             return null;
+            return null;
         }
 
 

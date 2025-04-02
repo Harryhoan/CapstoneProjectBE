@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Enums;
+using System.Text.Json.Serialization;
 
 namespace Domain.Entities
 {
@@ -14,7 +10,8 @@ namespace Domain.Entities
         public int ProjectId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public PostEnum Status { get; set; }
 
         public DateTime CreatedDatetime { get; set; }
 

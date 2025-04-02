@@ -1,6 +1,3 @@
-using Domain;
-using Microsoft.EntityFrameworkCore;
-
 namespace CapstoneProjectDashboardFE
 {
     public class Program

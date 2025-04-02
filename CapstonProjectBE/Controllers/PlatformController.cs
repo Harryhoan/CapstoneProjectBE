@@ -1,5 +1,4 @@
 ﻿using Application.IService;
-using Application.Services;
 using Application.ViewModels.PlatformDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -44,7 +43,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "STAFF")]
         [HttpPost("create")]
         public async Task<IActionResult> CreatePlatform(CreatePlatformDTO createPlatformDTO)
         {
@@ -56,7 +55,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "STAFF")]
         [HttpPut]
         public async Task<IActionResult> UpdatePlatform(int platformId, [FromForm] CreatePlatformDTO createPlatformDTO)
         {
@@ -69,7 +68,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff")]
+        [Authorize(Roles = "STAFF")]
         [HttpDelete]
         public async Task<IActionResult> RemovePlatform(int platformId)
         {
@@ -82,7 +81,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff, Customer")]
+        [Authorize(Roles = "STAFF, CUSTOMER")]
         [HttpPost("project/add")]
         public async Task<IActionResult> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {
@@ -101,7 +100,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff, Customer")]
+        [Authorize(Roles = "STAFF, CUSTOMER")]
         [HttpDelete("project/delete")]
         public async Task<IActionResult> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {

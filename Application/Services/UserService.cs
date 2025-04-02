@@ -6,13 +6,8 @@ using Application.ViewModels.UserDTO;
 using AutoMapper;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using Domain.Entities;
+using Domain.Enums;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -79,7 +74,7 @@ namespace Application.Services
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var users = await _userRepo.GetAllUser();
-                if (user.Role == "Staff")
+                if (user.Role == UserEnum.STAFF)
                 {
                     var staffUser = _mapper.Map<IEnumerable<UserDTO>>(users).Where(u => u.Role == "Customer");
                     response.Data = staffUser;
@@ -187,7 +182,7 @@ namespace Application.Services
             try
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-                if (user.Role != "Admin")
+                if (user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
                     response.Message = "You are not allow to do this.";

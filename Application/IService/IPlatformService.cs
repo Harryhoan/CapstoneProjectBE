@@ -2,17 +2,12 @@
 using Application.ViewModels.PlatformDTO;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.IService
 {
     public interface IPlatformService
     {
-        public Task<ServiceResponse<int>> CreatePlatform( CreatePlatformDTO createPlatformDTO);
+        public Task<ServiceResponse<int>> CreatePlatform(CreatePlatformDTO createPlatformDTO);
         public Task<ServiceResponse<PlatformDTO>> GetPlatformById(int platformId);
         public Task<ServiceResponse<List<PlatformDTO>>> GetPlatforms(string? query = null);
         public Task<ServiceResponse<PaginationModel<PlatformDTO>>> GetPaginatedPlatforms(string? query = null, int page = 1, int pageSize = 20);

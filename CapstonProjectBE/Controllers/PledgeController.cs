@@ -1,7 +1,6 @@
 ﻿using Application;
 using Application.IService;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -21,7 +20,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetAllPledges")]
-        [Authorize(Roles = "Admin, Staff")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         public async Task<IActionResult> GetAllPledgeByAdmin()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -38,7 +37,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetPledgeById")]
-        [Authorize(Roles = "Admin, Customer, Staff")]
+        [Authorize(Roles = "ADMIN, STAFF, CUSTOMER")]
         public async Task<IActionResult> GetPledgeById(int pledgeId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -55,11 +54,11 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetPledgeByUserId")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetPledgeByUserId()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if(user == null)
+            if (user == null)
             {
                 return Unauthorized();
             }
@@ -72,7 +71,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("ExportPledgesToExcel/{projectId}")]
-        [Authorize(Roles = "Customer, Admin, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
         public async Task<IActionResult> ExportPledgesToExcel(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -81,7 +80,7 @@ namespace CapstonProjectBE.Controllers
             var result = await _pledgeService.ExportPledgeToExcelByProjectId(projectId);
             if (!result.Success || string.IsNullOrEmpty(result.Data)) return BadRequest(result.Message);
             var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
-            if(project == null) return BadRequest("Project not found");
+            if (project == null) return BadRequest("Project not found");
             var fileBytes = Convert.FromBase64String(result.Data);
             return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Project_{project.Title}.xlsx");
         }

@@ -1,6 +1,5 @@
 ﻿using Application.IService;
 using Application.ViewModels.CategoryDTO;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -40,7 +39,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
             var updateCategory = await _categoryService.UpdateCategory(categoryId, updateCate);
-            return Ok(updateCategory);  
+            return Ok(updateCategory);
         }
     }
 }

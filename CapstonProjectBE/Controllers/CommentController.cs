@@ -1,7 +1,7 @@
 ﻿using Application.IService;
 using Application.ViewModels.CommentDTO;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -23,7 +23,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> CreatePostComment([FromForm] CreatePostCommentDTO createPostCommentDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) 
+            if (user == null)
             {
                 return Unauthorized();
             }
@@ -107,7 +107,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPut("UpdateComment")]
         public async Task<IActionResult> UpdateComment([FromForm] UpdateCommentDTO updateCommentDTO)
         {
@@ -129,7 +129,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Customer, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpDelete("DeleteComment")]
         public async Task<IActionResult> RemoveComment(int commentId)
         {
@@ -138,7 +138,7 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            if (user.Role == "Customer" && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            if (user.Role == UserEnum.CUSTOMER && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
             {
                 return Forbid();
             }
@@ -151,7 +151,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Customer, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpDelete("SoftDelComment")]
         public async Task<IActionResult> SoftRemoveComment(int commentId)
         {
@@ -160,7 +160,7 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            if (user.Role == "Customer" && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            if (user.Role == UserEnum.CUSTOMER && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
             {
                 return Forbid();
             }

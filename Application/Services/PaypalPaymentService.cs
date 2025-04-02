@@ -1,18 +1,11 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
-using AutoMapper;
-using Microsoft.Extensions.Configuration;
-using PayPal.Api;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Domain.Entities;
-using Newtonsoft.Json;
 using Application.Utils;
-using PayPal;
-using Microsoft.AspNetCore.Http.HttpResults;
+using AutoMapper;
 using Domain.Enums;
+using Microsoft.Extensions.Configuration;
+using PayPal;
+using PayPal.Api;
 
 namespace Application.Services
 {
@@ -51,7 +44,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (user.Role != "Staff" && user.Role != "Admin" && user.UserId != project.CreatorId)
+                if (user.Role != UserEnum.STAFF && user.Role != UserEnum.ADMIN && user.UserId != project.CreatorId)
                 {
                     response.Success = false;
                     response.Message = "You are not allowed to do this method";
@@ -247,7 +240,7 @@ namespace Application.Services
 
                     foreach (var pledgeDetail in pledgeDetails)
                     {
-                        if ( pledgeDetail.Status == "pledged")
+                        if (pledgeDetail.Status == PledgeDetailEnum.PLEDGED)
                         {
                             var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
                             if (user == null)
@@ -270,12 +263,12 @@ namespace Application.Services
                                 sender_item_id = pledge.PledgeId.ToString()
                             });
 
-                            pledgeDetail.Status = "refunded";
+                            pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
                             pledge.Amount = 0;
                             await _unitOfWork.SaveChangeAsync();
                         }
                     }
-                    
+
                 }
 
                 var payout = new Payout
@@ -490,7 +483,7 @@ namespace Application.Services
                     {
                         PledgeId = newPledge.PledgeId,
                         PaymentId = paymentId,
-                        Status = "pledged"
+                        Status = PledgeDetailEnum.PLEDGED
                     };
 
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -506,7 +499,7 @@ namespace Application.Services
                     {
                         PledgeId = getPledge.PledgeId,
                         PaymentId = paymentId,
-                        Status = "pledged"
+                        Status = PledgeDetailEnum.PLEDGED
                     };
 
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);

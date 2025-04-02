@@ -1,9 +1,4 @@
 ﻿using Domain.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.ViewModels.ProjectDTO
 {
@@ -12,7 +7,7 @@ namespace Application.ViewModels.ProjectDTO
         public int ProjectId { get; set; }
         public string Thumbnail { get; set; } = string.Empty;
         public string Monitor { get; set; } = string.Empty;
-        public int CreatorId { get; set; } 
+        public int CreatorId { get; set; }
         public string Creator { get; set; } = string.Empty;
         public int Backers { get; set; } = 0;
         public string? Title { get; set; }

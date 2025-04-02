@@ -1,7 +1,5 @@
 using Application.ServiceResponse;
 using CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO;
-using CapstoneProjectDashboardFE.ModelDTO.FeUserDTO;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
@@ -11,7 +9,7 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
 {
     public class DetailsModel : PageModel
     {
-        public ProjectDetailDTO projectDetail {  get; set; } = new ProjectDetailDTO();
+        public ProjectDetailDTO projectDetail { get; set; } = new ProjectDetailDTO();
         public string Message { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int projectId)

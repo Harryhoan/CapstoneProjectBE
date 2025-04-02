@@ -1,9 +1,6 @@
 ﻿using Application.IService;
-using Application.Services;
 using Application.ViewModels.FileDTO;
-using Application.ViewModels.PostDTO;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -21,7 +18,7 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPost]
         public async Task<IActionResult> CreateFiles([FromForm] List<IFormFile> formFiles)
         {

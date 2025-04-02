@@ -1,6 +1,4 @@
-﻿using Domain.Enums.VnpayEnums;
-
-namespace Domain.Enums.VnpayEnums
+﻿namespace Domain.Enums.VnpayEnums
 {
     /// <summary>
     /// Trạng thái của giao dịch sau khi được xử lý.

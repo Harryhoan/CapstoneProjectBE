@@ -1,20 +1,10 @@
 ﻿using Application.IService;
-using Application.ServiceResponse;
 using Application.Utils.Vnpay;
 using Application.ViewModels.VnpayDTO;
-using AutoMapper;
-using CloudinaryDotNet;
 using Domain.Entities;
 using Domain.Enums.VnpayEnums;
-using Domain;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -48,7 +38,7 @@ namespace Application.Services
                 Currency = Currency.VND, // Tùy chọn. Mặc định là VND (Việt Nam đồng)
                 Language = DisplayLanguage.Vietnamese // Tùy chọn. Mặc định là tiếng Việt
             };
-            Pledge pledge = new Pledge 
+            Pledge pledge = new Pledge
             {
                 Amount = (decimal)money,
                 ProjectId = projectId,

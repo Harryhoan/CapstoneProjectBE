@@ -1,11 +1,4 @@
-﻿using Application.IService;
-using Application.Utils.Vnpay;
-using Application.ViewModels.VnpayDTO;
-using Domain.Entities;
-using Domain.Enums.VnpayEnums;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {

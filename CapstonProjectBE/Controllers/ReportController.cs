@@ -1,7 +1,6 @@
 ﻿using Application.IService;
 using Application.ViewModels.ReportDTO;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -19,7 +18,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetAllReport")]
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         public async Task<IActionResult> GetAllReport()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -35,7 +34,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
         [HttpGet("GetReportByUserId")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetReportByUserId()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -52,7 +51,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("CreateReport")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> CreateReport([FromBody] CreateReportDto report)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -69,7 +68,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetReportById")]
-        [Authorize(Roles = "Customer, Staff, Admin")]
+        [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         public async Task<IActionResult> GetReportById(int reportId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

@@ -3,11 +3,6 @@ using Application.ServiceResponse;
 using Application.ViewModels.ReportDTO;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -27,7 +22,7 @@ namespace Application.Services
             try
             {
                 var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-                if(existingUser == null)
+                if (existingUser == null)
                 {
                     response.Success = false;
                     response.Message = "User not found.";
@@ -82,7 +77,7 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<ReportDto>> GetReportByIdAsync(int userId,int reportId)
+        public async Task<ServiceResponse<ReportDto>> GetReportByIdAsync(int userId, int reportId)
         {
             var response = new ServiceResponse<ReportDto>();
             try

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Domain.Enums;
+using Newtonsoft.Json.Converters;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
 
 namespace Application.ViewModels.PostDTO
 {
@@ -17,8 +15,10 @@ namespace Application.ViewModels.PostDTO
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Status is required")]
-        [RegularExpression("^(Deleted|Private|Exclusive|Public)$", ErrorMessage = "Status can only be \"Deleted\", \"Private\", \"Exclusive\" or \"Public\".")] 
-        public string Status { get; set; } = string.Empty;
+        //[RegularExpression("^(Deleted|Private|Exclusive|Public)$", ErrorMessage = "Status can only be \"Deleted\", \"Private\", \"Exclusive\" or \"Public\".")] 
+        [EnumDataType(typeof(CollaboratorEnum), ErrorMessage = "Role must be ADMINISTRATOR, EDITOR or VIEWER")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PostEnum Status { get; set; }
 
     }
 }

@@ -1,7 +1,5 @@
 ﻿using Application.IService;
-using Application.Services;
 using Application.ViewModels.ProjectDTO;
-using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +35,7 @@ namespace CapstonProjectBE.Controllers
         /// </summary>
         /// <returns>Returns an Ok response with the list of projects if the user is authorized.</returns>
         [HttpGet("GetAllProjectByMonitor")]
-        [Authorize(Roles = "Admin, Staff")]
+        [Authorize(Roles = "ADMIn, STAFF")]
         public async Task<IActionResult> GetAllProjectByMonitor()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -57,7 +55,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetProjectByUserId")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetProjectByUserId()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -69,7 +67,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("CreateProject")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> CreateProject([FromForm] CreateProjectDto projectDto)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -81,14 +79,14 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPut("UpdateProject")]
-        [Authorize(Roles = "Customer, Staff, Admin")]
-        public async Task<IActionResult> UpdateProject(int projectId,[FromForm] UpdateProjectDto updateProjectDto)
+        [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
+        public async Task<IActionResult> UpdateProject(int projectId, [FromForm] UpdateProjectDto updateProjectDto)
         {
             return Ok(await _projectService.UpdateProject(projectId, updateProjectDto));
         }
 
         [HttpPut("UpdateProjectThumbnail")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> UpdateProjectThumbnail(int projectId, IFormFile file)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -104,7 +102,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
         [HttpPut("UpdateProjectStory")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> UpdateProjectStory(int projectId, string story)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -115,14 +113,14 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story));
         }
         [HttpDelete("DeleteProject")]
-        [Authorize(Roles = "Customer, Staff, Admin")]
+        [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         public async Task<IActionResult> DeleteProject(int id)
         {
             return Ok(await _projectService.DeleteProject(id));
         }
 
         [HttpPut("StaffApproveProject")]
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         public async Task<IActionResult> StaffApproveProject(int projectId, ProjectEnum status, string reason)
         {
             if (status == ProjectEnum.DELETED)

@@ -3,12 +3,6 @@ using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using AutoMapper;
 using ClosedXML.Excel;
-using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -166,8 +160,8 @@ namespace Application.Services
                         worksheet.Cell(currentRow, 4).Value = pledge.Amount;
 
                         var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-                        var status = pledgeDetails.FirstOrDefault()?.Status ?? "Unknown";
-                        worksheet.Cell(currentRow, 5).Value = status;
+                        var status = pledgeDetails.FirstOrDefault()?.Status;
+                        worksheet.Cell(currentRow, 5).Value = status.ToString();
                     }
 
                     // Save the workbook to a memory stream
