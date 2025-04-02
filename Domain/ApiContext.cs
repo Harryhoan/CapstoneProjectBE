@@ -1,10 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Domain
 {
@@ -113,7 +108,7 @@ namespace Domain
 
             modelBuilder.Entity<FAQ>()
                 .HasOne(g => g.Project)
-                .WithMany(p => p.Question)
+                .WithMany(p => p.Questions)
                 .HasForeignKey(g => g.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 

@@ -5,14 +5,9 @@ using Application.Utils;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
 using Domain.Entities;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
+using Domain.Enums;
 using System.Data.Common;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -43,7 +38,7 @@ namespace Application.Services
 
                 var userAccountRegister = _mapper.Map<User>(userObject);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
-                userAccountRegister.Role = "Customer";
+                userAccountRegister.Role = UserEnum.CUSTOMER;
                 userAccountRegister.CreatedDatetime = DateTime.UtcNow;
                 await _unitOfWork.UserRepo.AddAsync(userAccountRegister);
 
@@ -119,7 +114,7 @@ namespace Application.Services
                 response.Message = "Login successfully";
                 response.DataToken = tokenJWT;
                 response.Avatar = avatar;
-                response.Role = auth;
+                response.Role = auth.ToString();
                 response.HintId = userId;
             }
             catch (DbException ex)
@@ -219,7 +214,7 @@ namespace Application.Services
             try
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-                if (user.Role != "Admin")
+                if (user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
                     response.Message = "You are not allowed.";
@@ -233,7 +228,7 @@ namespace Application.Services
                     return response;
                 }
                 var staffAccount = _mapper.Map<User>(register);
-                staffAccount.Role = "Staff";
+                staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
                 staffAccount.CreatedDatetime = DateTime.UtcNow;
 

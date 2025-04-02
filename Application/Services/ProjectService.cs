@@ -49,7 +49,7 @@ namespace Application.Services
                 }
 
                 IEnumerable<Project> projects;
-                if (user.Role == "Staff")
+                if (user.Role == UserEnum.STAFF)
                 {
                     projects = await _unitOfWork.ProjectRepo.GetAllProjectByMonitorIdAsync(userId);
                 }
@@ -134,7 +134,7 @@ namespace Application.Services
                 var project = _mapper.Map<Project>(createProjectDto);
 
 
-                var staffUsers = user.Where(u => u.Role == "Staff").ToList();
+                var staffUsers = user.Where(u => u.Role == UserEnum.STAFF).ToList();
                 if (!staffUsers.Any())
                 {
                     response.Success = false;
@@ -602,7 +602,7 @@ namespace Application.Services
                     response.Message = "This project has been deleted.";
                     return response;
                 }
-                if (project.MonitorId != userId && user.Role != "Admin")
+                if (project.MonitorId != userId && user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
                     response.Message = "You are not authorized to approve or reject this project.";
@@ -688,7 +688,7 @@ namespace Application.Services
                     CategoryDescription = category.Description,
                     ProjectId = addCategory.ProjectId,
                     Thumbnail = project.Thumbnail ?? "Null",
-                    Monitor = project.Monitor?.Fullname ?? "Unknown", 
+                    Monitor = project.Monitor?.Fullname ?? "Unknown",
                     CreatorId = project.CreatorId,
                     Creator = creator?.Fullname ?? "Unknown",
                     Backers = project.Pledges?.Count(pl => pl.ProjectId == project.ProjectId) ?? 0,

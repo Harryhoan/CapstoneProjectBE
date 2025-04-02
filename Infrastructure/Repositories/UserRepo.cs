@@ -1,14 +1,8 @@
 ﻿using Application.IRepositories;
-using Domain.Entities;
-using Microsoft.EntityFrameworkCore;
 using Domain;
-using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Mozilla;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Domain.Entities;
+using Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -35,7 +29,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<User>> GetAllUser()
         {
-            return await _dbContext.Users.Where(u => u.Role == "Customer" || u.Role == "Staff").ToListAsync();
+            return await _dbContext.Users.Where(u => u.Role == UserEnum.CUSTOMER || u.Role == UserEnum.STAFF).ToListAsync();
         }
         public int GetCount()
         {

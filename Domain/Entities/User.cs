@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Enums;
+using System.Text.Json.Serialization;
 
 namespace Domain.Entities
 {
@@ -15,7 +12,8 @@ namespace Domain.Entities
         public string Password { get; set; } = string.Empty;
         public string PaymentAccount { get; set; } = string.Empty;
         public string? Phone { get; set; }
-        public string Role { get; set; } = string.Empty;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public UserEnum Role { get; set; }
         public string Bio { get; set; } = string.Empty;
         public bool IsDeleted { get; set; } = false;
         public DateTime CreatedDatetime { get; set; }

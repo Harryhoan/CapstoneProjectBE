@@ -1,5 +1,4 @@
 using Application.ServiceResponse;
-using Application.ViewModels.UserDTO;
 using CapstoneProjectDashboardFE.ModelDTO.FeUserDTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

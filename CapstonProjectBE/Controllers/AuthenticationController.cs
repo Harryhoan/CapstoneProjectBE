@@ -1,11 +1,7 @@
 ﻿using Application.IService;
 using Application.ViewModels.UserDTO;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -100,12 +96,12 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("CreateStaff")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> CreateStaffAccount(RegisterDTO register)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
 
-            if (user == null) return BadRequest(); 
+            if (user == null) return BadRequest();
 
             var result = await _authenService.CreateStaffAccountAsync(user.UserId, register);
 

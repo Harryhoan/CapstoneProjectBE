@@ -1,21 +1,16 @@
 ﻿using Application.ViewModels.CategoryDTO;
-using Application.ViewModels.ProjectDTO;
-using Application.ViewModels.RewardDTO;
+using Application.ViewModels.CollaboratorDTO;
 using Application.ViewModels.CommentDTO;
+using Application.ViewModels.FaqDTO;
+using Application.ViewModels.FileDTO;
+using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.PostDTO;
+using Application.ViewModels.ProjectDTO;
+using Application.ViewModels.ReportDTO;
+using Application.ViewModels.RewardDTO;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.ViewModels.ReportDTO;
-using Application.ViewModels.PledgeDTO;
-using Application.ViewModels.FaqDTO;
-using Application.ViewModels.FileDTO;
-using Application.ViewModels.CollaboratorDTO;
 
 namespace Infrastructure.Mappers
 {

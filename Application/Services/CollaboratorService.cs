@@ -2,18 +2,11 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.CollaboratorDTO;
-using Application.ViewModels.CommentDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -137,16 +130,16 @@ namespace Application.Services
                 if (existingProject == null)
                 {
                     await _unitOfWork.CollaboratorRepo.RemoveAsync(collaborators[i]);
-                    collaborators.RemoveAt(i);            
+                    collaborators.RemoveAt(i);
                 }
                 else if (existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
                     if (user != null)
                     {
-                        if (user.Role == "Customer" && user.UserId != userId && user.UserId != existingProject.CreatorId)
+                        if (user.Role == UserEnum.CUSTOMER && user.UserId != userId && user.UserId != existingProject.CreatorId)
                         {
                             var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
-                            if(existingCollaborator == null )
+                            if (existingCollaborator == null)
                             {
                                 collaborators.RemoveAt(i);
                             }
@@ -312,7 +305,7 @@ namespace Application.Services
                 //    return new UnauthorizedObjectResult("This request is not authorized.");
                 //}
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || ((user == null || user.Role == "Customer") && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
                     return new NotFoundObjectResult("The project cannot be found.");
                 }
@@ -320,7 +313,7 @@ namespace Application.Services
                 {
                     return new UnauthorizedObjectResult("This request is not authorized.");
                 }
-                if (user != null && user.Role == "Customer" && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
+                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if (existingCollaborator == null && user.UserId != existingProject.CreatorId)
@@ -345,7 +338,7 @@ namespace Application.Services
                     return new UnauthorizedObjectResult("This request is not authorized.");
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || (user.Role == "Customer" && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
                     return new NotFoundObjectResult("The project cannot be found.");
                 }
@@ -354,7 +347,7 @@ namespace Application.Services
                 {
                     return new NotFoundObjectResult("The user cannot be found.");
                 }
-                if (user.Role == "Customer" && existingUser.UserId != user.UserId)
+                if (user.Role == UserEnum.CUSTOMER && existingUser.UserId != user.UserId)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR))
@@ -364,7 +357,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    if (user.Role == "Staff")
+                    if (user.Role == UserEnum.STAFF)
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {
@@ -389,7 +382,7 @@ namespace Application.Services
                     return new UnauthorizedObjectResult("This request is not authorized.");
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || (user.Role == "Customer" && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
                     return new NotFoundObjectResult("The project cannot be found.");
                 }
@@ -398,7 +391,7 @@ namespace Application.Services
                 {
                     return new NotFoundObjectResult("The user cannot be found.");
                 }
-                if (user.Role == "Customer")
+                if (user.Role == UserEnum.CUSTOMER)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     //if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && ((existingCollaborator.UserId != user.UserId && existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR) || (existingCollaborator.UserId == userId && (int) role < (int)existingCollaborator.Role))))
@@ -430,7 +423,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    if (user.Role == "Staff")
+                    if (user.Role == UserEnum.STAFF)
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {

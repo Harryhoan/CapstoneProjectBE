@@ -1,9 +1,5 @@
-﻿using CloudinaryDotNet.Actions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Domain.Enums;
+using System.Text.Json.Serialization;
 
 namespace Domain.Entities
 {
@@ -11,7 +7,8 @@ namespace Domain.Entities
     {
         public int PledgeId { get; set; }
         public string PaymentId { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        public PledgeDetailEnum Status { get; set; }
 
         public virtual Pledge Pledge { get; set; } = null!;
     }

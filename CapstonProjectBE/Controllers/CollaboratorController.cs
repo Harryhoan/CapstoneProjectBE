@@ -19,9 +19,9 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPost]
-        public async Task<IActionResult> CreateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
+        public async Task<IActionResult> CreateCollaborator([FromForm] CreateCollaboratorDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -38,7 +38,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpGet("pagination/all")]
         public async Task<IActionResult> GetPaginatedCollaborators(int page = 1, int pageSize = 20)
         {
@@ -51,7 +51,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpGet("all")]
         public async Task<IActionResult> GetCollaborators()
         {
@@ -128,7 +128,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpGet]
         public async Task<IActionResult> GetPaginatedCollaboratorsByCurrentUser(int page = 1, int pageSize = 20)
         {
@@ -145,7 +145,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-        [Authorize(Roles = "Customer, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpPut]
         public async Task<IActionResult> UpdateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
         {
@@ -166,7 +166,7 @@ namespace CapstonProjectBE.Controllers
 
 
 
-        [Authorize(Roles = "Customer, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpDelete]
         public async Task<IActionResult> RemoveCollaborator(int userId, int projectId)
         {

@@ -55,6 +55,9 @@ namespace Domain.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
                     b.HasKey("UserId", "ProjectId");
 
                     b.HasIndex("ProjectId");
@@ -119,7 +122,7 @@ namespace Domain.Migrations
 
                     b.HasKey("ProjectId", "Question");
 
-                    b.ToTable("Goals");
+                    b.ToTable("FAQs");
                 });
 
             modelBuilder.Entity("Domain.Entities.File", b =>
@@ -205,9 +208,8 @@ namespace Domain.Migrations
                     b.Property<string>("PaymentId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.HasKey("PledgeId", "PaymentId");
 
@@ -232,9 +234,8 @@ namespace Domain.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -496,9 +497,8 @@ namespace Domain.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("text");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId");
 
@@ -559,7 +559,7 @@ namespace Domain.Migrations
             modelBuilder.Entity("Domain.Entities.FAQ", b =>
                 {
                     b.HasOne("Domain.Entities.Project", "Project")
-                        .WithMany("Question")
+                        .WithMany("Questions")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -800,7 +800,7 @@ namespace Domain.Migrations
 
                     b.Navigation("ProjectPlatforms");
 
-                    b.Navigation("Question");
+                    b.Navigation("Questions");
 
                     b.Navigation("Rewards");
                 });

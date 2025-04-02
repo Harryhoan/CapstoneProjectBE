@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using MailKit.Security;
+﻿using Domain.Enums;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using MimeKit;
-using System.Text;
-using System.Threading.Tasks;
-using Domain.Enums;
 
 namespace Application.Utils
 {

@@ -1,5 +1,4 @@
-﻿using Application.IRepositories;
-using Application.IService;
+﻿using Application.IService;
 using Application.ViewModels.RewardDTO;
 using Microsoft.AspNetCore.Mvc;
 

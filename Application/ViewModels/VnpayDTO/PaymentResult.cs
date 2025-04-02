@@ -1,5 +1,4 @@
-﻿using System;
-using Domain.Enums.VnpayEnums;
+﻿using Domain.Enums.VnpayEnums;
 namespace Application.ViewModels.VnpayDTO
 {
     public class PaymentResult

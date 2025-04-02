@@ -3,18 +3,11 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.FileDTO;
 using AutoMapper;
-using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
+using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.ViewModels;
-using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
@@ -47,7 +40,7 @@ namespace Application.Services
         //            return response;
         //        }
 
-        //        if (user == null || user.Role == "Customer")
+        //        if (user == null || user.Role == UserEnum.CUSTOMER)
         //        {
         //            files.RemoveAll(f => f.Status == "Deleted");
         //        }
@@ -84,7 +77,7 @@ namespace Application.Services
                     return new NotFoundObjectResult(response);
                 }
 
-                if (user.Role == "Customer")
+                if (user.Role == UserEnum.CUSTOMER)
                 {
                     if (user.UserId != existingUser.UserId)
                     {
@@ -126,7 +119,7 @@ namespace Application.Services
                     return new NotFoundObjectResult(response);
                 }
 
-                if (user.Role == "Customer")
+                if (user.Role == UserEnum.CUSTOMER)
                 {
                     if (user.UserId != existingUser.UserId)
                     {
@@ -159,14 +152,14 @@ namespace Application.Services
                 }
 
                 var existingFile = await _unitOfWork.FileRepo.GetByIdNoTrackingAsync("FileId", fileId);
-                if (existingFile == null || (user.Role == "Customer" && existingFile.Status == "Deleted"))
+                if (existingFile == null || (user.Role == UserEnum.CUSTOMER && existingFile.Status == "Deleted"))
                 {
                     response.Success = false;
                     response.Message = "File not found";
                     return new NotFoundObjectResult(response);
                 }
 
-                if (user.Role == "Customer" && user.UserId != existingFile.UserId)
+                if (user.Role == UserEnum.CUSTOMER && user.UserId != existingFile.UserId)
                 {
                     return new ForbidResult();
                 }
@@ -295,7 +288,7 @@ namespace Application.Services
                 return new UnauthorizedResult();
             }
             var existingFile = await _unitOfWork.FileRepo.GetByIdNoTrackingAsync("FileId", fileId);
-            if (existingFile == null || (user.Role == "Customer" && existingFile.Status == "Deleted"))
+            if (existingFile == null || (user.Role == UserEnum.CUSTOMER && existingFile.Status == "Deleted"))
             {
                 return new NotFoundResult();
             }

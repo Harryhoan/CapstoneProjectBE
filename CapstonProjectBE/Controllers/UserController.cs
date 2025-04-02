@@ -1,17 +1,13 @@
 ﻿using Application.IService;
+using Application.ViewModels;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
-using Domain;
-using CloudinaryDotNet.Actions;
 using CloudinaryDotNet;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using CloudinaryDotNet.Actions;
+using Domain;
 using Microsoft.AspNetCore.Authorization;
-using Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Application.ViewModels;
-using Application.Services;
 
 namespace CapstonProjectBE.Controllers
 {
@@ -44,7 +40,7 @@ namespace CapstonProjectBE.Controllers
         /// Get all user for admin and get user from specific project for staff
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Admin, Staff")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         [HttpGet("GetAllUser")]
         public async Task<IActionResult> GetAllUser()
         {
@@ -62,7 +58,7 @@ namespace CapstonProjectBE.Controllers
         /// 'Customer' or 'Admin' roles.
         /// </summary>
         /// <returns>Returns an IActionResult indicating the success or failure of the user retrieval operation.</returns>
-        [Authorize(Roles = "Customer, Staff, Admin")]
+        [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         [HttpGet("GetUserById")]
         public async Task<IActionResult> GetUserById()
         {
@@ -83,7 +79,7 @@ namespace CapstonProjectBE.Controllers
         /// </summary>
         /// <param name="userId">The identifier used to look up the user in the system.</param>
         /// <returns>Returns an action result indicating the success or failure of the user retrieval operation.</returns>
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpGet("GetUserByUserId")]
         public async Task<IActionResult> GetUserByUserIdByMonitor(int userId)
         {
@@ -104,7 +100,7 @@ namespace CapstonProjectBE.Controllers
         /// </summary>
         /// <param name="UpdateUser">Contains the new user information to be updated in the system.</param>
         /// <returns>Returns an action result indicating the success or failure of the update operation.</returns>
-        [Authorize(Roles = "Customer, Staff, Admin")]
+        [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         [HttpPost("UpdateUser")]
         public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDTO UpdateUser)
         {
@@ -121,7 +117,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPut("avatar")]
         public async Task<IActionResult> UpdateUserAvatar(IFormFile file)
         {
@@ -156,7 +152,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpDelete("DeleteUser")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> DeleteUser(int UserDeleteId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

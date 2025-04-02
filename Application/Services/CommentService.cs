@@ -4,12 +4,7 @@ using Application.Utils;
 using Application.ViewModels.CommentDTO;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -99,7 +94,7 @@ namespace Application.Services
             }
             return response;
         }
-        
+
         public async Task<ServiceResponse<int>> CreateProjectComment(CreateProjectCommentDTO createProjectCommentDTO, int userId)
         {
             var response = new ServiceResponse<int>();

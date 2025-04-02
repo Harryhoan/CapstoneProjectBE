@@ -1,28 +1,18 @@
-using System.Reflection;
 using Application.Commons;
-using Infrastructure;
-using Domain;
-using Infrastructure.Mappers;
-using Microsoft.EntityFrameworkCore;
-using CapstonProjectBE.Middlewares;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.OpenApi.Models;
-using CloudinaryDotNet;
-using Microsoft.Extensions.Options;
-using AutoMapper;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Application;
-using System.IO;
-using System.Linq;
-using System;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Google;
-using System.Runtime.InteropServices;
 using Application.ViewModels;
+using AutoMapper;
+using CapstonProjectBE.Middlewares;
+using CloudinaryDotNet;
+using Domain;
+using Infrastructure;
+using Infrastructure.Mappers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace CapstonProjectBE
@@ -84,9 +74,9 @@ namespace CapstonProjectBE
             });
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-                options.AddPolicy("Staff", policy => policy.RequireRole("Staff"));
-                options.AddPolicy("Customer", policy => policy.RequireRole("Customer"));
+                options.AddPolicy("ADMIN", policy => policy.RequireRole("ADMIN"));
+                options.AddPolicy("STAFF", policy => policy.RequireRole("STAFF"));
+                options.AddPolicy("CUSTOEMR", policy => policy.RequireRole("CUSTOMER"));
             });
             builder.Services.AddDistributedMemoryCache();
 

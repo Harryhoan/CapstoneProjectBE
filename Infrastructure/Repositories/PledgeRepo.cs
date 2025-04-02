@@ -1,12 +1,7 @@
 ﻿using Application.IRepositories;
+using Domain;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Domain;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repositories
 {

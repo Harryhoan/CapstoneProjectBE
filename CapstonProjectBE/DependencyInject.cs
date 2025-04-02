@@ -1,9 +1,7 @@
-﻿using Application.IRepositories;
-using Application.IService;
+﻿using Application.IService;
 using Application.Services;
 using Application.Utils.Vnpay;
 using Infrastructure;
-using Infrastructure.Repositories;
 
 namespace CapstonProjectBE
 {
@@ -25,7 +23,7 @@ namespace CapstonProjectBE
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPledgeService, PledgeService>();
             services.AddScoped<IReportService, ReportService>();
-            services.AddScoped<IPaypalPaymentService,  PaypalPaymentService>();
+            services.AddScoped<IPaypalPaymentService, PaypalPaymentService>();
             services.AddScoped<IPostService, PostService>();
             services.AddScoped<ICommentService, CommentService>();
             services.AddScoped<ICollaboratorService, CollaboratorService>();

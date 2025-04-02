@@ -1,11 +1,8 @@
 ﻿using Application.IService;
 using Application.ViewModels.PostDTO;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization.Infrastructure;
-using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
-using System.Drawing.Printing;
 
 namespace CapstonProjectBE.Controllers
 {
@@ -22,12 +19,12 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromForm] CreatePostDTO createPostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) 
+            if (user == null)
             {
                 return Unauthorized();
             }
@@ -44,7 +41,7 @@ namespace CapstonProjectBE.Controllers
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             var check = await _postService.CheckIfUserHasPermissionsByPostId(user, postId);
-            if (check != null) 
+            if (check != null)
             {
                 return check;
             }
@@ -111,16 +108,16 @@ namespace CapstonProjectBE.Controllers
         }
 
 
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPut("Update")]
-        public async Task<IActionResult> UpdatePost(int postId,[FromForm] CreatePostDTO createPostDTO)
+        public async Task<IActionResult> UpdatePost(int postId, [FromForm] CreatePostDTO createPostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
             {
                 return Unauthorized();
             }
-            if (user.Role == "Customer" && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
+            if (user.Role == UserEnum.CUSTOMER && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
             {
                 return Forbid();
             }
@@ -133,7 +130,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "Customer, Staff")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpDelete("DeletePost")]
         public async Task<IActionResult> RemovePost(int postId)
         {
@@ -142,7 +139,7 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            if (user.Role == "Customer" && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
+            if (user.Role == UserEnum.CUSTOMER && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
             {
                 return Forbid();
             }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Domain.Enums
+﻿namespace Domain.Enums
 {
     //public enum GeneralEnum
     //{
@@ -22,7 +16,24 @@ namespace Domain.Enums
     {
 
     }
-
+    public enum UserEnum
+    {
+        CUSTOMER,
+        STAFF,
+        ADMIN
+    }
+    public enum PostEnum
+    {
+        EXCLUSIVE,
+        PRIVATE,
+        PUBLIC,
+        DELETED
+    }
+    public enum PledgeDetailEnum
+    {
+        PLEDGED,
+        REFUNDED
+    }
     public enum CollaboratorEnum
     {
         ADMINISTRATOR,

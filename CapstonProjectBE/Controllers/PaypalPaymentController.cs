@@ -1,7 +1,5 @@
 ﻿using Application.IService;
-using Application.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
@@ -19,7 +17,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("create")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> CreatePayment(int projectId, decimal amount)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -37,7 +35,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("execute")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> ExecutePayment([FromQuery] string paymentId, [FromQuery] string token, [FromQuery] string PayerID)
         {
             var result = await _paypalPaymentService.ExecutePaymentAsync(paymentId, PayerID);
@@ -49,7 +47,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("Refund")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> CreateRefundAsync(int pledgeId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -66,7 +64,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("TransferPledgeToCreator")]
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         public async Task<IActionResult> TransferPledgeToCreatorAsync(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -83,7 +81,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("RefundAllPledgesForProject")]
-        [Authorize(Roles = "Staff, Admin")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         public async Task<IActionResult> RefundAllPledgesForProjectAsync(int projectId)
         {
             var result = await _paypalPaymentService.RefundAllPledgesForProjectAsync(projectId);

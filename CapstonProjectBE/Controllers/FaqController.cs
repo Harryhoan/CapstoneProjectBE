@@ -28,7 +28,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpGet("GetFaqProjectId")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> GetFaqByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -39,8 +39,8 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.GetFaqByProjectId(user.UserId, projectId));
         }
         [HttpPost("AddFaq")]
-        [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> AddFaq(int projectId,[FromForm] FaqDto createFaq)
+        [Authorize(Roles = "CUSTOMER")]
+        public async Task<IActionResult> AddFaq(int projectId, [FromForm] FaqDto createFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -50,7 +50,8 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.AddFaq(user.UserId, projectId, createFaq));
         }
         [HttpPut("UpdateFaq")]
-        public async Task<IActionResult> UpdateFaq(int projectId, string question,[FromForm] FaqDto updateFaq)
+        [Authorize(Roles = "CUSTOMER")]
+        public async Task<IActionResult> UpdateFaq(int projectId, string question, [FromForm] FaqDto updateFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
@@ -60,7 +61,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _faqService.UpdateFaq(user.UserId, projectId, question, updateFaq));
         }
         [HttpDelete("DeleteFaq")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> DeleteFaq(int projectId, string question)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
