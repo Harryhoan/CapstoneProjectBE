@@ -4,6 +4,8 @@ using Application.Utils;
 using Application.ViewModels.CommentDTO;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
@@ -18,7 +20,7 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<int>> CreatePostComment(CreatePostCommentDTO createPostCommentDTO, int userId)
+        public async Task<ServiceResponse<int>> CreatePostComment(CreatePostCommentDTO createPostCommentDTO, User user)
         {
             var response = new ServiceResponse<int>();
 
@@ -34,13 +36,13 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
-                if (existingUser == null)
-                {
-                    response.Success = false;
-                    response.Message = "User not found";
-                    return response;
-                }
+                //var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                //if (existingUser == null)
+                //{
+                //    response.Success = false;
+                //    response.Message = "User not found";
+                //    return response;
+                //}
                 var existingPost = await _unitOfWork.PostRepo.GetByIdAsync(createPostCommentDTO.PostId);
                 if (existingPost == null)
                 {
@@ -61,7 +63,7 @@ namespace Application.Services
 
                 Comment comment = new()
                 {
-                    UserId = existingUser.UserId,
+                    UserId = user.UserId,
                     Content = createPostCommentDTO.Content,
                     CommentId = 0,
                     Status = "Created",
@@ -95,7 +97,7 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> CreateProjectComment(CreateProjectCommentDTO createProjectCommentDTO, int userId)
+        public async Task<ServiceResponse<int>> CreateProjectComment(CreateProjectCommentDTO createProjectCommentDTO, User user)
         {
             var response = new ServiceResponse<int>();
 
@@ -111,13 +113,13 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
-                if (existingUser == null)
-                {
-                    response.Success = false;
-                    response.Message = "User not found";
-                    return response;
-                }
+                //var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                //if (existingUser == null)
+                //{
+                //    response.Success = false;
+                //    response.Message = "User not found";
+                //    return response;
+                //}
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createProjectCommentDTO.ProjectId);
                 if (existingProject == null)
                 {
@@ -137,7 +139,7 @@ namespace Application.Services
                 }
 
                 Comment comment = new Comment();
-                comment.UserId = existingUser.UserId;
+                comment.UserId = user.UserId;
                 comment.Content = createProjectCommentDTO.Content;
                 comment.CommentId = 0;
                 comment.Status = "Created";
@@ -181,6 +183,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = await Pagination.GetPagination(commentDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
@@ -200,6 +210,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = commentDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
@@ -219,6 +237,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = await Pagination.GetPagination(commentDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
@@ -264,6 +290,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = await Pagination.GetPagination(commentDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
@@ -283,6 +317,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = commentDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
@@ -410,6 +452,57 @@ namespace Application.Services
             return false;
         }
 
+        public async Task<IActionResult?> CheckIfUserHasPermissionsByPostId(User user, int postId)
+        {
+            try
+            {
+                var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
+                if (existingPost == null || (existingPost.Status == PostEnum.DELETED && user.Role == UserEnum.CUSTOMER))
+                {
+                    return new NotFoundObjectResult("The requested post cannot be found.");
+                }
+
+                return await CheckIfUserHasPermissionsByProjectId(user, existingPost.ProjectId);
+            }
+            catch
+            {
+            }
+            return new BadRequestObjectResult("This request cannot be processed.");
+        }
+
+
+        public async Task<IActionResult?> CheckIfUserHasPermissionsByProjectId(User user, int projectId)
+        {
+            try
+            {
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    return new NotFoundObjectResult("The project associated with the request cannot be found.");
+                }
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+
+                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                    if (existingCollaborator == null && user.UserId != existingProject.CreatorId)
+                    {
+                        existingCollaborator = null;
+                        var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
+                        if ((existingPledge == null || existingPledge.Amount <= 0))
+                        {
+                            existingPledge = null;
+                            return new ForbidResult("This request is forbidden.");
+                        }
+
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+            }
+            return new BadRequestObjectResult("This request cannot be processed.");
+        }
 
     }
 }

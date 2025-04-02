@@ -147,7 +147,7 @@ namespace CapstonProjectBE.Controllers
         }
         [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpPut]
-        public async Task<IActionResult> UpdateCollaborator(CreateCollaboratorDTO createCollaboratorDTO)
+        public async Task<IActionResult> UpdateCollaborator([FromForm] CreateCollaboratorDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             var check = await _collaboratorService.CheckIfUserCanUpdateByProjectId(createCollaboratorDTO.Role, createCollaboratorDTO.UserId, createCollaboratorDTO.ProjectId, user);

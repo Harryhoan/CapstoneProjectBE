@@ -3,6 +3,7 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.PostDTO;
 using AutoMapper;
+using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -187,7 +188,7 @@ namespace Application.Services
             return posts;
         }
 
-        private async Task<List<Post>?> FilterPostsByUserId(int userId, int? currentUserId = null)
+        private async Task<List<Post>?> FilterPostsByUserId(int userId, User? currentUser = null)
         {
             var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
             var posts = await _unitOfWork.PostRepo.GetPostsByUserId(userId);
@@ -198,9 +199,8 @@ namespace Application.Services
                 return null;
             }
 
-            if (currentUserId != null && currentUserId > 0)
+            if (currentUser != null && currentUser.UserId > 0)
             {
-                var currentUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", (int)currentUserId);
                 if (currentUser != null && currentUser.Role == UserEnum.CUSTOMER)
                 {
                     int i = 0;
@@ -298,7 +298,7 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20, int? currentUserId = null)
+        public async Task<ServiceResponse<PaginationModel<PostDTO>>> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20, User? currentUser = null)
         {
             var response = new ServiceResponse<PaginationModel<PostDTO>>();
 
@@ -319,7 +319,7 @@ namespace Application.Services
                 //{
                 //    posts.RemoveAll(p => p.Status == PostEnum.DELETED);
                 //}
-                var posts = await FilterPostsByUserId(userId, currentUserId);
+                var posts = await FilterPostsByUserId(userId, currentUser);
                 if (posts == null)
                 {
                     response.Success = false;
@@ -339,13 +339,13 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByUserId(int userId, int? currentUserId = null)
+        public async Task<ServiceResponse<List<PostDTO>>> GetPostsByUserId(int userId, User? currentUser)
         {
             var response = new ServiceResponse<List<PostDTO>>();
 
             try
             {
-                var posts = await FilterPostsByUserId(userId, currentUserId);
+                var posts = await FilterPostsByUserId(userId, currentUser);
                 if (posts == null)
                 {
                     response.Success = false;
@@ -485,7 +485,7 @@ namespace Application.Services
 
         }
 
-        public async Task<IActionResult?> CheckIfUserHasPermissionsByPostId(User user, int postId)
+        public async Task<IActionResult?> CheckIfUserHasPermissionsByPostId(int postId, User? user = null)
         {
             try
             {
@@ -504,10 +504,15 @@ namespace Application.Services
                 {
                     return new NotFoundObjectResult("The project associated with the requested post cannot be found.");
                 }
-                if (user.Role == UserEnum.CUSTOMER)
+                if (existingPost.Status == PostEnum.PRIVATE || existingPost.Status == PostEnum.EXCLUSIVE)
                 {
-                    if (existingPost.Status == PostEnum.PRIVATE || existingPost.Status == PostEnum.EXCLUSIVE)
+                    if (user == null || !(user.UserId > 0))
                     {
+                        return new UnauthorizedObjectResult("This request is not authorized.");
+                    }
+                    else if (user.Role == UserEnum.CUSTOMER)
+                    {
+
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null && user.UserId != existingPost.UserId && user.UserId != existingProject.CreatorId)
                         {
@@ -525,12 +530,13 @@ namespace Application.Services
                             }
                         }
                     }
-                    else if (existingPost.Status == PostEnum.DELETED)
-                    {
-                        return new NotFoundObjectResult("The requested post cannot be found.");
-                    }
-                    return null;
                 }
+                else if (existingPost.Status == PostEnum.DELETED && (user == null || !(user.UserId > 0) || user.Role == UserEnum.CUSTOMER))
+                {
+                    return new NotFoundObjectResult("The requested post cannot be found.");
+                }
+                return null;
+
             }
             catch
             {
