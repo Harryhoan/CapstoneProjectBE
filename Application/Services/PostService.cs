@@ -66,8 +66,8 @@ namespace Application.Services
                 post.Title = createPostDTO.Title;
                 post.Description = createPostDTO.Description;
                 post.Status = createPostDTO.Status;
-                post.PostId = 0;
-                post.CreatedDatetime = DateTime.Now;
+                //post.PostId = 0;
+                post.CreatedDatetime = DateTime.UtcNow;
                 await _unitOfWork.PostRepo.AddAsync(post);
                 response.Data = post.PostId;
                 response.Success = true;

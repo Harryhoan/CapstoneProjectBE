@@ -229,6 +229,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = commentDTOs;
                 response.Success = true;
+                if (response.Data.Count <= 0)
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {

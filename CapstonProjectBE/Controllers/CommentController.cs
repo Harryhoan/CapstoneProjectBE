@@ -20,7 +20,7 @@ namespace CapstonProjectBE.Controllers
         }
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreatePostComment([FromBody] CreatePostCommentDTO createPostCommentDTO)
+        public async Task<IActionResult> CreatePostComment([FromForm] CreatePostCommentDTO createPostCommentDTO)
         {
             var user = _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null) 
@@ -36,7 +36,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet("GetComment")]
         public async Task<IActionResult> GetCommentsByPostId(int postId)
         {
             var result = await _commentService.GetCommentsByPostId(postId);
@@ -60,7 +60,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
+        [HttpGet("GetCommentById")]
         public async Task<IActionResult> GetCommentsByProjectId(int projectId)
         {
             var result = await _commentService.GetCommentsByProjectId(projectId);
@@ -83,7 +83,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-        [HttpGet]
+        [HttpGet("GetCommentByUserId")]
         public async Task<IActionResult> GetCommentsByUserId(int userId)
         {
             var result = await _commentService.GetCommentsByUserId(userId);
@@ -108,7 +108,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "Customer")]
-        [HttpPut]
+        [HttpPut("UpdateComment")]
         public async Task<IActionResult> UpdateComment([FromForm] UpdateCommentDTO updateCommentDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -130,7 +130,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "Customer, Staff")]
-        [HttpDelete]
+        [HttpDelete("DeleteComment")]
         public async Task<IActionResult> RemoveComment(int commentId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -152,7 +152,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "Customer, Staff")]
-        [HttpDelete]
+        [HttpDelete("SoftDelComment")]
         public async Task<IActionResult> SoftRemoveComment(int commentId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
