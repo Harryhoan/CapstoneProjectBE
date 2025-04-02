@@ -22,12 +22,12 @@ namespace CapstonProjectBE.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePostComment([FromForm] CreatePostCommentDTO createPostCommentDTO)
         {
-            var user = _authenService.GetUserByTokenAsync(HttpContext.User);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null) 
             {
                 return Unauthorized();
             }
-            var result = await _commentService.CreatePostComment(createPostCommentDTO, user.Id);
+            var result = await _commentService.CreatePostComment(createPostCommentDTO, user.UserId);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -60,7 +60,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [HttpGet("GetCommentById")]
+        [HttpGet("GetCommentsByProjectId")]
         public async Task<IActionResult> GetCommentsByProjectId(int projectId)
         {
             var result = await _commentService.GetCommentsByProjectId(projectId);
@@ -72,7 +72,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [HttpGet("pagination")]
+        [HttpGet("pagination/project")]
         public async Task<IActionResult> GetPaginatedCommentsByProjectId(int projectId, int page = 1, int pageSize = 20)
         {
             var result = await _commentService.GetPaginatedCommentsByProjectId(projectId, page, pageSize);
@@ -95,7 +95,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [HttpGet("pagination")]
+        [HttpGet("pagination/user")]
         public async Task<IActionResult> GetPaginatedCommentsByUserId(int userId, int page = 1, int pageSize = 20)
         {
             var result = await _commentService.GetPaginatedCommentsByUserId(userId, page, pageSize);
