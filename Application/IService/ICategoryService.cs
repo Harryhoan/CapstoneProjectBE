@@ -11,9 +11,9 @@ namespace Application.IService
 {
     public interface ICategoryService
     {
-        public Task<ServiceResponse<IEnumerable<Category>>> GetAllCategory(); 
+        public Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory(); 
         public Task<ServiceResponse<AddCategory>> AddCategory(AddCategory category);
-        public Task<ServiceResponse<Category>> UpdateCategory();
+        public Task<ServiceResponse<ViewCategory>> UpdateCategory(int categoryId, UpdateCategory updateCategory);
         public Task<ServiceResponse<int>> DeleteCategory(int categoryId);
 
     }

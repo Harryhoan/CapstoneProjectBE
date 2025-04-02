@@ -136,5 +136,11 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(await _projectService.StaffApproveAsync(projectId, user.UserId, status, reason));
         }
+
+        [HttpPost("AddCategoryToProject")]
+        public async Task<IActionResult> AddCategoryToProject([FromForm] AddCategoryToProject addCategoryToProject)
+        {
+            return Ok(await _projectService.AddCategoryToProject(addCategoryToProject));
+        }
     }
 }

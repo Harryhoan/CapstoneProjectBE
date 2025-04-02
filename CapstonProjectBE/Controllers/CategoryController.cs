@@ -29,5 +29,18 @@ namespace CapstonProjectBE.Controllers
             var newCategory = await _categoryService.AddCategory(category);
             return Ok(newCategory);
         }
+
+        [HttpDelete("DeleteCategory")]
+        public async Task<IActionResult> DeleteCategory(int categoryId)
+        {
+            return Ok(await _categoryService.DeleteCategory(categoryId));
+        }
+
+        [HttpPut("UpdateCategory")]
+        public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
+        {
+            var updateCategory = await _categoryService.UpdateCategory(categoryId, updateCate);
+            return Ok(updateCategory);  
+        }
     }
 }
