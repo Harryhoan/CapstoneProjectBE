@@ -24,8 +24,9 @@ namespace Infrastructure.Repositories
         {
             var allComments = await _dbContext.PostComments
                 .Where(pc => pc.PostId == postId)
+                .Include(c => c.Comment.User)
                 .Select(pc => pc.Comment)
-                .Include(c => c.User)
+
                 .ToListAsync();
 
             var parentComments = allComments.Where(c => c.ParentCommentId == null).ToList();

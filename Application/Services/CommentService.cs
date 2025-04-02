@@ -64,14 +64,16 @@ namespace Application.Services
                     }
                 }
 
-                Comment comment = new Comment();
-                comment.UserId = existingUser.UserId;
-                comment.Content = createPostCommentDTO.Content;
-                comment.CommentId = 0;
-                comment.Status = "Created";
-                comment.ParentCommentId = createPostCommentDTO.ParentCommentId;
-                comment.CreatedDatetime = DateTime.UtcNow;
-                comment.UpdatedDatetime = DateTime.UtcNow;
+                Comment comment = new()
+                {
+                    UserId = existingUser.UserId,
+                    Content = createPostCommentDTO.Content,
+                    CommentId = 0,
+                    Status = "Created",
+                    ParentCommentId = createPostCommentDTO.ParentCommentId,
+                    CreatedDatetime = DateTime.UtcNow,
+                    UpdatedDatetime = DateTime.UtcNow
+                };
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
                 {
@@ -80,6 +82,12 @@ namespace Application.Services
                     return response;
                 }
 
+                PostComment postComment = new()
+                {
+                    PostId = existingPost.PostId,
+                    CommentId = comment.CommentId
+                };
+                await _unitOfWork.PostCommentRepo.AddAsync(postComment);
                 response.Data = comment.CommentId;
                 response.Success = true;
                 response.Message = "Comment created successfully";
@@ -115,8 +123,8 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                var existingPost = await _unitOfWork.ProjectRepo.GetByIdAsync(createProjectCommentDTO.ProjectId);
-                if (existingPost == null)
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createProjectCommentDTO.ProjectId);
+                if (existingProject == null)
                 {
                     response.Success = false;
                     response.Message = "Post not found";
@@ -148,6 +156,12 @@ namespace Application.Services
                     response.Message = "Comment cannot be created";
                     return response;
                 }
+                ProjectComment projectComment = new()
+                {
+                    ProjectId = existingProject.ProjectId,
+                    CommentId = comment.CommentId
+                };
+                await _unitOfWork.ProjectCommentRepo.AddAsync(projectComment);
 
                 response.Data = comment.CommentId;
                 response.Success = true;
@@ -229,6 +243,14 @@ namespace Application.Services
                 var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
                 response.Data = commentDTOs;
                 response.Success = true;
+                if (response.Data.Count <= 0)
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
             }
             catch (Exception ex)
             {
