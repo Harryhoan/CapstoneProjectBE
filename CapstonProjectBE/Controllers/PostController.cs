@@ -40,12 +40,12 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPostById(int postId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _postService.CheckIfUserHasPermissionsByPostId(user, postId);
+            var check = await _postService.CheckIfUserHasPermissionsByPostId(postId, user);
             if (check != null)
             {
                 return check;
             }
-            var result = await _postService.GetPostById(postId, user == null ? null : user.UserId);
+            var result = await _postService.GetPostById(postId, user?.UserId);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -58,7 +58,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPostsByUserId(int userId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var result = await _postService.GetPostsByProjectId(userId, user.UserId);
+            var result = await _postService.GetPostsByUserId(userId, user);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -71,7 +71,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPaginatedPostsByUserId(int userId, int page = 1, int pageSize = 20)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var result = await _postService.GetPaginatedPostsByProjectId(userId, page, pageSize, user.UserId);
+            var result = await _postService.GetPaginatedPostsByUserId(userId, page, pageSize, user);
             if (!result.Success)
             {
                 return BadRequest(result);

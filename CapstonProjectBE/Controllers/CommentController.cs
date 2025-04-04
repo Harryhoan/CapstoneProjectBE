@@ -19,7 +19,7 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
         [Authorize]
-        [HttpPost]
+        [HttpPost("post")]
         public async Task<IActionResult> CreatePostComment([FromForm] CreatePostCommentDTO createPostCommentDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -27,7 +27,12 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            var result = await _commentService.CreatePostComment(createPostCommentDTO, user.UserId);
+            var check = await _commentService.CheckIfUserHasPermissionsByPostId(user, createPostCommentDTO.PostId);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _commentService.CreatePostComment(createPostCommentDTO, user);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -35,6 +40,30 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpPost("project")]
+        public async Task<IActionResult> CreateProjectComment([FromForm] CreateProjectCommentDTO createProjectCommentDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var check = await _commentService.CheckIfUserHasPermissionsByProjectId(user, createProjectCommentDTO.ProjectId);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _commentService.CreateProjectComment(createProjectCommentDTO, user);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
 
         [HttpGet("GetComment")]
         public async Task<IActionResult> GetCommentsByPostId(int postId)
