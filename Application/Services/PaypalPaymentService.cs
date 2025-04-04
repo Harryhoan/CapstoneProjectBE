@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using AutoMapper;
+using Domain.Entities;
 using Domain.Enums;
 using Microsoft.Extensions.Configuration;
 using PayPal;
@@ -31,6 +32,7 @@ namespace Application.Services
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
                 var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
+                var pledgeDetails = new List<PledgeDetail>();
 
                 if (user == null)
                 {
@@ -50,10 +52,22 @@ namespace Application.Services
                     response.Message = "You are not allowed to do this method";
                     return response;
                 }
+                if (project.StartDatetime < project.EndDatetime)
+                {
+                    response.Success = false;
+                    response.Message = "This project has not ended yet.";
+                    return response;
+                }
                 if (project.Status == ProjectEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This project has been deleted.";
+                    return response;
+                }
+                if (project.TotalAmount < project.MinimumAmount)
+                {
+                    response.Success = false;
+                    response.Message = "This project has not reached the minimum amount.";
                     return response;
                 }
                 var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
@@ -99,7 +113,20 @@ namespace Application.Services
                 //    pledge.Amount = 0;
                 //    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                 //}
+                foreach (var pledge in pledges)
+                {
+                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                    if (details != null)
+                    {
+                        pledgeDetails.AddRange(details);
+                    }
+                }
+                foreach (var pledgeDetail in pledgeDetails)
+                {
+                    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
+                }
 
+                await _unitOfWork.SaveChangeAsync();
                 response.Success = true;
                 response.Message = "Payout created successfully.";
             }
@@ -145,6 +172,18 @@ namespace Application.Services
                     response.Message = "Project Id not found.";
                     return response;
                 }
+                if (project.StartDatetime < project.EndDatetime)
+                {
+                    response.Success = false;
+                    response.Message = "This project has not ended yet.";
+                    return response;
+                }
+                if (project.TotalAmount >= project.MinimumAmount)
+                {
+                    response.Success = false;
+                    response.Message = "This project has reached the minimum amount.";
+                    return response;
+                }
                 if (project.Status == ProjectEnum.DELETED)
                 {
                     response.Success = false;
@@ -187,7 +226,7 @@ namespace Application.Services
 
                 var createdPayout = payout.Create(apiContext, false);
 
-                pledge.Amount = 0;
+                //pledge.Amount = 0;
                 await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
 
@@ -501,7 +540,12 @@ namespace Application.Services
                     await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
 
                     var getPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
-
+                    if (getPledge == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Pledge not found.";
+                        return response;
+                    }
                     Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
                     {
                         PledgeId = getPledge.PledgeId,
