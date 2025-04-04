@@ -54,8 +54,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(response);
         }
         /// <summary>
-        /// Retrieves user information based on the authenticated user's token. Access is restricted to users with
-        /// 'Customer' or 'Admin' roles.
+        /// Retrieves user information based on the authenticated user's token.
         /// </summary>
         /// <returns>Returns an IActionResult indicating the success or failure of the user retrieval operation.</returns>
         [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
@@ -75,19 +74,14 @@ namespace CapstonProjectBE.Controllers
             return Ok(response);
         }
         /// <summary>
-        /// Retrieves user information based on a specified identifier for authorized staff or admin users.
+        /// Retrieves user information based on a specified identifier.
         /// </summary>
         /// <param name="userId">The identifier used to look up the user in the system.</param>
         /// <returns>Returns an action result indicating the success or failure of the user retrieval operation.</returns>
-        [Authorize(Roles = "STAFF, ADMIN")]
+        [AllowAnonymous]
         [HttpGet("GetUserByUserId")]
-        public async Task<IActionResult> GetUserByUserIdByMonitor(int userId)
+        public async Task<IActionResult> GetUserByUserId(int userId)
         {
-            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null)
-            {
-                return Unauthorized();
-            }
             var response = await _userService.GetUserByIdAsync(userId);
             if (response.Success == false)
             {

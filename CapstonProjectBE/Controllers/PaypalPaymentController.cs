@@ -25,7 +25,7 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            var result = await _paypalPaymentService.CreatePaymentAsync(user.UserId, projectId, amount, "http://localhost:50875/payment", "http://localhost:50875/user/cart");
+            var result = await _paypalPaymentService.CreatePaymentAsync(user.UserId, projectId, amount, "http://localhost:3000/payment/result", "http://localhost:50875/user/cart");
 
             if (!result.Success)
             {

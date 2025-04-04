@@ -1,0 +1,89 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.PledgePages.DetailModel
+@{
+    ViewData["Title"] = "Pledge Details";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Pledge Details</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th class="bg-light">Pledge ID</th>
+                            <td>@Model.pledgeDTO.PledgeId</td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">User ID</th>
+                            <td>
+                                <a asp-page="/Admin/UserPages/Details" asp-route-userId="@Model.pledgeDTO.UserId" class="text-primary fw-bold">
+                                    @Model.pledgeDTO.UserId
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Project ID</th>
+                            <td>
+                                <a asp-page="/Admin/ProjectPages/Details" asp-route-projectId="@Model.pledgeDTO.ProjectId" class="text-primary fw-bold">
+                                    @Model.pledgeDTO.ProjectId
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="bg-light">Amount</th>
+                            <td>@Model.pledgeDTO.Amount</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h5 class="mt-4">Payment Details</h5>
+            @if (Model.pledgeDTO.PledgeDetail != null && Model.pledgeDTO.PledgeDetail.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.pledgeDTO.PledgeDetail)
+                            {
+                                <tr>
+                                    <td>@detail.PaymentId</td>
+                                    <td>
+                                        <span class="badge @(detail.Status == "REFUNDED" ? "badge-danger" : "badge-success")">
+                                            @detail.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No payment details available.</p>
+            }
+        </div>
+        <div class="card-footer text-start">
+            <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/adminAssets/assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/popper.min.js"></script>
+    <script src="~/adminAssets/assets/js/core/bootstrap.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/datatables/datatables.min.js"></script>
+    <script src="~/adminAssets/assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+}

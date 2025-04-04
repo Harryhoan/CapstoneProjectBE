@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities;
+using Domain.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -89,7 +90,108 @@ namespace Application.Utils
                 }
             }
         }
+        public static async Task<bool> SendProjectConfirmationEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, Enum status)
+        {
+            var userName = "GameMkt";
+            var emailFrom = "thongsieusao3@gmail.com";
+            var password = "dfni ihvq panf lyjc";
 
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", creatorEmail));
+            message.Subject = "GameMkt notification.";
+            message.Body = new TextPart("html")
+            {
+                Text =
+                $@"
+<html>
+    <head>
+        <style>
+            body {{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }}
+            .mailHeader {{
+                text-align: center;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .content {{
+                text-align: text-end;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .button {{
+                display: inline-block;
+                padding: 12px 24px;
+                background: linear-gradient(45deg, #007bff, #0056b3);
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 8px;
+                font-size: 18px;
+                font-weight: bold;
+                transition: background 0.3s ease-in-out, transform 0.2s;
+            }}
+            .button:hover {{
+                background: #ffffff;
+                transform: scale(1.05);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='mailHeader'>
+            <h2>Project Confirmation</h2>
+        </div>
+        <div class='content'>
+            <div class='details'>
+                <p> <strong>Dear {creatorFullname},</strong></p>
+                
+                <p>We are pleased to inform you that your project <strong>{title}</strong> has been successfully created.</p>
+                <p><strong>Project Title:</strong> {title}</p>
+                <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
+                <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
+                <p><strong>Current Status:</strong> {status}</p>
+                <p><strong>Assigned Staff:</strong> {staffFullname}</p>
+                <p><strong>Staff Email:</strong> {staffEmail}</p>
+            </div>
+            
+            <p>Your project will be monitored by our staff member <strong>{staffFullname}</strong>. Once you have fully fullfilled your project <strong>{title}</strong>, you can ask your project monitor <strong>({staffFullname})</strong> to approve your project and start earning your money.</p>
+            <p>If you have any questions or need assistance, please feel free to reach out via your staff email {staffEmail}.</p>
+            <p>Best regards,</p>
+            <p><strong>GameMkt Developer Team</strong></p>
+        </div>
+    </body>
+</html>
+"
+            };
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                //authenticate account email
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
         public static async Task<bool> SendHaltedProjectStatusEmailToMonitor(
     string toEmail,
     string projectTitle,

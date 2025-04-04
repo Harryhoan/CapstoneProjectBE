@@ -37,6 +37,12 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User has been deleted.";
+                    return response;
+                }
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)

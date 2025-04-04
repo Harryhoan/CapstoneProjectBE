@@ -62,6 +62,13 @@ namespace Application.Services
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
+                var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+                if (creator == null)
+                {
+                    response.Success = false;
+                    response.Message = "Creator not found.";
+                    return response;
+                }
                 var payout = new Payout
                 {
                     sender_batch_header = new PayoutSenderBatchHeader
@@ -79,7 +86,7 @@ namespace Application.Services
                         value = project.TotalAmount.ToString(),
                         currency = "USD"
                     },
-                    receiver = user.Email,
+                    receiver = creator.Email,
                     note = "Transfer of pledged funds",
                     sender_item_id = projectId.ToString()
                 }
@@ -87,11 +94,11 @@ namespace Application.Services
                 };
                 var createdPayout = payout.Create(apiContext, false);
 
-                foreach (var pledge in pledges)
-                {
-                    pledge.Amount = 0;
-                    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-                }
+                //foreach (var pledge in pledges)
+                //{
+                //    pledge.Amount = 0;
+                //    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                //}
 
                 response.Success = true;
                 response.Message = "Payout created successfully.";
