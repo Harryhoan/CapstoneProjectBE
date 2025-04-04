@@ -32,6 +32,7 @@
     public enum PledgeDetailEnum
     {
         PLEDGED,
+        TRANSFERRED,
         REFUNDED
     }
     public enum CollaboratorEnum

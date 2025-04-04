@@ -25,7 +25,7 @@
                         }
                         else
                         {
-                            <span>No Avatar</span>
+                            <span>No Thumbnail</span>
                         }
                     </dd>
 
@@ -67,6 +67,12 @@
                 <a asp-page="./Story" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View Story</a>
                 <button class="btn btn-success btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#approveProjectModal">
                     <i class="fa fa-check"></i> Approve Project
+                </button>
+                <button id="transferToCreatorBtn" class="btn btn-warning btn-round ms-auto">
+                    <i class="fa fa-money-bill-wave"></i> Transfer
+                </button>
+                <button id="refundPledgesBtn" class="btn btn-danger btn-round ms-auto">
+                    <i class="fa fa-undo"></i> Refund All Pledges
                 </button>
             </div>
         </div>
@@ -121,8 +127,65 @@
     <script src="~/adminAssets/assets/js/setting-demo.js"></script>
     <script src="~/adminAssets/assets/js/demo.js"></script>
     <script src="~/adminAssets/assets/js/plugin/webfont/webfont.min.js"></script>
-
     <script>
+        $(document).ready(function () {
+            $('#transferToCreatorBtn').click(function () {
+                var projectId = @Model.projectDetail.ProjectId;
+                var token = sessionStorage.getItem("AuthToken") || getCookie("AuthToken");
+
+                if (!token) {
+                    alert("Authentication token is missing! Please log in again.");
+                    return;
+                }
+
+                if (!confirm("Are you sure you want to transfer money to the creator? This action is irreversible.")) {
+                    return;
+                }
+
+                $.ajax({
+                    url: `https://marvelous-gentleness-production.up.railway.app/api/PaypalPayment/TransferPledgeToCreator?projectId=${projectId}`,
+                    type: 'POST',
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    },
+                    success: function (response) {
+                        alert("Funds transferred successfully!");
+                    },
+                    error: function (xhr) {
+                        alert('Error transferring funds: ' + xhr.responseText);
+                    }
+                });
+            });
+        });
+
+        $('#refundPledgesBtn').click(function () {
+                var projectId = @Model.projectDetail.ProjectId;
+                var token = sessionStorage.getItem("AuthToken") || getCookie("AuthToken");
+
+                if (!token) {
+                    alert("Authentication token is missing! Please log in again.");
+                    return;
+                }
+
+                if (!confirm("Are you sure you want to refund all pledges for this project? This action is irreversible.")) {
+                    return;
+                }
+
+                $.ajax({
+                    url: `https://marvelous-gentleness-production.up.railway.app/api/PaypalPayment/RefundAllPledgesForProject?projectId=${projectId}`,
+                    type: 'POST',
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    },
+                    success: function (response) {
+                        alert("All pledges refunded successfully!");
+                    },
+                    error: function (xhr) {
+                        alert('Error refunding pledges: ' + xhr.responseText);
+                    }
+                });
+            });
+
         function getCookie(name) {
             let matches = document.cookie.match(new RegExp(
                 "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
