@@ -33,7 +33,23 @@ namespace Application.Services
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
                 var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
                 var pledgeDetails = new List<PledgeDetail>();
-
+                foreach (var pledge in pledges)
+                {
+                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                    if (details != null)
+                    {
+                        pledgeDetails.AddRange(details);
+                    }
+                }
+                foreach (var item in pledgeDetails)
+                {
+                    if (item.Status == PledgeDetailEnum.TRANSFERRED)
+                    {
+                        response.Success = false;
+                        response.Message = "This pledge has already been transferred.";
+                        return response;
+                    }
+                }
                 if (user == null)
                 {
                     response.Success = false;
@@ -113,14 +129,7 @@ namespace Application.Services
                 //    pledge.Amount = 0;
                 //    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                 //}
-                foreach (var pledge in pledges)
-                {
-                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-                    if (details != null)
-                    {
-                        pledgeDetails.AddRange(details);
-                    }
-                }
+
                 foreach (var pledgeDetail in pledgeDetails)
                 {
                     pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;

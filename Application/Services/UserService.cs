@@ -82,7 +82,7 @@ namespace Application.Services
                 var users = await _userRepo.GetAllUser();
                 if (user.Role == UserEnum.STAFF)
                 {
-                    var staffUser = _mapper.Map<IEnumerable<UserDTO>>(users).Where(u => u.Role == "Customer");
+                    var staffUser = _mapper.Map<IEnumerable<UserDTO>>(user.Role == UserEnum.CUSTOMER);
                     response.Data = staffUser;
                     response.Success = true;
                     response.Message = "Get all user successfully";
