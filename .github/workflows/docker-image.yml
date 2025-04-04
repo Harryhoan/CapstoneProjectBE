@@ -30,26 +30,3 @@ jobs:
         
       - name: Push Docker image to Docker Hub
         run: docker push trungthong/capstonebe:latest
-
-      - name: Cache Railway CLI
-        uses: actions/cache@v3
-        with:
-          path: ~/.railway
-          key: ${{ runner.os }}-railway-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-railway-
-
-      - name: Install Railway CLI
-        run: |
-          if ! command -v railway &> /dev/null || [[ "$(railway --version)" != "$(curl -sSL https://cli.railway.app/version)" ]]; then
-            curl -fsSL https://cli.railway.app/install.sh | sh
-            echo "$HOME/.railway/bin" >> $GITHUB_PATH
-          fi
-
-      - name: Authenticate to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway login --token $RAILWAY_TOKEN
-
-      - name: Deploy to Railway
-        run: railway up
