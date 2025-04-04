@@ -1,4 +1,4 @@
-name: Build and Publish image to Docker Hub and deploy to railway
+name: Build and Publish image to Docker Hub and deploy to Railway
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
   publish_images:
     runs-on: ubuntu-latest
     steps: 
-      - name: checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -22,13 +22,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           
-      - name: build image
+      - name: Build Docker image
         run: docker build -t capstoneprojectbedocker:latest -f Dockerfile .
 
-      - name: docker tag
+      - name: Tag Docker image
         run: docker tag capstoneprojectbedocker:latest trungthong/capstonebe:latest
         
-      - name: push image to docker hub
+      - name: Push Docker image to Docker Hub
         run: docker push trungthong/capstonebe:latest
 
       - name: Cache Railway CLI
