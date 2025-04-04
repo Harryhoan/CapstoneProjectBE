@@ -41,15 +41,12 @@ namespace CapstoneProjectDashboardFE.Pages
                             SameSite = SameSiteMode.Strict
                         });
 
-                        if (result.Role != "Admin" && result.Role != "Staff")
+                        if (result.Role != "ADMIN" && result.Role != "STAFF")
                         {
                             Message = "You are not allow to access.";
                             return Page();
                         }
-                        if (result.Role == "Role")
-                        {
-                            return RedirectToPage("/Staff/UserPages/Index");
-                        }
+
                         return RedirectToPage("/Admin/UserPages/Index");
                     }
                     else

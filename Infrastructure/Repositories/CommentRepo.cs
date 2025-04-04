@@ -20,7 +20,6 @@ namespace Infrastructure.Repositories
                 .Where(pc => pc.PostId == postId)
                 .Include(c => c.Comment.User)
                 .Select(pc => pc.Comment)
-
                 .ToListAsync();
 
             var parentComments = allComments.Where(c => c.ParentCommentId == null).ToList();
@@ -47,8 +46,8 @@ namespace Infrastructure.Repositories
         {
             var allComments = await _dbContext.ProjectComments
                 .Where(pc => pc.ProjectId == projectId)
+                .Include(c => c.Comment.User)
                 .Select(pc => pc.Comment)
-                .Include(c => c.User)
                 .ToListAsync();
 
             var parentComments = allComments.Where(c => c.ParentCommentId == null).ToList();

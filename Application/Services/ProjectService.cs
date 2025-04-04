@@ -85,7 +85,7 @@ namespace Application.Services
                         TotalAmount = projectItem.TotalAmount,
                         StartDatetime = projectItem.StartDatetime,
                         EndDatetime = projectItem.EndDatetime,
-                        Backers = projectItem.Pledges.Count(pl => pl.ProjectId == projectItem.ProjectId) // Calculate the total number of backers with valid ProjectId
+                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(projectItem.ProjectId) // Calculate the total number of backers with valid ProjectId
                     };
 
                     responseData.Add(projectDto);
@@ -172,6 +172,21 @@ namespace Application.Services
                     Backers = 0,
                     EndDatetime = project.EndDatetime
                 };
+
+                var specificUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (specificUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                var ConfirmProjectCreatedEmail = await EmailSender.SendProjectConfirmationEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, project.Title ?? "Unknown", project.StartDatetime, project.EndDatetime, project.Status);
+                if (!ConfirmProjectCreatedEmail)
+                {
+                    response.Success = false;
+                    response.Message = "Error when sending email notification.";
+                    return response;
+                }
                 response.Data = responseData;
                 response.Success = true;
                 response.Message = "Project created successfully.";
@@ -285,7 +300,7 @@ namespace Application.Services
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
-                        Backers = project.Pledges.Count(pl => pl.ProjectId == project.ProjectId) // Calculate the total number of backers with valid ProjectId
+                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId) // Calculate the total number of backers with valid ProjectId
                     };
 
                     responseData.Add(projectDto);

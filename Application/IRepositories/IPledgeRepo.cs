@@ -9,5 +9,6 @@ namespace Application.IRepositories
         Task<List<Pledge>> GetManyPledgeByUserIdAndProjectIdAsync(int userId, int projectId);
         Task<List<Pledge>> GetPledgeByUserIdAsync(int userId);
         Task<List<Pledge>> GetPledgeByProjectIdAsync(int projectId);
+        Task<int> GetBackersByProjectIdAsync(int projectId);
     }
 }

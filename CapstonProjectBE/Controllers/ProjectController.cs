@@ -35,7 +35,7 @@ namespace CapstonProjectBE.Controllers
         /// </summary>
         /// <returns>Returns an Ok response with the list of projects if the user is authorized.</returns>
         [HttpGet("GetAllProjectByMonitor")]
-        [Authorize(Roles = "ADMIn, STAFF")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         public async Task<IActionResult> GetAllProjectByMonitor()
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

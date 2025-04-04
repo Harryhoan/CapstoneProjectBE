@@ -13,6 +13,10 @@ namespace Infrastructure.Repositories
         {
             _context = context;
         }
+        public async Task<int> GetBackersByProjectIdAsync(int projectId)
+        {
+            return await _context.Pledges.Where(p => p.ProjectId == projectId).CountAsync();
+        }
 
         public async Task<Pledge> GetPledgeByIdAsync(int id)
         {

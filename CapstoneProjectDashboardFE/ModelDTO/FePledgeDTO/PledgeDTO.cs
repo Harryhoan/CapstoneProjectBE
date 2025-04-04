@@ -12,5 +12,7 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FePledgeDTO
         public int ProjectId { get; set; }
         [JsonProperty("amount")]
         public decimal Amount { get; set; }
+        [JsonProperty("pledge-detail")]
+        public List<PledgeDetailDTO> PledgeDetail { get; set; } = new List<PledgeDetailDTO>();
     }
 }
