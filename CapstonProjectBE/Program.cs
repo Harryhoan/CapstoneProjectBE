@@ -155,6 +155,7 @@ namespace CapstonProjectBE
             });
 
             var app = builder.Build();
+
            //app.UseDeveloperExceptionPage();
 
            //if (app.Environment.IsDevelopment())
