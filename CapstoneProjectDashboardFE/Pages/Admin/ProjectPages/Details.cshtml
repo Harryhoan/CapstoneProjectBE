@@ -61,10 +61,11 @@
                 </dl>
             </div>
             <div class="card-footer">
-                <a asp-page="./Index" class="btn btn-secondary">Back to List</a>
-                <a asp-page="./Rewards" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-primary">View Rewards</a>
-                <a asp-page="./Faqs" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View FAQs</a>
-                <a asp-page="./Story" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-info">View Story</a>
+                <a asp-page="./Index" class="btn btn-round btn-secondary">Back to List</a>
+                <a asp-page="./Rewards" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-round btn-primary">View Rewards</a>
+                <a asp-page="./Faqs" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-round btn-info">View FAQs</a>
+                <a asp-page="./Collaborator" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-round btn-info">View Colaborators</a>
+                <a asp-page="./Story" asp-route-projectId="@Model.projectDetail.ProjectId" class="btn btn-round btn-info">View Story</a>
                 <button class="btn btn-success btn-round ms-auto" data-bs-toggle="modal" data-bs-target="#approveProjectModal">
                     <i class="fa fa-check"></i> Approve Project
                 </button>

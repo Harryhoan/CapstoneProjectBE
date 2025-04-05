@@ -79,6 +79,12 @@ namespace Application.Services
             try
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
                 var users = await _userRepo.GetAllUser();
                 if (user.Role == UserEnum.STAFF)
                 {

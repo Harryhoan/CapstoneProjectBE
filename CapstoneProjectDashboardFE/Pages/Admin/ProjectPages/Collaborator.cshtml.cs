@@ -7,9 +7,9 @@ using System.Net.Http.Headers;
 
 namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
 {
-    public class FaqsModel : PageModel
+    public class CollaboratorModel : PageModel
     {
-        public List<FaqDTO> Faqs { get; set; } = new List<FaqDTO>();
+        public List<CollaboratorDTO> CollaboratorDTO { get; set; } = new List<CollaboratorDTO>();
         public string Message { get; set; } = default!;
 
         public async Task<IActionResult> OnGetAsync(int projectId)
@@ -26,21 +26,21 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                    var response = await httpClient.GetAsync($"https://marvelous-gentleness-production.up.railway.app/api/Faq/GetFaqByProjectId?projectId={projectId}");
+                    var response = await httpClient.GetAsync($"https://marvelous-gentleness-production.up.railway.app/api/Collaborator/project?projectId={projectId}");
 
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync();
-                        var result = JsonConvert.DeserializeObject<ServiceResponse<List<FaqDTO>>>(content);
+                        var result = JsonConvert.DeserializeObject<ServiceResponse<List<CollaboratorDTO>>>(content);
 
                         if (result != null && result.Success)
                         {
-                            Faqs = result.Data ?? new List<FaqDTO>();
+                            CollaboratorDTO = result.Data ?? new List<CollaboratorDTO>();
                             return Page();
                         }
                         else
                         {
-                            Message = result?.Message ?? "Failed to retrieve FAQs.";
+                            Message = result?.Message ?? "Failed to retrieve rewards.";
                         }
                     }
                     else

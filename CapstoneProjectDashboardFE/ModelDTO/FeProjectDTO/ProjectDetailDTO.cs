@@ -18,7 +18,7 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO
         [JsonProperty("story")]
         public string Story { get; set; } = string.Empty;
         [JsonProperty("backers")]
-        public int Backers { get; set; } = 0;
+        public int Backers { get; set; }
         [JsonProperty("title")]
         public string? Title { get; set; }
         [JsonProperty("description")]
