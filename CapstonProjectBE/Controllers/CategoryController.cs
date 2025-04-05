@@ -22,6 +22,24 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategory());
         }
 
+        [HttpGet("GetCategoryByCategoryId")]
+        public async Task<IActionResult> GetCategoryByCategoryId(int categoryId)
+        {
+            return Ok(await _categoryService.GetCategoryByCategoryId(categoryId));
+        }
+
+        [HttpGet("GetCategoryByParentCategoryId")]
+        public async Task<IActionResult> GetCategoryByParentCategoryId(int parentCategoryId)
+        {
+            return Ok(await _categoryService.GetAllCategoryByParentId(parentCategoryId));
+        }
+
+        [HttpGet("GetAllCategoryByProjectId")]
+        public async Task<IActionResult> GetAllCategoryByProjectId(int projecId)
+        {
+            return Ok(await _categoryService.GetAllCategoryByProjectId(projecId));
+        }
+
         [HttpPost("AddCategory")]
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
@@ -33,6 +51,12 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             return Ok(await _categoryService.DeleteCategory(categoryId));
+        }
+
+        [HttpDelete("DeleteCategoryFromProject")]
+        public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
+        {
+            return Ok(await _categoryService.DeleteCategoryFromProject(projectId, categoryId));
         }
 
         [HttpPut("UpdateCategory")]
