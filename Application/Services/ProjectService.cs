@@ -445,12 +445,22 @@ namespace Application.Services
                     return response;
                 }
 
-                if (string.IsNullOrWhiteSpace(updateProjectDto.Name))
+                if (!string.IsNullOrWhiteSpace(updateProjectDto.Name))
+                    existingProject.Title = updateProjectDto.Name;
+
+                if (!string.IsNullOrWhiteSpace(updateProjectDto.Description))
+                    existingProject.Description = updateProjectDto.Description;
+
+                if (updateProjectDto.MinimumAmount > 0)
                 {
-                    response.Success = false;
-                    response.Message = "Project name is required.";
-                    return response;
+                    existingProject.MinimumAmount = updateProjectDto.MinimumAmount;
                 }
+
+                if (updateProjectDto.StartDatetime != default)
+                    existingProject.StartDatetime = updateProjectDto.StartDatetime;
+
+                if (updateProjectDto.EndDatetime != default)
+                    existingProject.EndDatetime = updateProjectDto.EndDatetime;
 
                 if (updateProjectDto.StartDatetime >= updateProjectDto.EndDatetime)
                 {
