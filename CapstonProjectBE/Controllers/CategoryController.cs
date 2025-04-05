@@ -22,6 +22,12 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategory());
         }
 
+        [HttpGet("GetAllCategoryByProjectCategoryId")]
+        public async Task<IActionResult> GetAllCategoryByProjectCategoryId(int projecId)
+        {
+            return Ok(await _categoryService.GetAllCategoryByProjectId(projecId));
+        }
+
         [HttpPost("AddCategory")]
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
@@ -33,6 +39,12 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             return Ok(await _categoryService.DeleteCategory(categoryId));
+        }
+
+        [HttpDelete("DeleteCategoryFromProject")]
+        public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
+        {
+            return Ok(await _categoryService.DeleteCategoryFromProject(projectId, categoryId));
         }
 
         [HttpPut("UpdateCategory")]

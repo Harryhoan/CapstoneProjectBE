@@ -69,6 +69,34 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int projectId, int categoryId)
+        {
+            var response = new ServiceResponse<int>();
+
+            try
+            {
+                var category = await _unitOfWork.ProjectCategoryRepo.FindEntityAsync(pc => pc.ProjectId == projectId && pc.CategoryId == categoryId);
+                if (category == null)
+                {
+                    response.Success = false;
+                    response.Message = "No categories found for this project.";
+                    return response;
+                }
+
+                await _unitOfWork.ProjectCategoryRepo.RemoveAsync(category);
+
+                response.Success = true;
+                response.Message = "Categories deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
+        } 
+
         public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory()
         {
             var response = new ServiceResponse<IEnumerable<ViewCategory>>();
@@ -103,6 +131,56 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByProjectId(int projectId)
+        {
+            var response = new ServiceResponse<IEnumerable<ViewCategory>>();
+
+            try
+            {
+                var projectCategories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(projectId);
+
+                if (projectCategories == null || !projectCategories.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No ProjectCategories found for the given Project.";
+                    return response;
+                }
+
+                var categories = projectCategories
+                    .Where(pc => pc.Category != null)
+                    .Select(pc => pc.Category)
+                    .Where(c => c != null)
+                    .ToList();
+
+                if (categories.Any())
+                {
+                    response.Data = categories.Select(c => new ViewCategory
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.Name,
+                        Description = c.Description,
+                        ParentCategoryId = c.ParentCategoryId,
+                    });
+                    response.Success = true;
+                    response.Message = "Categories retrieved successfully.";
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "No categories found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
+        }
+
+
         public async Task<ServiceResponse<ViewCategory>> UpdateCategory(int categoryId, UpdateCategory updateCategory)
         {
             var response = new ServiceResponse<ViewCategory>();
@@ -118,7 +196,6 @@ namespace Application.Services
                 }
 
                 var updateCate = _mapper.Map<Category>(updateCategory);
-                updateCate.ParentCategoryId = result.ParentCategoryId;
                 await _unitOfWork.CategoryRepo.UpdateAsync(updateCate);
 
                 var category = new ViewCategory

@@ -85,5 +85,10 @@ namespace Infrastructure.Repositories
         {
             return await _dbSet.AnyAsync(predicate);
         }
+        public async Task<T?> FindEntityAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.FirstOrDefaultAsync(predicate);
+        }
+
     }
 }
