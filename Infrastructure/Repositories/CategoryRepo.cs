@@ -1,6 +1,7 @@
 ﻿using Application.IRepositories;
 using Domain;
 using Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories
 {
@@ -8,6 +9,12 @@ namespace Infrastructure.Repositories
     {
         public CategoryRepo(ApiContext context) : base(context)
         {
+        }
+        public async Task<IEnumerable<Category>> GetListByParentCategoryIdAsync(int parentCategoryId)
+        {
+            return await _context.Categories
+                .Where(pc => pc.ParentCategoryId == parentCategoryId)
+                .ToListAsync();
         }
     }
 }

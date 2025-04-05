@@ -131,6 +131,49 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByParentId(int parentId)
+        {
+            var response = new ServiceResponse<IEnumerable<ViewCategory>>();
+
+            try
+            {
+                var categories = await _unitOfWork.CategoryRepo.GetListByParentCategoryIdAsync(parentId);
+
+                if (categories == null || !categories.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No Categories found for the given Project.";
+                    return response;
+                }
+
+                if (categories.Any())
+                {
+                    response.Data = categories.Select(c => new ViewCategory
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.Name,
+                        Description = c.Description,
+                        ParentCategoryId = c.ParentCategoryId,
+                    });
+                    response.Success = true;
+                    response.Message = "Categories retrieved successfully.";
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "No categories found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
+        }
+
         public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByProjectId(int projectId)
         {
             var response = new ServiceResponse<IEnumerable<ViewCategory>>();
@@ -180,6 +223,42 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<ViewCategory>> GetCategoryByCategoryId(int categoryId)
+        {
+            var response = new ServiceResponse<ViewCategory>();
+
+            try
+            {
+                var result = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
+                if (result == null)
+                {
+                    response.Success = false;
+                    response.Message = "Category not found.";
+                    return response;
+                }
+
+                var category = new ViewCategory
+                {
+                    CategoryId = categoryId,
+                    Name = result.Name,
+                    Description = result.Description,
+                    ParentCategoryId = result.ParentCategoryId,
+                };
+                response.Data = category;
+                response.Success = true;
+                response.Message = "Category updated successfully";
+
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
+        }
 
         public async Task<ServiceResponse<ViewCategory>> UpdateCategory(int categoryId, UpdateCategory updateCategory)
         {

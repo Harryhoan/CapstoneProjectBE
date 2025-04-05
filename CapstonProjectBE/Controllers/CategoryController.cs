@@ -22,8 +22,20 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategory());
         }
 
-        [HttpGet("GetAllCategoryByProjectCategoryId")]
-        public async Task<IActionResult> GetAllCategoryByProjectCategoryId(int projecId)
+        [HttpGet("GetCategoryByCategoryId")]
+        public async Task<IActionResult> GetCategoryByCategoryId(int categoryId)
+        {
+            return Ok(await _categoryService.GetCategoryByCategoryId(categoryId));
+        }
+
+        [HttpGet("GetCategoryByParentCategoryId")]
+        public async Task<IActionResult> GetCategoryByParentCategoryId(int parentCategoryId)
+        {
+            return Ok(await _categoryService.GetAllCategoryByParentId(parentCategoryId));
+        }
+
+        [HttpGet("GetAllCategoryByProjectId")]
+        public async Task<IActionResult> GetAllCategoryByProjectId(int projecId)
         {
             return Ok(await _categoryService.GetAllCategoryByProjectId(projecId));
         }
