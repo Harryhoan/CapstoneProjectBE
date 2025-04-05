@@ -1,0 +1,35 @@
+﻿@page
+@model CapstoneProjectDashboardFE.Pages.Admin.ProjectPages.CollaboratorModel
+@{
+    ViewData["Title"] = "Project Collaborators";
+    Layout = "~/Pages/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Project Collaborator</h2>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-danger">@Model.Message</div>
+}
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Fullname</th>
+            <th>Avatar</th>
+            <th>Role</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var faq in Model.CollaboratorDTO)
+        {
+            <tr>
+                <td>@faq.User.Fullname</td>
+                <td>@faq.User.Avatar</td>
+                <td>@faq.Role</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-page="./Details" asp-route-projectId="@Request.Query["projectId"]" class="btn btn-secondary">Back to Details</a>
