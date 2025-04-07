@@ -3,6 +3,7 @@ using Application.ServiceResponse;
 using Application.ViewModels.CategoryDTO;
 using AutoMapper;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.Services
 {
@@ -15,10 +16,22 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        public async Task<ServiceResponse<AddCategory>> AddCategory(AddCategory category)
+        public async Task<ServiceResponse<AddCategory>> AddCategory(int userId, AddCategory category)
         {
             var response = new ServiceResponse<AddCategory>();
-
+            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            if (user.Role != UserEnum.ADMIN)
+            {
+                response.Success = false;
+                response.Message = "You do not have permission to update this category.";
+                return response;
+            }
             try
             {
                 var newCategory = _mapper.Map<Category>(category);
@@ -37,10 +50,22 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategory(int categoryId)
+        public async Task<ServiceResponse<int>> DeleteCategory(int userId, int categoryId)
         {
             var response = new ServiceResponse<int>();
-
+            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            if (user.Role != UserEnum.ADMIN)
+            {
+                response.Success = false;
+                response.Message = "You do not have permission to update this category.";
+                return response;
+            }
             try
             {
                 var category = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
@@ -69,10 +94,22 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int projectId, int categoryId)
+        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int userId, int projectId, int categoryId)
         {
             var response = new ServiceResponse<int>();
-
+            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            if (user.Role != UserEnum.ADMIN)
+            {
+                response.Success = false;
+                response.Message = "You do not have permission to update this category.";
+                return response;
+            }
             try
             {
                 var category = await _unitOfWork.ProjectCategoryRepo.FindEntityAsync(pc => pc.ProjectId == projectId && pc.CategoryId == categoryId);
@@ -260,10 +297,22 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<ViewCategory>> UpdateCategory(int categoryId, UpdateCategory updateCategory)
+        public async Task<ServiceResponse<ViewCategory>> UpdateCategory(int userId, int categoryId, UpdateCategory updateCategory)
         {
             var response = new ServiceResponse<ViewCategory>();
-
+            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+            if (user == null)
+            {
+                response.Success = false;
+                response.Message = "User not found.";
+                return response;
+            }
+            if (user.Role != UserEnum.ADMIN)
+            {
+                response.Success = false;
+                response.Message = "You do not have permission to update this category.";
+                return response;
+            }
             try
             {
                 var result = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);

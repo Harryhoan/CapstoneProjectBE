@@ -12,8 +12,10 @@ namespace CapstonProjectBE.Controllers
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
-        public CategoryController(ICategoryService categoryService)
+        private readonly IAuthenService _authenService;
+        public CategoryController(ICategoryService categoryService, IAuthenService authenService)
         {
+            _authenService = authenService;
             _categoryService = categoryService;
         }
 
@@ -41,10 +43,13 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategoryByProjectId(projecId));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddCategory")]
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
-            var newCategory = await _categoryService.AddCategory(category);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) Unauthorized();
+            var newCategory = await _categoryService.AddCategory(user.UserId, category);
             return Ok(newCategory);
         }
 
@@ -52,19 +57,27 @@ namespace CapstonProjectBE.Controllers
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
-            return Ok(await _categoryService.DeleteCategory(categoryId));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) Unauthorized();
+            return Ok(await _categoryService.DeleteCategory(user.UserId, categoryId));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteCategoryFromProject")]
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
-            return Ok(await _categoryService.DeleteCategoryFromProject(projectId, categoryId));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) Unauthorized();
+            return Ok(await _categoryService.DeleteCategoryFromProject(user.UserId, projectId, categoryId));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("UpdateCategory")]
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
-            var updateCategory = await _categoryService.UpdateCategory(categoryId, updateCate);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) Unauthorized();
+            var updateCategory = await _categoryService.UpdateCategory(user.UserId, categoryId, updateCate);
             return Ok(updateCategory);
         }
     }
