@@ -14,5 +14,6 @@ namespace Application.IRepositories
         public Task RemoveAll(IEnumerable<T> entities);
         Task RemoveAsync(T entity);
         Task<bool> Find(Expression<Func<T, bool>> predicate);
+        Task<T?> FindEntityAsync(Expression<Func<T, bool>> predicate);
     }
 }

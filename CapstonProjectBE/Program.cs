@@ -155,19 +155,20 @@ namespace CapstonProjectBE
             });
 
             var app = builder.Build();
-            // app.UseDeveloperExceptionPage();
 
-            // if (app.Environment.IsDevelopment())
-            // {
-            //     app.UseSwagger();
-            //     app.UseSwaggerUI();
-            // }
-            // app.UseSwagger();
-            // app.UseSwaggerUI(c =>
-            // {
-            //     c.SwaggerEndpoint("swagger/v1/swagger.json", "GameMkt v1");
-            //     c.RoutePrefix = string.Empty;
-            // });
+           //app.UseDeveloperExceptionPage();
+
+           //if (app.Environment.IsDevelopment())
+           //{
+           //     app.UseSwagger();
+           //    app.UseSwaggerUI();
+           //}
+           //app.UseSwagger();
+            //app.UseSwaggerUI(c =>
+            //{
+            //    c.SwaggerEndpoint("swagger/v1/swagger.json", "GameMkt v1");
+            //   c.RoutePrefix = string.Empty;
+            //});
 
             #region
             var port = Environment.GetEnvironmentVariable("PORT") ?? "8081";
