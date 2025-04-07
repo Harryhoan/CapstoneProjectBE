@@ -4,11 +4,12 @@
     {
         public int UserId { get; set; }
         public string? Avatar { get; set; }
-        public string Email { get; set; }
-        public string Phone { get; set; }
-        public string FullName { get; set; }
-        public string Role { get; set; }
-        public string Bio { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? PaymentAccount { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
         public DateTime CreatedDatetime { get; set; }
     }
 }
