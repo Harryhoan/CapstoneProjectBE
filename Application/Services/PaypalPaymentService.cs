@@ -226,7 +226,7 @@ namespace Application.Services
                                 value = totalAmountInUSD,
                                 currency = "USD"
                             },
-                            receiver = user.Email,
+                            receiver = user.PaymentAccount,
                             note = "Refund for your pledge",
                             sender_item_id = pledge.PledgeId.ToString()
                         }
@@ -313,7 +313,7 @@ namespace Application.Services
                                     value = totalAmountInUSD,
                                     currency = "USD"
                                 },
-                                receiver = user.Email,
+                                receiver = user.PaymentAccount,
                                 note = "Refund for your pledge",
                                 sender_item_id = pledge.PledgeId.ToString()
                             });
@@ -366,7 +366,19 @@ namespace Application.Services
                 string totalAmount = amount.ToString("F2");
 
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
-
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                if (user.IsVerified == false)
+                {
+                    response.Success = false;
+                    response.Message = "You account need to be verified before using this method.";
+                    return response;
+                }
                 if (project == null)
                 {
                     response.Success = false;

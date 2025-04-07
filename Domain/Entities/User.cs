@@ -5,16 +5,35 @@ namespace Domain.Entities
 {
     public class User
     {
+        private string? _phone;
+        private string _paymentAccount = string.Empty;
         public int UserId { get; set; }
         public string Fullname { get; set; } = string.Empty;
         public string? Avatar { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string PaymentAccount { get; set; } = string.Empty;
-        public string? Phone { get; set; }
+        public string PaymentAccount
+        {
+            get => _paymentAccount;
+            set
+            {
+                _paymentAccount = value;
+                VerifyUser();
+            }
+        }
+        public string? Phone
+        {
+            get => _phone;
+            set
+            {
+                _phone = value;
+                VerifyUser();
+            }
+        }
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public UserEnum Role { get; set; }
         public string Bio { get; set; } = string.Empty;
+        public bool IsVerified { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
         public DateTime CreatedDatetime { get; set; }
 
@@ -28,5 +47,12 @@ namespace Domain.Entities
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
         public virtual ICollection<Project> Projects { get; set; } = new List<Project>();
         public virtual ICollection<Project> MonitoredProjects { get; set; } = new List<Project>(); // New relationship
+        private void VerifyUser()
+        {
+            if (!string.IsNullOrEmpty(_phone) && !string.IsNullOrEmpty(_paymentAccount))
+            {
+                IsVerified = true;
+            }
+        }
     }
 }

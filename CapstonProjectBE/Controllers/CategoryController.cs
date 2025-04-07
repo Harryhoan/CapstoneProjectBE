@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ViewModels.CategoryDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -47,6 +48,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(newCategory);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {

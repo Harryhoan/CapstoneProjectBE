@@ -109,13 +109,19 @@ namespace Application.Services
             var user = await _unitOfWork.UserRepo.GetAllAsync();
             try
             {
-                if (string.IsNullOrWhiteSpace(createProjectDto.Title))
+                var specificUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (specificUser == null)
                 {
                     response.Success = false;
-                    response.Message = "Project title is required.";
+                    response.Message = "User not found.";
                     return response;
                 }
-
+                if (specificUser.IsVerified == false)
+                {
+                    response.Success = false;
+                    response.Message = "You account need to be verified before using this method.";
+                    return response;
+                }
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
                 if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
                 {
@@ -173,13 +179,6 @@ namespace Application.Services
                     EndDatetime = project.EndDatetime
                 };
 
-                var specificUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-                if (specificUser == null)
-                {
-                    response.Success = false;
-                    response.Message = "User not found.";
-                    return response;
-                }
                 var ConfirmProjectCreatedEmail = await EmailSender.SendProjectConfirmationEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, project.Title ?? "Unknown", project.StartDatetime, project.EndDatetime, project.Status);
                 if (!ConfirmProjectCreatedEmail)
                 {
@@ -289,7 +288,7 @@ namespace Application.Services
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
-                        Thumbnail = project.Thumbnail,
+                        Thumbnail = project.Thumbnail ?? "Unknown",
                         Monitor = monitor?.Fullname ?? "Unknown",
                         CreatorId = project.CreatorId,
                         Creator = creator?.Fullname ?? "Unknown",
@@ -396,7 +395,7 @@ namespace Application.Services
                         ProjectId = project.ProjectId,
                         Monitor = monitor?.Fullname ?? "unknown",
                         Creator = creator?.Fullname ?? "unknown",
-                        Thumbnail = project.Thumbnail,
+                        Thumbnail = project.Thumbnail ?? "Unknown",
                         Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId),
                         Title = project.Title,
                         Description = project.Description,
