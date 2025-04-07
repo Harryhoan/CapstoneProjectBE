@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ViewModels.CategoryDTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -22,6 +23,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategory());
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("AddCategory")]
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
@@ -29,12 +31,14 @@ namespace CapstonProjectBE.Controllers
             return Ok(newCategory);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             return Ok(await _categoryService.DeleteCategory(categoryId));
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("UpdateCategory")]
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
