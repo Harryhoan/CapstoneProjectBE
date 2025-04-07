@@ -5,7 +5,7 @@ namespace Application.ViewModels.ProjectDTO
     public class ProjectCategoryDto
     {
         public int CategoryId { get; set; }
-        public int ParentCategoryId { get; set; }
+        public int? ParentCategoryId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string? CategoryDescription { get; set; }
         /// <summary>

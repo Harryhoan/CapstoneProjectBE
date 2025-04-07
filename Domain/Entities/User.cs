@@ -6,13 +6,13 @@ namespace Domain.Entities
     public class User
     {
         private string? _phone;
-        private string _paymentAccount = string.Empty;
+        private string? _paymentAccount = string.Empty;
         public int UserId { get; set; }
         public string Fullname { get; set; } = string.Empty;
         public string? Avatar { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string PaymentAccount
+        public string? PaymentAccount
         {
             get => _paymentAccount;
             set

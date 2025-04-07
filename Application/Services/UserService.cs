@@ -130,6 +130,10 @@ namespace Application.Services
                 {
                     userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
                 }
+                if (!string.IsNullOrEmpty(UpdateUser.PaymentAccount))
+                {
+                    userEntity.PaymentAccount = UpdateUser.PaymentAccount;
+                }
                 if (!string.IsNullOrEmpty(UpdateUser.Phone))
                 {
                     userEntity.Phone = UpdateUser.Phone;
