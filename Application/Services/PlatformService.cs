@@ -19,7 +19,28 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-
+        public async Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformAsync()
+        {
+            var response = new ServiceResponse<List<PlatformDTO>>();
+            try
+            {
+                var platforms = await _unitOfWork.PlatformRepo.GetAllAsync();
+                if (platforms == null)
+                {
+                    response.Success = false;
+                    response.Message = "Platform not found";
+                    return response;
+                }
+                var platformDTOs = _mapper.Map<List<PlatformDTO>>(platforms);
+                response.Data = platformDTOs;
+                response.Success = true;
+            }catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get platforms: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<int>> CreatePlatform(CreatePlatformDTO createPlatformDTO)
         {
             var response = new ServiceResponse<int>();
