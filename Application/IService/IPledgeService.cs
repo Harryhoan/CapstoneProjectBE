@@ -9,6 +9,6 @@ namespace Application.IService
         public Task<ServiceResponse<PledgeDto>> GetPledgeById(int pledgeId);
         public Task<ServiceResponse<List<PledgeDto>>> GetPledgeByUserId(int userId);
         public Task<ServiceResponse<string>> ExportPledgeToExcelByProjectId(int projectId);
-        public Task<ServiceResponse<List<PledgeDto>>> GetPledgesByUserIdAndProjectId(int userId, int projectId);
+        public Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int userId, int projectId);
     }
 }

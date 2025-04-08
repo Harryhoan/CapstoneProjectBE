@@ -69,13 +69,13 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-        [HttpGet("GetPledgeByProjectId/{projectId}")]
+        [HttpGet("GetBackerByUser/{projectId}")]
         [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
-        public async Task<IActionResult> GetPledgeByProjectId(int projectId)
+        public async Task<IActionResult> GetBackerByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null) return Unauthorized();
-            var result = await _pledgeService.GetPledgesByUserIdAndProjectId(user.UserId, projectId);
+            var result = await _pledgeService.GetBackerByProjectId(user.UserId, projectId);
             if (!result.Success) return BadRequest(result.Message);
             return Ok(result);
         }
