@@ -124,8 +124,31 @@ namespace Application.Services
                     return response;
                 }
 
+                // Fetch rewards for the project
+                var rewards = await _unitOfWork.RewardRepo.GetRewardsByProjectIdAsync(projectId);
+                if (rewards == null || !rewards.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No rewards found for the specified project.";
+                    return response;
+                }
+
+                // Sort rewards by amount in ascending order for easier comparison
+                var sortedRewards = rewards.OrderBy(r => r.Amount).ToList();
+
                 // Dictionary to cache user data and reduce redundant calls
                 var userCache = new Dictionary<int, (string Username, string Email)>();
+
+                // Calculate total amount and total backers
+                var totalAmount = pledges.Sum(p => p.Amount);
+                var totalBackers = pledges.Select(p => p.UserId).Distinct().Count();
+
+                // Count the total number of each type of reward
+                var rewardCounts = new Dictionary<int, int>();
+                foreach (var reward in sortedRewards)
+                {
+                    rewardCounts[reward.RewardId] = 0;
+                }
 
                 using (var workbook = new XLWorkbook())
                 {
@@ -135,9 +158,17 @@ namespace Application.Services
                     // Add headers
                     worksheet.Cell(currentRow, 1).Value = "Pledge ID";
                     worksheet.Cell(currentRow, 2).Value = "Username";
-                    worksheet.Cell(currentRow, 3).Value = "Email"; // New column for Email
+                    worksheet.Cell(currentRow, 3).Value = "Email";
                     worksheet.Cell(currentRow, 4).Value = "Amount";
                     worksheet.Cell(currentRow, 5).Value = "Status";
+                    worksheet.Cell(currentRow, 6).Value = "Reward";
+
+                    // Style headers
+                    var headerRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
+                    headerRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
                     // Add pledge data
                     foreach (var pledge in pledges)
@@ -148,21 +179,69 @@ namespace Application.Services
                         if (!userCache.TryGetValue(pledge.UserId, out var userData))
                         {
                             var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
-                            var username = user?.Fullname ?? "Unknown"; // Replace with actual username property
-                            var email = user?.Email ?? "Unknown"; // Replace with actual email property
+                            var username = user?.Fullname ?? "Unknown";
+                            var email = user?.Email ?? "Unknown";
                             userData = (username, email);
                             userCache[pledge.UserId] = userData;
                         }
 
                         worksheet.Cell(currentRow, 1).Value = pledge.PledgeId;
-                        worksheet.Cell(currentRow, 2).Value = userData.Username; // Use fetched username
-                        worksheet.Cell(currentRow, 3).Value = userData.Email; // Use fetched email
+                        worksheet.Cell(currentRow, 2).Value = userData.Username;
+                        worksheet.Cell(currentRow, 3).Value = userData.Email;
                         worksheet.Cell(currentRow, 4).Value = pledge.Amount;
 
                         var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
                         var status = pledgeDetails.FirstOrDefault()?.Status;
                         worksheet.Cell(currentRow, 5).Value = status.ToString();
+
+                        // Find the highest reward less than or equal to the pledge amount
+                        var reward = sortedRewards.LastOrDefault(r => r.Amount <= pledge.Amount);
+                        worksheet.Cell(currentRow, 6).Value = reward?.Details ?? "No Reward";
+
+                        // Increment reward count if a reward is found
+                        if (reward != null)
+                        {
+                            rewardCounts[reward.RewardId]++;
+                        }
                     }
+
+                    // Style data rows
+                    var dataRange = worksheet.Range(2, 1, currentRow, 6);
+                    dataRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    dataRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    dataRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+                    // Add summary information
+                    currentRow += 2;
+                    worksheet.Cell(currentRow, 1).Value = "Export Date:";
+                    worksheet.Cell(currentRow, 2).Value = DateTime.Now.ToString("yyyy-MM-dd");
+
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = "Total Amount:";
+                    worksheet.Cell(currentRow, 2).Value = totalAmount;
+
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = "Total Backers:";
+                    worksheet.Cell(currentRow, 2).Value = totalBackers;
+
+                    currentRow++;
+                    worksheet.Cell(currentRow, 1).Value = "Reward Summary:";
+                    foreach (var reward in sortedRewards)
+                    {
+                        currentRow++;
+                        worksheet.Cell(currentRow, 1).Value = reward.Details; // Replace with actual reward property
+                        worksheet.Cell(currentRow, 2).Value = rewardCounts[reward.RewardId];
+                    }
+
+                    // Style summary section
+                    var summaryRange = worksheet.Range(currentRow - sortedRewards.Count - 3, 1, currentRow, 2);
+                    summaryRange.Style.Font.Bold = true;
+                    summaryRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    summaryRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+
+
+                    // Auto-adjust column widths
+                    worksheet.Columns().AdjustToContents();
 
                     // Save the workbook to a memory stream
                     using (var stream = new MemoryStream())
@@ -184,5 +263,8 @@ namespace Application.Services
             }
             return response;
         }
+
+
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
 using Application.ViewModels.CategoryDTO;
+using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
@@ -158,6 +159,39 @@ namespace Application.Services
                     response.Success = false;
                     response.Message = "No categories found.";
                 }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByCategoryId(int categoryId)
+        {
+            var response = new ServiceResponse<List<ProjectDto>>();
+            try
+            {
+                // Retrieve all ProjectCategory entities for the given categoryId
+                var projectCategories = await _unitOfWork.ProjectCategoryRepo.GetAllProjectByCategoryAsync(categoryId);
+
+                if (projectCategories == null || !projectCategories.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No projects found for the given category.";
+                    return response;
+                }
+
+                // Map the associated projects to ProjectDto
+                var projectList = projectCategories
+                    .Where(pc => pc.Project != null) // Ensure the Project is not null
+                    .Select(pc => _mapper.Map<ProjectDto>(pc.Project))
+                    .ToList();
+
+                response.Data = projectList;
+                response.Success = true;
+                response.Message = "Projects retrieved successfully.";
             }
             catch (Exception ex)
             {

@@ -27,6 +27,28 @@ namespace CapstonProjectBE.Controllers
             if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
+        [AllowAnonymous]
+        [HttpGet("GetPlatformByProjectId/{projectId}")]
+        public async Task<IActionResult> GetAllPlatformByProjectId(int projectId)
+        {
+            var result = await _platformService.GetAllPlatformByProjectId(projectId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+        [AllowAnonymous]
+        [HttpGet("GetAllProjectByPlatformId/{platformId}")]
+        public async Task<IActionResult> GetAllProjectByPlatformId(int platformId)
+        {
+            var result = await _platformService.GetAllProjectByPlatformId(platformId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
         [HttpGet("Platform/{search}")]
         public async Task<IActionResult> GetPlatforms(string? query = null)
         {
@@ -74,7 +96,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-
+        
         [Authorize(Roles = "STAFF, ADMIN")]
         [HttpDelete]
         public async Task<IActionResult> RemovePlatform(int platformId)

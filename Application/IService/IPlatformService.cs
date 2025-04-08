@@ -1,5 +1,6 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.PlatformDTO;
+using Application.ViewModels.ProjectDTO;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,6 +18,7 @@ namespace Application.IService
         public Task<ServiceResponse<int>> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO);
         public Task<ServiceResponse<int>> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO);
         public Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformAsync();
-
+        public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByPlatformId(int platformId);
+        public Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformByProjectId(int projectId);
     }
 }
