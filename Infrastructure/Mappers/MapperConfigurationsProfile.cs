@@ -3,6 +3,7 @@ using Application.ViewModels.CollaboratorDTO;
 using Application.ViewModels.CommentDTO;
 using Application.ViewModels.FaqDTO;
 using Application.ViewModels.FileDTO;
+using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.PostDTO;
 using Application.ViewModels.ProjectDTO;
@@ -25,6 +26,10 @@ namespace Infrastructure.Mappers
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
             CreateMap<Project, ProjectThumbnailDto>().ReverseMap();
+            CreateMap<Platform, PlatformDTO>()
+                .ForMember(dest => dest.PlatformId, opt => opt.MapFrom(src => src.PlatformId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description)).ReverseMap();
             CreateMap<Project, UserProjectsDto>()
                             .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
                             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))

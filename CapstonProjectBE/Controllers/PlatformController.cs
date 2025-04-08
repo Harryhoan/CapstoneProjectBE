@@ -1,4 +1,5 @@
 ﻿using Application.IService;
+using Application.ServiceResponse;
 using Application.ViewModels.PlatformDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -19,8 +20,14 @@ namespace CapstonProjectBE.Controllers
             _platformService = platformService;
             _authenService = authenService;
         }
-
-        [HttpGet]
+        [HttpGet("Platform/GetAll")]
+        public async Task<IActionResult> GetAllPlatformAsync()
+        {
+            var result = await _platformService.GetAllPlatformAsync();
+            if (!result.Success) return BadRequest(result);
+            return Ok(result);
+        }
+        [HttpGet("Platform/{search}")]
         public async Task<IActionResult> GetPlatforms(string? query = null)
         {
             var result = await _platformService.GetPlatforms(query);
@@ -43,9 +50,9 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePlatform(CreatePlatformDTO createPlatformDTO)
+        public async Task<IActionResult> CreatePlatform([FromForm]CreatePlatformDTO createPlatformDTO)
         {
             var result = await _platformService.CreatePlatform(createPlatformDTO);
             if (!result.Success)
@@ -55,7 +62,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpPut]
         public async Task<IActionResult> UpdatePlatform(int platformId, [FromForm] CreatePlatformDTO createPlatformDTO)
         {
@@ -68,7 +75,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "STAFF")]
+        [Authorize(Roles = "STAFF, ADMIN")]
         [HttpDelete]
         public async Task<IActionResult> RemovePlatform(int platformId)
         {
@@ -83,7 +90,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "STAFF, CUSTOMER")]
         [HttpPost("project/add")]
-        public async Task<IActionResult> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
+        public async Task<IActionResult> CreateProjectPlatform([FromForm]ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);

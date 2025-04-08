@@ -16,5 +16,7 @@ namespace Application.IService
         public Task<IActionResult?> CheckIfUserHasPermissionsByProjectId(int projectId, User? user = null);
         public Task<ServiceResponse<int>> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO);
         public Task<ServiceResponse<int>> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO);
+        public Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformAsync();
+
     }
 }
