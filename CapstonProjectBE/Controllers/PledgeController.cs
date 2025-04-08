@@ -69,7 +69,16 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-
+        [HttpGet("GetPledgeByProjectId/{projectId}")]
+        [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
+        public async Task<IActionResult> GetPledgeByProjectId(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null) return Unauthorized();
+            var result = await _pledgeService.GetPledgesByUserIdAndProjectId(user.UserId, projectId);
+            if (!result.Success) return BadRequest(result.Message);
+            return Ok(result);
+        }
         [HttpGet("ExportPledgesToExcel/{projectId}")]
         [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
         public async Task<IActionResult> ExportPledgesToExcel(int projectId)

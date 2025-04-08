@@ -111,6 +111,44 @@ namespace Application.Services
                 return response;
             }
         }
+        public async Task<ServiceResponse<List<PledgeDto>>> GetPledgesByUserIdAndProjectId(int userId, int projectId)
+        {
+            var response = new ServiceResponse<List<PledgeDto>>();
+            try
+            {
+                // Fetch pledges for the user in the specified project
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+
+                if (pledges == null || !pledges.Any())
+                {
+                    response.Success = true;
+                    response.Message = "No pledges found for the specified user and project.";
+                    return response;
+                }
+                
+                // Map pledges to PledgeDto
+                var pledgeDtos = _mapper.Map<List<PledgeDto>>(pledges);
+
+                // Fetch and map pledge details for each pledge
+                foreach (var pledgeDto in pledgeDtos)
+                {
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
+                    var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                }
+
+                response.Data = pledgeDtos;
+                response.Success = true;
+                response.Message = "Pledges retrieved successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to retrieve pledges: {ex.Message}";
+            }
+
+            return response;
+        }
         public async Task<ServiceResponse<string>> ExportPledgeToExcelByProjectId(int projectId)
         {
             var response = new ServiceResponse<string>();
