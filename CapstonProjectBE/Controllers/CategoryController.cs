@@ -30,7 +30,11 @@ namespace CapstonProjectBE.Controllers
         {
             return Ok(await _categoryService.GetCategoryByCategoryId(categoryId));
         }
-
+        [HttpGet("GetAllProjectByCategoryId")]
+        public async Task<IActionResult> GetAllProjectByCategoryId(int categoryId)
+        {
+            return Ok(await _categoryService.GetAllProjectByCategoryId(categoryId));
+        }
         [HttpGet("GetCategoryByParentCategoryId")]
         public async Task<IActionResult> GetCategoryByParentCategoryId(int parentCategoryId)
         {

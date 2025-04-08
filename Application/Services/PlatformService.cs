@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.PlatformDTO;
+using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
@@ -35,6 +36,62 @@ namespace Application.Services
                 response.Data = platformDTOs;
                 response.Success = true;
             }catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get platforms: {ex.Message}";
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByPlatformId(int platformId)
+        {
+            var response = new ServiceResponse<List<ProjectDto>>();
+            try
+            {
+                // Retrieve all ProjectPlatform entities for the given platformId
+                var projectPlatforms = await _unitOfWork.ProjectPlatformRepo.GetAllProjectByPlatformId(platformId);
+
+                if (projectPlatforms == null || !projectPlatforms.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No projects found for the given platform.";
+                    return response;
+                }
+
+                // Map the associated projects to ProjectDto
+                var projectList = projectPlatforms
+                    .Where(pp => pp.Project != null) // Ensure the Project is not null
+                    .Select(pp => _mapper.Map<ProjectDto>(pp.Project))
+                    .ToList();
+
+                response.Data = projectList;
+                response.Success = true;
+                response.Message = "Projects retrieved successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformByProjectId(int projectId)
+        {
+            var response = new ServiceResponse<List<PlatformDTO>>();
+            try
+            {
+                var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(projectId);
+                if (platforms == null)
+                {
+                    response.Success = false;
+                    response.Message = "Platform not found";
+                    return response;
+                }
+                var platformDTOs = _mapper.Map<List<PlatformDTO>>(platforms);
+                response.Data = platformDTOs;
+                response.Success = true;
+            }
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = $"Failed to get platforms: {ex.Message}";
