@@ -48,7 +48,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.GetAllCategoryByProjectId(projecId));
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         [HttpPost("AddCategory")]
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
@@ -58,7 +58,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(newCategory);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
@@ -67,7 +67,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.DeleteCategory(user.UserId, categoryId));
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "ADMIN, STAFF")]
         [HttpDelete("DeleteCategoryFromProject")]
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
@@ -76,7 +76,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(await _categoryService.DeleteCategoryFromProject(user.UserId, projectId, categoryId));
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, STAFF")]
         [HttpPut("UpdateCategory")]
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
