@@ -69,6 +69,7 @@ namespace CapstonProjectBE.Controllers
                         token = result.DataToken,
                         role = result.Role,
                         avatar = result.Avatar,
+                        fullName = result.FullName,
                         hint = result.HintId,
                     }
                 );

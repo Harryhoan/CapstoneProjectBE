@@ -112,11 +112,13 @@ namespace Application.Services
                 var auth = userLogin.Role;
                 var userId = userLogin.UserId;
                 var avatar = userLogin.Avatar;
+                var fullName = userLogin.Fullname;
                 var tokenJWT = userLogin.GenerateJsonWebToken(_config, _config.JWTSection.SecretKey, DateTime.Now);
                 response.Success = true;
                 response.Message = "Login successfully";
                 response.DataToken = tokenJWT;
                 response.Avatar = avatar;
+                response.FullName = fullName;
                 response.Role = auth.ToString();
                 response.HintId = userId;
             }
