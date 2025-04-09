@@ -29,7 +29,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<IEnumerable<User>> GetAllUser()
         {
-            return await _dbContext.Users.Where(u => u.Role == UserEnum.CUSTOMER || u.Role == UserEnum.STAFF).ToListAsync();
+            return await _dbContext.Users.Where(u => u.Role == UserEnum.CUSTOMER || u.Role == UserEnum.STAFF && !u.IsDeleted).ToListAsync();
         }
         public int GetCount()
         {
