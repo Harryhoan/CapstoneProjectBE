@@ -39,6 +39,17 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
         [AllowAnonymous]
+        [HttpGet("GetPlatformByPlatformId/{platformId}")]
+        public async Task<IActionResult> GetPlatformByPlatformId(int platformId)
+        {
+            var result = await _platformService.GetPlatformByPlatformId(platformId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+        [AllowAnonymous]
         [HttpGet("GetAllProjectByPlatformId/{platformId}")]
         public async Task<IActionResult> GetAllProjectByPlatformId(int platformId)
         {
