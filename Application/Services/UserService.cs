@@ -83,6 +83,12 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User has been deleted.";
+                    return response;
+                }
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
@@ -107,7 +113,7 @@ namespace Application.Services
                 var users = await _userRepo.GetAllUser();
                 if (user.Role == UserEnum.STAFF)
                 {
-                    var staffUsers = _mapper.Map<IEnumerable<UserDTO>>(users.Where(u => u.Role == UserEnum.CUSTOMER));
+                    var staffUsers = _mapper.Map<IEnumerable<UserDTO>>(users.Where(u => u.Role == UserEnum.CUSTOMER && !u.IsDeleted));
                     response.Data = staffUsers;
                     response.Success = true;
                     response.Message = "Get all user successfully";
