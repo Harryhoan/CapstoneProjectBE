@@ -39,5 +39,7 @@ namespace Application.ViewModels.ProjectDTO
         public DateTime? MinEndDatetime { get; set; } = null;
         [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project ends")]
         public DateTime? MaxEndDatetime { get; set; } = null;
+        public IList<int>? CategoryIds { get; set; } = null;
+        public IList<int>? PlatformIds { get; set; } = null;
     }
 }

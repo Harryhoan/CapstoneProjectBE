@@ -184,12 +184,11 @@ namespace Application.Services
             }
             return response;
         }
-        public async Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByCategoryId(int categoryId)
+        public async Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByCategoryId(int categoryId, User? user = null)
         {
             var response = new ServiceResponse<List<ProjectDto>>();
             try
             {
-                // Retrieve all ProjectCategory entities for the given categoryId
                 var projectCategories = await _unitOfWork.ProjectCategoryRepo.GetAllProjectByCategoryAsync(categoryId);
 
                 if (projectCategories == null || !projectCategories.Any())
@@ -199,13 +198,21 @@ namespace Application.Services
                     return response;
                 }
 
-                // Map the associated projects to ProjectDto
                 var projectList = projectCategories
-                    .Where(pc => pc.Project != null) // Ensure the Project is not null
+                    .Where(pc => pc.Project != null)
                     .Select(pc => _mapper.Map<ProjectDto>(pc.Project))
                     .ToList();
 
-                response.Data = projectList;
+                if (user == null) 
+                {
+                    projectList.RemoveAll(p => p.Status == ProjectEnum.DELETED || p.Status == ProjectEnum.INVISIBLE);
+                }
+                else if (user.Role == UserEnum.CUSTOMER)
+                {
+                    projectList.RemoveAll(p => p.Status == ProjectEnum.DELETED || (p.Status == ProjectEnum.INVISIBLE && user.UserId != p.CreatorId));
+                }
+
+                    response.Data = projectList;
                 response.Success = true;
                 response.Message = "Projects retrieved successfully.";
             }
