@@ -124,11 +124,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> UpdateProject(int projectId, [FromForm] UpdateProjectDto updateProjectDto)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _projectService.UpdateProject(projectId, updateProjectDto);
             if (!result.Success)
             {
@@ -211,11 +211,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> AddCategoryToProject([FromForm] AddCategoryToProject addCategoryToProject)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(addCategoryToProject.ProjectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(addCategoryToProject.ProjectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _projectService.AddCategoryToProject(addCategoryToProject);
             if (!result.Success)
             {

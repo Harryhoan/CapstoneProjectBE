@@ -116,11 +116,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> CreateProjectPlatform([FromForm]ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _platformService.CreateProjectPlatform(projectPlatformDTO);
             if (!result.Success)
             {
@@ -135,11 +135,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _platformService.RemoveProjectPlatform(projectPlatformDTO);
             if (!result.Success)
             {
