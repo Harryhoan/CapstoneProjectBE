@@ -38,6 +38,24 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "CUSTOMER")]
+        [HttpPost]
+        public async Task<IActionResult> CreateCollaboratorByEmail([FromForm] CreateCollaboratorByEmailDTO createCollaboratorDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _collaboratorService.CreateCollaboratorByUserEmail(createCollaboratorDTO, user);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
         [Authorize(Roles = "STAFF, ADMIN")]
         [HttpGet("pagination/all")]
         public async Task<IActionResult> GetPaginatedCollaborators(int page = 1, int pageSize = 20)

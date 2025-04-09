@@ -4,6 +4,7 @@ namespace Application.ViewModels.CommentDTO
 {
     public class CreatePostCommentDTO
     {
+        [Range(1, int.MaxValue, ErrorMessage = "Parent Comment ID must be a positive integer")]
         public int? ParentCommentId { get; set; }
         [Required(ErrorMessage = "Post ID is required")]
         [Range(1, int.MaxValue, ErrorMessage = "Post ID must be a positive integer")]

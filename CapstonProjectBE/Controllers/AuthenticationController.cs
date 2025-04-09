@@ -101,7 +101,7 @@ namespace CapstonProjectBE.Controllers
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
 
-            if (user == null) return BadRequest();
+            if (user == null) return Unauthorized();
 
             var result = await _authenService.CreateStaffAccountAsync(user.UserId, register);
 

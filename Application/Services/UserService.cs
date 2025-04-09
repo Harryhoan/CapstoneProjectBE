@@ -25,6 +25,25 @@ namespace Application.Services
             _userRepo = userRepo;
         }
 
+        public async Task<ServiceResponse<List<UserDTO>>> GetAllCustomerAsync()
+        {
+            var response = new ServiceResponse<List<UserDTO>>();
+            try
+            {
+                var customer = await _unitOfWork.UserRepo.GetAllAsync();
+                var data = _mapper.Map<List<UserDTO>>(customer.Where(u => u.Role == UserEnum.CUSTOMER));
+
+                response.Data = data;
+                response.Success = true;
+                response.Message = "Get all Customer successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to Get all Customer: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<UserDTO>> GetUserByIdAsync(int userId)
         {
             var response = new ServiceResponse<UserDTO>();
@@ -201,7 +220,7 @@ namespace Application.Services
                 if (user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
-                    response.Message = "You are not allow to do this.";
+                    response.Message = "You are not allowed to do this.";
                     return response;
                 }
                 var DeleteUser = await _unitOfWork.UserRepo.GetByIdAsync(UserDeleteId);

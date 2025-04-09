@@ -13,7 +13,7 @@ namespace Infrastructure.Repositories
         public async Task<IEnumerable<Category>> GetListByParentCategoryIdAsync(int parentCategoryId)
         {
             return await _context.Categories
-                .Where(pc => pc.ParentCategoryId == parentCategoryId)
+                .Where(pc => pc.ParentCategoryId.HasValue && pc.ParentCategoryId.Value != pc.CategoryId && pc.ParentCategoryId == parentCategoryId)
                 .ToListAsync();
         }
     }

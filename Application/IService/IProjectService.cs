@@ -1,5 +1,6 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.ProjectDTO;
+using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 
@@ -7,8 +8,8 @@ namespace Application.IService
 {
     public interface IProjectService
     {
-        public Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects();
-        public Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber, int pageSize);
+        public Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects(User? user = null, QueryProjectDto? queryProjectDto = null);
+        public Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber, int pageSize, User? user = null, QueryProjectDto? queryProjectDto = null);
         public Task<ServiceResponse<ProjectDetailDto>> GetProjectById(int id);
         public Task<ServiceResponse<int>> DeleteProject(int id);
         public Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto);

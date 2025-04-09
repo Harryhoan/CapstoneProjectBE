@@ -281,39 +281,38 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<IActionResult?> CheckIfUserHasPermissionsByProjectId(int projectId, User? user = null)
-        {
-            if (user == null || !(user.UserId > 0))
-            {
-                return new UnauthorizedObjectResult("This request is not authorized.");
-            }
-            var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-            if (existingProject == null)
-            {
-                return new NotFoundObjectResult("The project associated with the request cannot be found.");
-            }
-            if (user.Role == UserEnum.CUSTOMER)
-            {
-                if (user.UserId != existingProject.CreatorId)
-                {
-                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
-                    {
-                        return new ForbidResult("This request is forbidden.");
-                    }
-                }
-            }
-            else
-            {
-                if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
-                {
-                    return new ForbidResult("This request is forbidden.");
-                }
-            }
+        //public async Task<IActionResult?> CheckIfUserHasPermissionsByProjectId(int projectId, User? user = null)
+        //{
+        //    if (user == null || !(user.UserId > 0))
+        //    {
+        //        return new UnauthorizedObjectResult("This request is not authorized.");
+        //    }
+        //    var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+        //    if (existingProject == null)
+        //    {
+        //        return new NotFoundObjectResult("The project associated with the request cannot be found.");
+        //    }
+        //    if (user.Role == UserEnum.CUSTOMER)
+        //    {
+        //        if (user.UserId != existingProject.CreatorId)
+        //        {
+        //            var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+        //            if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
+        //            {
+        //                return new ForbidResult("This request is forbidden.");
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
+        //        {
+        //            return new ForbidResult("This request is forbidden.");
+        //        }
+        //    }
 
-            return null;
-        }
-
+        //    return null;
+        //}
 
         public async Task<ServiceResponse<int>> CreateProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {

@@ -62,6 +62,7 @@ namespace CapstonProjectBE.Controllers
 
 
         [HttpGet("pagination")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPaginatedPlatforms(string? query = null, int page = 1, int pageSize = 20)
         {
             var result = await _platformService.GetPaginatedPlatforms(query, page, pageSize);
@@ -115,7 +116,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> CreateProjectPlatform([FromForm]ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
             if (check != null)
             {
                 return check;
@@ -134,7 +135,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
             if (check != null)
             {
                 return check;

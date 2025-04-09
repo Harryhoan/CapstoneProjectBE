@@ -3,6 +3,10 @@ using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using AutoMapper;
 using ClosedXML.Excel;
+using Domain.Entities;
+using Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Crypto;
 
 namespace Application.Services
 {
@@ -111,7 +115,8 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int userId, int projectId)
+
+        public async Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int projectId)
         {
             var response = new ServiceResponse<List<ProjectBackerDto>>();
             try
@@ -125,6 +130,7 @@ namespace Application.Services
                     response.Message = "No pledges found for the specified user and project.";
                     return response;
                 }
+
 
                 // Prepare the result list
                 var projectBackerDtos = new List<ProjectBackerDto>();
@@ -151,7 +157,7 @@ namespace Application.Services
                     {
                         backerId = user.UserId,
                         backerName = user.Fullname,
-                        backerAvatar = user.Avatar ?? string.Empty, // Assuming `Avatar` is a property in the User entity
+                        backerAvatar = user.Avatar ?? string.Empty,
                         pledge = pledgeDto
                     };
 

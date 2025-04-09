@@ -4,8 +4,10 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
 using System.Data.Common;
 using System.Security.Claims;
 
@@ -161,7 +163,13 @@ namespace Application.Services
                     return response;
                 }
                 var token = await _unitOfWork.TokenRepo.FindByConditionAsync(user.UserId, "confirmation");
-                if (token != null && token.TokenValue == "success")
+                if (token == null)
+                {
+                    response.Success = false;
+                    response.Message = "Không tìm thấy token với người dùng này.";
+                    return response;
+                }
+                if (token.TokenValue == "success")
                 {
                     response.Success = false;
                     response.Message = "Email của bạn đã được xác nhận.";
@@ -208,13 +216,14 @@ namespace Application.Services
             }
             return response;
         }
+
         public async Task<ServiceResponse<RegisterDTO>> CreateStaffAccountAsync(int userId, RegisterDTO register)
         {
             var response = new ServiceResponse<RegisterDTO>();
             try
             {
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-                if (user.Role != UserEnum.ADMIN)
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                if (user == null || user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
                     response.Message = "You are not allowed.";
@@ -256,5 +265,44 @@ namespace Application.Services
                 return response;
             }
         }
+
+        public async Task<IActionResult?> CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(int projectId, User? user = null)
+        {
+            if (user == null || !(user.UserId > 0))
+            {
+                return new UnauthorizedObjectResult("This request is not authorized.");
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return new ForbidResult("This request is forbidden.");
+            }
+            var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+            if (existingProject == null)
+            {
+                return new NotFoundObjectResult("The project associated with the request cannot be found.");
+            }
+            if (user.Role == UserEnum.CUSTOMER)
+            {
+                if (user.UserId != existingProject.CreatorId)
+                {
+                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                    if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
+                    {
+                        return new ForbidResult("This request is forbidden.");
+                    }
+                }
+            }
+            else
+            {
+                if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
+                {
+                    return new ForbidResult("This request is forbidden.");
+                }
+            }
+
+            return null;
+        }
+
+
     }
 }

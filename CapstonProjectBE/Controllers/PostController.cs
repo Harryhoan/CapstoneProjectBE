@@ -28,6 +28,10 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
             var result = await _postService.CreatePost(user.UserId, createPostDTO);
             if (!result.Success)
             {

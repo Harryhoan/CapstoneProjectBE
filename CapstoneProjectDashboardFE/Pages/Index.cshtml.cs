@@ -43,7 +43,7 @@ namespace CapstoneProjectDashboardFE.Pages
 
                         if (result.Role != "ADMIN" && result.Role != "STAFF")
                         {
-                            Message = "You are not allow to access.";
+                            Message = "You are not allowed to access.";
                             return Page();
                         }
 
