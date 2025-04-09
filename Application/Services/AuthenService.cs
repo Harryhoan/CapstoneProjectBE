@@ -30,8 +30,9 @@ namespace Application.Services
             var response = new ServiceResponse<RegisterDTO>();
             try
             {
-                var existEmail = await _unitOfWork.UserRepo.CheckEmailAddressExisted(userObject.Email);
-                if (existEmail)
+                //var existEmail = await _unitOfWork.UserRepo.CheckEmailAddressExisted(userObject.Email);
+                var user = await _unitOfWork.UserRepo.GetByEmailAsync(userObject.Email);
+                if (user != null && !user.IsDeleted)
                 {
                     response.Success = false;
                     response.Message = "Email is already existed";
