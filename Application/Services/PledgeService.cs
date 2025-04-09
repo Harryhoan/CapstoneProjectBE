@@ -3,6 +3,10 @@ using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using AutoMapper;
 using ClosedXML.Excel;
+using Domain.Entities;
+using Domain.Enums;
+using Microsoft.AspNetCore.Mvc;
+using Org.BouncyCastle.Crypto;
 
 namespace Application.Services
 {
@@ -111,9 +115,10 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<List<PledgeDto>>> GetPledgesByUserIdAndProjectId(int userId, int projectId)
+
+        public async Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int projectId)
         {
-            var response = new ServiceResponse<List<PledgeDto>>();
+            var response = new ServiceResponse<List<ProjectBackerDto>>();
             try
             {
                 // Fetch pledges for the user in the specified project
@@ -125,19 +130,41 @@ namespace Application.Services
                     response.Message = "No pledges found for the specified user and project.";
                     return response;
                 }
-                
-                // Map pledges to PledgeDto
-                var pledgeDtos = _mapper.Map<List<PledgeDto>>(pledges);
 
-                // Fetch and map pledge details for each pledge
-                foreach (var pledgeDto in pledgeDtos)
+
+                // Prepare the result list
+                var projectBackerDtos = new List<ProjectBackerDto>();
+
+                foreach (var pledge in pledges)
                 {
-                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
+                    // Fetch backer (user) details
+                    var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
+                    if (user == null)
+                    {
+                        continue; // Skip if user not found
+                    }
+
+                    // Fetch pledge details
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
                     var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+
+                    // Map pledge to PledgeDto and include pledge details
+                    var pledgeDto = _mapper.Map<PledgeDto>(pledge);
                     pledgeDto.pledgeDetail = pledgeDetailDtos;
+
+                    // Create ProjectBackerDto
+                    var projectBackerDto = new ProjectBackerDto
+                    {
+                        backerId = user.UserId,
+                        backerName = user.Fullname,
+                        backerAvatar = user.Avatar ?? string.Empty,
+                        pledge = pledgeDto
+                    };
+
+                    projectBackerDtos.Add(projectBackerDto);
                 }
 
-                response.Data = pledgeDtos;
+                response.Data = projectBackerDtos;
                 response.Success = true;
                 response.Message = "Pledges retrieved successfully.";
             }
@@ -149,6 +176,7 @@ namespace Application.Services
 
             return response;
         }
+
         public async Task<ServiceResponse<string>> ExportPledgeToExcelByProjectId(int projectId)
         {
             var response = new ServiceResponse<string>();

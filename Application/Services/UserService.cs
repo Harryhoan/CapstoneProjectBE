@@ -25,6 +25,25 @@ namespace Application.Services
             _userRepo = userRepo;
         }
 
+        public async Task<ServiceResponse<List<UserDTO>>> GetAllCustomerAsync()
+        {
+            var response = new ServiceResponse<List<UserDTO>>();
+            try
+            {
+                var customer = await _unitOfWork.UserRepo.GetAllAsync();
+                var data = _mapper.Map<List<UserDTO>>(customer.Where(u => u.Role == UserEnum.CUSTOMER));
+
+                response.Data = data;
+                response.Success = true;
+                response.Message = "Get all Customer successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to Get all Customer: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<UserDTO>> GetUserByIdAsync(int userId)
         {
             var response = new ServiceResponse<UserDTO>();
@@ -64,6 +83,12 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User has been deleted.";
+                    return response;
+                }
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
@@ -88,7 +113,7 @@ namespace Application.Services
                 var users = await _userRepo.GetAllUser();
                 if (user.Role == UserEnum.STAFF)
                 {
-                    var staffUsers = _mapper.Map<IEnumerable<UserDTO>>(users.Where(u => u.Role == UserEnum.CUSTOMER));
+                    var staffUsers = _mapper.Map<IEnumerable<UserDTO>>(users.Where(u => u.Role == UserEnum.CUSTOMER && !u.IsDeleted));
                     response.Data = staffUsers;
                     response.Success = true;
                     response.Message = "Get all user successfully";
@@ -201,7 +226,7 @@ namespace Application.Services
                 if (user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;
-                    response.Message = "You are not allow to do this.";
+                    response.Message = "You are not allowed to do this.";
                     return response;
                 }
                 var DeleteUser = await _unitOfWork.UserRepo.GetByIdAsync(UserDeleteId);

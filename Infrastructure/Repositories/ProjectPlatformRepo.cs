@@ -17,19 +17,19 @@ namespace Infrastructure.Repositories
 
         public async Task<List<ProjectPlatform>> GetProjectPlatformsByPlatformId(int platformId)
         {
-            return await _dbContext.GamePlatforms.Where(pp => pp.PlatformId == platformId).ToListAsync();
+            return await _dbContext.ProjectPlatforms.Where(pp => pp.PlatformId == platformId).ToListAsync();
         }
         public async Task<ProjectPlatform?> GetProjectPlatformByProjectIdAndPlatformId(int projectId, int platformId)
         {
-            return await _dbContext.GamePlatforms.SingleOrDefaultAsync(pp => pp.ProjectId == projectId && pp.PlatformId == platformId);
+            return await _dbContext.ProjectPlatforms.SingleOrDefaultAsync(pp => pp.ProjectId == projectId && pp.PlatformId == platformId);
         }
         public async Task<List<ProjectPlatform>> GetAllProjectByPlatformId(int platformId)
         {
-            return await _dbContext.GamePlatforms.Where(pp => pp.PlatformId == platformId).Include(pp => pp.Project).OrderBy(pp => pp.Project.Title).ToListAsync();
+            return await _dbContext.ProjectPlatforms.Where(pp => pp.PlatformId == platformId).Include(pp => pp.Project).OrderBy(pp => pp.Project.Title).ToListAsync();
         }
         public async Task<List<ProjectPlatform>> GetAllPlatformByProjectId(int projectId)
         {
-            return await _dbContext.GamePlatforms.Where(pp => pp.ProjectId == projectId).Include(pp => pp.Platform).OrderBy(pp => pp.Platform.Name).ToListAsync();
+            return await _dbContext.ProjectPlatforms.Where(pp => pp.ProjectId == projectId).Include(pp => pp.Platform).OrderBy(pp => pp.Platform.Name).ToListAsync();
         }
     }
 }

@@ -27,6 +27,10 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
             var check = await _commentService.CheckIfUserHasPermissionsByPostId(user, createPostCommentDTO.PostId);
             if (check != null)
             {
@@ -49,6 +53,10 @@ namespace CapstonProjectBE.Controllers
             if (user == null)
             {
                 return Unauthorized();
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
             }
             var check = await _commentService.CheckIfUserHasPermissionsByProjectId(user, createProjectCommentDTO.ProjectId);
             if (check != null)

@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using AutoMapper;
+using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.Extensions.Configuration;
@@ -15,60 +16,48 @@ namespace Application.Services
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ExchangeRateService _exchangeRateService;
 
         public PaypalPaymentService(IConfiguration configuration, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _configuration = configuration;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
-            _exchangeRateService = new ExchangeRateService(_configuration["ExchangeRateApiKey"]);
         }
         public async Task<ServiceResponse<string>> TransferPledgeToCreatorAsync(int userId, int projectId)
         {
             var response = new ServiceResponse<string>();
             try
             {
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
-                var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
-                var pledgeDetails = new List<PledgeDetail>();
-                foreach (var pledge in pledges)
-                {
-                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-                    if (details != null)
-                    {
-                        pledgeDetails.AddRange(details);
-                    }
-                }
-                foreach (var item in pledgeDetails)
-                {
-                    if (item.Status == PledgeDetailEnum.TRANSFERRED)
-                    {
-                        response.Success = false;
-                        response.Message = "This pledge has already been transferred.";
-                        return response;
-                    }
-                }
-                if (user == null)
-                {
-                    response.Success = false;
-                    response.Message = "User not found.";
-                    return response;
-                }
+
                 if (project == null)
                 {
                     response.Success = false;
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (user.Role != UserEnum.STAFF && user.Role != UserEnum.ADMIN && user.UserId != project.CreatorId)
+
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+
+                if (user == null)
                 {
                     response.Success = false;
-                    response.Message = "You are not allowed to do this method";
+                    response.Message = "User not found.";
                     return response;
                 }
-                if (project.StartDatetime < project.EndDatetime)
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "This request is invalid.";
+                    return response;
+                }
+                if (!(user.Role == UserEnum.STAFF && user.UserId == project.MonitorId) && user.Role != UserEnum.ADMIN)
+                {
+                    response.Success = false;
+                    response.Message = "You are not allowed to do this method.";
+                    return response;
+                }
+                if (project.EndDatetime > DateTime.UtcNow)
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -77,7 +66,7 @@ namespace Application.Services
                 if (project.Status == ProjectEnum.DELETED)
                 {
                     response.Success = false;
-                    response.Message = "This project has been deleted.";
+                    response.Message = "This request is invalid.";
                     return response;
                 }
                 if (project.TotalAmount < project.MinimumAmount)
@@ -86,19 +75,65 @@ namespace Application.Services
                     response.Message = "This project has not reached the minimum amount.";
                     return response;
                 }
-                var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
-                var apiContext = new APIContext(new OAuthTokenCredential(
-                    _configuration["PayPal:ClientId"],
-                    _configuration["PayPal:ClientSecret"]
-                ).GetAccessToken());
-
-                var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+                var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
                 if (creator == null)
                 {
                     response.Success = false;
                     response.Message = "Creator not found.";
                     return response;
                 }
+                if (creator.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "Creator deleted.";
+                    return response;
+                }
+                if (!creator.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "Creator unverified.";
+                    return response;
+                }
+                var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
+                if (pledges == null || !pledges.Any())
+                {
+                    response.Success = false;
+                    response.Message = "No pledges found for this project.";
+                    return response;
+                }
+                var pledgeDetails = new List<PledgeDetail>();
+
+                foreach (var pledge in pledges)
+                {
+                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                    if (details != null)
+                    {
+                        pledgeDetails.AddRange(details);
+                    }
+                }
+
+                foreach (var item in pledgeDetails)
+                {
+                    if (item.Status == PledgeDetailEnum.TRANSFERRED)
+                    {
+                        response.Success = false;
+                        response.Message = "The money has already been transferred.";
+                        return response;
+                    }
+                    //if (item.Status == PledgeDetailEnum.REFUNDED)
+                    //{
+                    //    response.Success = false;
+                    //    response.Message = "This pledge has already been transferred.";
+                    //    return response;
+                    //}
+                }
+
+                var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
+                var apiContext = new APIContext(new OAuthTokenCredential(
+                    _configuration["PayPal:ClientId"],
+                    _configuration["PayPal:ClientSecret"]
+                ).GetAccessToken());
+
                 var payout = new Payout
                 {
                     sender_batch_header = new PayoutSenderBatchHeader
@@ -113,7 +148,7 @@ namespace Application.Services
                     recipient_type = PayoutRecipientType.EMAIL,
                     amount = new Currency
                     {
-                        value = project.TotalAmount.ToString(),
+                        value = finalTotalPledgeForCreator.ToString(),
                         currency = "USD"
                     },
                     receiver = creator.Email,
@@ -122,22 +157,28 @@ namespace Application.Services
                 }
             }
                 };
-                var createdPayout = payout.Create(apiContext, false);
 
-                //foreach (var pledge in pledges)
+                var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
+
+                //var transferPledge = new Pledge
                 //{
-                //    pledge.Amount = 0;
-                //    await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                //    UserId = creator.UserId,
+                //    ProjectId = projectId,
+                //    Amount = finalTotalPledgeForCreator,
+                //};
+
+                //await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
+
+                //foreach (var pledgeDetail in pledgeDetails)
+                //{
+                //    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
+                //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
                 //}
 
-                foreach (var pledgeDetail in pledgeDetails)
-                {
-                    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
-                }
-
                 await _unitOfWork.SaveChangeAsync();
+
                 response.Success = true;
-                response.Message = "Payout created successfully.";
+                response.Message = "Pledge transfer completed successfully.";
             }
             catch (PayPalException paypalEx)
             {
@@ -148,17 +189,17 @@ namespace Application.Services
             {
                 response.Success = false;
                 response.Message = $"Failed to create payment: {ex.Message}";
-                return response;
             }
+
             return response;
         }
+
         public async Task<ServiceResponse<string>> CreateRefundAsync(int userId, int pledgeId)
         {
             var response = new ServiceResponse<string>();
             try
             {
                 var pledge = await _unitOfWork.PledgeRepo.GetPledgeByIdAsync(pledgeId);
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(pledge.ProjectId);
 
                 if (pledge == null)
                 {
@@ -175,10 +216,18 @@ namespace Application.Services
                     return response;
                 }
 
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User deleted.";
+                    return response;
+                }
+
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(pledge.ProjectId);
                 if (project == null)
                 {
                     response.Success = false;
-                    response.Message = "Project Id not found.";
+                    response.Message = "Project not found.";
                     return response;
                 }
                 if (project.StartDatetime < project.EndDatetime)
@@ -236,6 +285,9 @@ namespace Application.Services
                 var createdPayout = payout.Create(apiContext, false);
 
                 //pledge.Amount = 0;
+                //PledgeDetail pledgeDetail = new PledgeDetail();
+                //pledgeDetail.PledgeId = pledge.PledgeId;
+                //pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
                 await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
 
@@ -259,7 +311,7 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (project == null)
                 {
                     response.Success = false;
@@ -267,10 +319,10 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.Status == ProjectEnum.DELETED)
+                if (project.Status == ProjectEnum.DELETED || project.Status == ProjectEnum.INVISIBLE)
                 {
                     response.Success = false;
-                    response.Message = "This project has been deleted.";
+                    response.Message = "This request is invalid.";
                     return response;
                 }
 
@@ -292,17 +344,11 @@ namespace Application.Services
                 foreach (var pledge in pledges)
                 {
                     var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-
-                    foreach (var pledgeDetail in pledgeDetails)
+                    if (!pledgeDetails.Any(pd => pd.Status == PledgeDetailEnum.REFUNDED))
                     {
-                        if (pledgeDetail.Status == PledgeDetailEnum.PLEDGED)
+                        var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                        if (user != null && !user.IsDeleted)
                         {
-                            var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
-                            if (user == null)
-                            {
-                                continue;
-                            }
-
                             string totalAmountInUSD = pledge.Amount.ToString("F2");
 
                             payoutItems.Add(new PayoutItem
@@ -317,13 +363,9 @@ namespace Application.Services
                                 note = "Refund for your pledge",
                                 sender_item_id = pledge.PledgeId.ToString()
                             });
-
-                            pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
-                            pledge.Amount = 0;
                             await _unitOfWork.SaveChangeAsync();
                         }
                     }
-
                 }
 
                 var payout = new Payout
@@ -365,18 +407,24 @@ namespace Application.Services
             {
                 string totalAmount = amount.ToString("F2");
 
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (user == null)
                 {
                     response.Success = false;
                     response.Message = "User not found.";
                     return response;
                 }
+                if (user.Role != UserEnum.CUSTOMER)
+                {
+                    response.Success = false;
+                    response.Message = "You are forbidden from pledging.";
+                    return response;
+                }
                 if (user.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "You account need to be verified before using this method.";
+                    response.Message = "Your account needs to be verified before using this method.";
                     return response;
                 }
                 if (project == null)
@@ -385,10 +433,10 @@ namespace Application.Services
                     response.Message = "Project Id not found.";
                     return response;
                 }
-                if (project.Status == ProjectEnum.DELETED)
+                if (project.Status == ProjectEnum.DELETED || project.Status == ProjectEnum.INVISIBLE)
                 {
                     response.Success = false;
-                    response.Message = "This project has been deleted.";
+                    response.Message = "This request is invalid.";
                     return response;
                 }
                 if (project.Status == ProjectEnum.HALTED)
@@ -397,7 +445,7 @@ namespace Application.Services
                     response.Message = "This project has been halted.";
                     return response;
                 }
-                if (project.StartDatetime >= project.EndDatetime)
+                if (project.EndDatetime <= DateTime.UtcNow)
                 {
                     response.Success = false;
                     response.Message = "This project has ended.";
@@ -406,7 +454,7 @@ namespace Application.Services
                 if (project.CreatorId == userId)
                 {
                     response.Success = false;
-                    response.Message = "You are not allow to pledge your own Game Project.";
+                    response.Message = "You are not allowed to pledge to your own Game Project.";
                     return response;
                 }
                 var apiContext = new APIContext(new OAuthTokenCredential(
@@ -535,6 +583,19 @@ namespace Application.Services
 
                 var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
+                // Prepare to execute the payment
+
+                await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                var paymentExecution = new PaymentExecution() { payer_id = payerId };
+                var executedPayment = payment.Execute(apiContext, paymentExecution);
+
+                if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
+                {
+                    response.Success = false;
+                    response.Message = "Payment executed unsuccessfully.";
+                    return response;
+                }
+
                 if (existingPledge == null)
                 {
                     Domain.Entities.Pledge newPledge = new Domain.Entities.Pledge
@@ -575,19 +636,6 @@ namespace Application.Services
                     };
 
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-                }
-
-                // Prepare to execute the payment
-
-                await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                var paymentExecution = new PaymentExecution() { payer_id = payerId };
-                var executedPayment = payment.Execute(apiContext, paymentExecution);
-
-                if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
-                {
-                    response.Success = false;
-                    response.Message = "Payment executed unsuccessfully.";
-                    return response;
                 }
 
                 response.Success = true;

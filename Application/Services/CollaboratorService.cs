@@ -43,6 +43,85 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (existingUser.IsDeleted || !existingUser.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "This request is invalid";
+                    return response;
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+                if (existingProject.CreatorId != user.UserId)
+                {
+                    var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
+                    if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
+                    {
+                        response.Success = false;
+                        response.Message = "This request is not permitted";
+                        return response;
+                    }
+                }
+                var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(existingUser.UserId, existingProject.ProjectId);
+                if (existingCollaborator != null)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator already exists";
+                    return response;
+                }
+                Collaborator collaborator = new()
+                {
+                    ProjectId = existingProject.ProjectId,
+                    UserId = existingUser.UserId,
+                    Role = createCollaboratorDTO.Role
+                };
+                await _unitOfWork.CollaboratorRepo.AddAsync(collaborator);
+                collaborator.Project = existingProject;
+                collaborator.User = existingUser;
+                response.Data = _mapper.Map<CollaboratorDTO>(collaborator);
+                response.Success = true;
+                response.Message = "Collaborator created successfully";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create collaborator: {ex.Message}";
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<CollaboratorDTO>> CreateCollaboratorByUserEmail(CreateCollaboratorByEmailDTO createCollaboratorDTO, Domain.Entities.User user)
+        {
+            var response = new ServiceResponse<CollaboratorDTO>();
+
+            try
+            {
+                var validationContext = new ValidationContext(createCollaboratorDTO);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(createCollaboratorDTO, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+                var existingUser = await _unitOfWork.UserRepo.GetByEmailAsync(createCollaboratorDTO.Email);
+                if (existingUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                if (existingUser.IsDeleted || !existingUser.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "This request is invalid";
+                    return response;
+                }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
                 if (existingProject == null)
                 {
@@ -164,6 +243,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<CollaboratorDTO>>(collaborators);
                 response.Data = await Pagination.GetPagination(collaboratorDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -183,6 +270,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<CollaboratorDTO>>(collaborators);
                 response.Data = collaboratorDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -209,6 +304,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<UserCollaboratorDTO>>(collaborators);
                 response.Data = await Pagination.GetPagination(collaboratorDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -234,6 +337,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<UserCollaboratorDTO>>(collaborators);
                 response.Data = collaboratorDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -260,6 +371,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<ProjectCollaboratorDTO>>(collaborators);
                 response.Data = await Pagination.GetPagination(collaboratorDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -286,6 +405,14 @@ namespace Application.Services
                 var collaboratorDTOs = _mapper.Map<List<ProjectCollaboratorDTO>>(collaborators);
                 response.Data = collaboratorDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No collaborator found";
+                }
+                else
+                {
+                    response.Message = "Retrieve collaborator(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -315,10 +442,17 @@ namespace Application.Services
                 }
                 if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
-                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if (existingCollaborator == null && user.UserId != existingProject.CreatorId)
+                    if (user.IsDeleted && !user.IsVerified)
                     {
                         return new ForbidResult("This request is forbidden.");
+                    }
+                    else if (user.UserId != existingProject.CreatorId)
+                    {
+                        var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (existingCollaborator == null)
+                        {
+                            return new ForbidResult("This request is forbidden.");
+                        }
                     }
                 }
                 return null;

@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Domain.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    [Migration("20250322103207_thumbnail")]
-    partial class thumbnail
+    [Migration("20250409132313_updatingStuff")]
+    partial class updatingStuff
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,14 +40,17 @@ namespace Domain.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("ParentCategoryId")
+                    b.Property<int?>("ParentCategoryId")
                         .HasColumnType("integer");
 
                     b.HasKey("CategoryId");
 
                     b.HasIndex("ParentCategoryId");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", t =>
+                        {
+                            t.HasCheckConstraint("CK_Category_NoCircularDependency", "CategoryId != ParentCategoryId");
+                        });
                 });
 
             modelBuilder.Entity("Domain.Entities.Collaborator", b =>
@@ -56,6 +59,9 @@ namespace Domain.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Role")
                         .HasColumnType("integer");
 
                     b.HasKey("UserId", "ProjectId");
@@ -102,6 +108,29 @@ namespace Domain.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Domain.Entities.FAQ", b =>
+                {
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Question")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Answer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDatetime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedDatetime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ProjectId", "Question");
+
+                    b.ToTable("FAQs");
+                });
+
             modelBuilder.Entity("Domain.Entities.File", b =>
                 {
                     b.Property<int>("FileId")
@@ -129,19 +158,6 @@ namespace Domain.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Files");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Goal", b =>
-                {
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("ProjectId", "Amount");
-
-                    b.ToTable("Goals");
                 });
 
             modelBuilder.Entity("Domain.Entities.Platform", b =>
@@ -198,9 +214,8 @@ namespace Domain.Migrations
                     b.Property<string>("PaymentId")
                         .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.HasKey("PledgeId", "PaymentId");
 
@@ -225,9 +240,8 @@ namespace Domain.Migrations
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -289,8 +303,10 @@ namespace Domain.Migrations
                     b.Property<DateTime>("StartDatetime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Story")
                         .HasColumnType("text");
 
                     b.Property<string>("Thumbnail")
@@ -476,16 +492,21 @@ namespace Domain.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Password")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentAccount")
                         .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .HasColumnType("text");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId");
 
@@ -500,8 +521,7 @@ namespace Domain.Migrations
                     b.HasOne("Domain.Entities.Category", "ParentCategory")
                         .WithMany("Categories")
                         .HasForeignKey("ParentCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
                 });
@@ -543,6 +563,17 @@ namespace Domain.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.FAQ", b =>
+                {
+                    b.HasOne("Domain.Entities.Project", "Project")
+                        .WithMany("Questions")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Domain.Entities.File", b =>
                 {
                     b.HasOne("Domain.Entities.User", "User")
@@ -552,17 +583,6 @@ namespace Domain.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Domain.Entities.Goal", b =>
-                {
-                    b.HasOne("Domain.Entities.Project", "Project")
-                        .WithMany("Goals")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
                 });
 
             modelBuilder.Entity("Domain.Entities.Pledge", b =>
@@ -777,8 +797,6 @@ namespace Domain.Migrations
                 {
                     b.Navigation("Collaborators");
 
-                    b.Navigation("Goals");
-
                     b.Navigation("Pledges");
 
                     b.Navigation("Posts");
@@ -788,6 +806,8 @@ namespace Domain.Migrations
                     b.Navigation("ProjectComments");
 
                     b.Navigation("ProjectPlatforms");
+
+                    b.Navigation("Questions");
 
                     b.Navigation("Rewards");
                 });

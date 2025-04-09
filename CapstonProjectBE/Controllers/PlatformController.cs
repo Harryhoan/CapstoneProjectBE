@@ -39,6 +39,17 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
         [AllowAnonymous]
+        [HttpGet("GetPlatformByPlatformId/{platformId}")]
+        public async Task<IActionResult> GetPlatformByPlatformId(int platformId)
+        {
+            var result = await _platformService.GetPlatformByPlatformId(platformId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+        [AllowAnonymous]
         [HttpGet("GetAllProjectByPlatformId/{platformId}")]
         public async Task<IActionResult> GetAllProjectByPlatformId(int platformId)
         {
@@ -62,6 +73,7 @@ namespace CapstonProjectBE.Controllers
 
 
         [HttpGet("pagination")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPaginatedPlatforms(string? query = null, int page = 1, int pageSize = 20)
         {
             var result = await _platformService.GetPaginatedPlatforms(query, page, pageSize);
@@ -115,11 +127,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> CreateProjectPlatform([FromForm]ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _platformService.CreateProjectPlatform(projectPlatformDTO);
             if (!result.Success)
             {
@@ -134,11 +146,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RemoveProjectPlatform(ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _platformService.CheckIfUserHasPermissionsByProjectId(projectPlatformDTO.ProjectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _platformService.RemoveProjectPlatform(projectPlatformDTO);
             if (!result.Success)
             {

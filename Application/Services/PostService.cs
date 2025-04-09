@@ -264,6 +264,14 @@ namespace Application.Services
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = await Pagination.GetPagination(postDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No post found";
+                }
+                else
+                {
+                    response.Message = "Retrieve post(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -289,6 +297,14 @@ namespace Application.Services
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = postDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No post found";
+                }
+                else
+                {
+                    response.Message = "Retrieve post(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -330,6 +346,14 @@ namespace Application.Services
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = await Pagination.GetPagination(postDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No post found";
+                }
+                else
+                {
+                    response.Message = "Retrieve post(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -356,6 +380,14 @@ namespace Application.Services
                 var postDTOs = _mapper.Map<List<PostDTO>>(posts);
                 response.Data = postDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No post found";
+                }
+                else
+                {
+                    response.Message = "Retrieve post(s) successfully";
+                }
             }
             catch (Exception ex)
             {
