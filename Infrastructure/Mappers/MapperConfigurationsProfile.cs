@@ -26,10 +26,12 @@ namespace Infrastructure.Mappers
             CreateMap<Project, CreateProjectDto>().ReverseMap();
             CreateMap<Project, UpdateProjectDto>().ReverseMap();
             CreateMap<Project, ProjectThumbnailDto>().ReverseMap();
-            CreateMap<Platform, PlatformDTO>()
-                .ForMember(dest => dest.PlatformId, opt => opt.MapFrom(src => src.PlatformId))
-                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
-                .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description)).ReverseMap();
+            //CreateMap<Platform, PlatformDTO>()
+            //    .ForMember(dest => dest.PlatformId, opt => opt.MapFrom(src => src.PlatformId))
+            //    .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            //    .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description)).ReverseMap();
+            CreateMap<Platform, PlatformDTO>().ReverseMap();
+
             CreateMap<Project, UserProjectsDto>()
                             .ForMember(dest => dest.ProjectId, opt => opt.MapFrom(src => src.ProjectId))
                             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))

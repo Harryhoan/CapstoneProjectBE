@@ -359,7 +359,7 @@ namespace Domain.Migrations
 
                     b.HasIndex("ProjectId");
 
-                    b.ToTable("GamePlatforms");
+                    b.ToTable("ProjectPlatforms");
                 });
 
             modelBuilder.Entity("Domain.Entities.Report", b =>
@@ -693,7 +693,7 @@ namespace Domain.Migrations
             modelBuilder.Entity("Domain.Entities.ProjectPlatform", b =>
                 {
                     b.HasOne("Domain.Entities.Platform", "Platform")
-                        .WithMany("GamePlatforms")
+                        .WithMany("ProjectPlatforms")
                         .HasForeignKey("PlatformId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -760,7 +760,7 @@ namespace Domain.Migrations
 
             modelBuilder.Entity("Domain.Entities.Platform", b =>
                 {
-                    b.Navigation("GamePlatforms");
+                    b.Navigation("ProjectPlatforms");
                 });
 
             modelBuilder.Entity("Domain.Entities.Pledge", b =>

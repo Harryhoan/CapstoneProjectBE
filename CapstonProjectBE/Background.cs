@@ -44,11 +44,11 @@ namespace CapstonProjectBE
                                 {
                                     if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)
                                     {
-                                        var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
-                                        foreach (var pledge in pledges)
-                                        {
-                                            await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
-                                        }
+                                        //var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
+                                        //foreach (var pledge in pledges)
+                                        //{
+                                        //    await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
+                                        //}
                                         var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
                                         if (!emailSend)
                                         {
@@ -74,19 +74,33 @@ namespace CapstonProjectBE
                                     }
                                 }
                             }
-                            var projectCategories = await dbContext.ProjectCategories.Include(pc => pc.Category).ThenInclude(c => c.ParentCategory).Where(pc => pc.ProjectId == project.ProjectId && pc.Category != null && pc.Category.ParentCategory != null && !(pc.Category.ParentCategory.ParentCategoryId > 0)).ToListAsync();
+                            var projectCategories = await dbContext.ProjectCategories.Include(pc => pc.Category).Where(pc => pc.Category != null && pc.Category.ParentCategoryId.HasValue).ToListAsync();
                             if (projectCategories.Any())
                             {
                                 foreach (ProjectCategory projectCategory in projectCategories)
                                 {
-                                    if (projectCategory.Category.ParentCategoryId > 0 && projectCategory.Category.ParentCategory != null && projectCategory.Category.ParentCategory.ParentCategoryId > 0 && projectCategories.FirstOrDefault(pc => pc.CategoryId == projectCategory.Category.ParentCategoryId) == null)
+                                    if (projectCategory.Category.ParentCategoryId.HasValue)
                                     {
-                                        var newProjectCategory = new ProjectCategory
+                                        var existingParentCategory = await dbContext.Categories.AsNoTracking().SingleOrDefaultAsync(c => c.CategoryId == projectCategory.Category.ParentCategoryId.Value);
+                                        if (existingParentCategory == null)
                                         {
-                                            ProjectId = project.ProjectId,
-                                            CategoryId = (int)projectCategory.Category.ParentCategoryId
-                                        };
-                                        await dbContext.AddAsync(newProjectCategory);
+                                            projectCategory.Category.ParentCategoryId = null;
+                                        }
+                                        else if (existingParentCategory.ParentCategoryId.HasValue && existingParentCategory.ParentCategoryId.Value > 0 && projectCategories.FirstOrDefault(pc => pc.CategoryId == existingParentCategory.CategoryId) == null)
+                                        {
+                                            var parent = await dbContext.Categories.AsNoTracking().SingleOrDefaultAsync(c => c.CategoryId == existingParentCategory.ParentCategoryId.Value);
+                                            if (parent != null)
+                                            {
+                                                var newProjectCategory = new ProjectCategory
+                                                {
+                                                    ProjectId = project.ProjectId,
+                                                    CategoryId = (int)projectCategory.Category.ParentCategoryId
+                                                };
+                                                await dbContext.AddAsync(newProjectCategory);
+                                            }
+                                            parent = null;
+                                            existingParentCategory = null;
+                                        }
                                     }
                                 }
                             }
@@ -119,7 +133,7 @@ namespace CapstonProjectBE
                     _logger.LogError(ex, "Background processing failed");
                     Console.WriteLine($"Background processing failed: {ex.Message}");
                 }
-                await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(120), stoppingToken);
             }
 
         }

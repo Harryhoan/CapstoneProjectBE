@@ -5,6 +5,8 @@ using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using System.Threading.Tasks;
+
 
 namespace Application.Services
 {
@@ -35,6 +37,23 @@ namespace Application.Services
             }
             try
             {
+                if (category.ParentCategoryId.HasValue)
+                {
+                    var parentCategoryId = category.ParentCategoryId.Value;
+                    if (parentCategoryId < 1)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Category ID must be a positive integer.";
+                        return response;
+                    }
+                    var existingCategory = await _unitOfWork.CategoryRepo.GetByIdNoTrackingAsync("CategoryId", parentCategoryId);
+                    if (existingCategory == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Category cannot be found.";
+                        return response;
+                    }
+                }
                 var newCategory = _mapper.Map<Category>(category);
                 await _unitOfWork.CategoryRepo.AddAsync(newCategory);
 
@@ -61,12 +80,6 @@ namespace Application.Services
                 response.Message = "User not found.";
                 return response;
             }
-            if (user.Role != UserEnum.ADMIN)
-            {
-                response.Success = false;
-                response.Message = "You do not have permission to update this category.";
-                return response;
-            }
             try
             {
                 var category = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
@@ -78,7 +91,16 @@ namespace Application.Services
                     return response;
                 }
 
+                var childCategories = await _unitOfWork.CategoryRepo.GetListByParentCategoryIdAsync(category.CategoryId);
+                if (childCategories.Any())
+                {
+                    foreach (var childCategory in childCategories)
+                    {
+                        childCategory.ParentCategoryId = null;
+                    }
 
+                    await _unitOfWork.CategoryRepo.UpdateAllAsync(childCategories);
+                }
                 await _unitOfWork.CategoryRepo.RemoveAsync(category);
 
                 response.Success = true;
@@ -105,26 +127,20 @@ namespace Application.Services
                 response.Message = "User not found.";
                 return response;
             }
-            if (user.Role != UserEnum.ADMIN)
-            {
-                response.Success = false;
-                response.Message = "You do not have permission to update this category.";
-                return response;
-            }
             try
             {
                 var category = await _unitOfWork.ProjectCategoryRepo.FindEntityAsync(pc => pc.ProjectId == projectId && pc.CategoryId == categoryId);
                 if (category == null)
                 {
                     response.Success = false;
-                    response.Message = "No categories found for this project.";
+                    response.Message = "Category not found for this project.";
                     return response;
                 }
 
                 await _unitOfWork.ProjectCategoryRepo.RemoveAsync(category);
 
                 response.Success = true;
-                response.Message = "Categories deleted successfully.";
+                response.Message = "Category removed from the project successfully.";
             }
             catch (Exception ex)
             {
@@ -245,6 +261,25 @@ namespace Application.Services
             return response;
         }
 
+        private async Task<bool> HasCircularDependency(Category category, int? parentCategoryId)
+        {
+            if (parentCategoryId == null) return false;
+
+            var visited = new HashSet<int> { category.CategoryId };
+            var currentId = parentCategoryId;
+            var categories = await _unitOfWork.CategoryRepo.GetAllAsync();
+            while (currentId != null)
+            {
+                if (visited.Contains(currentId.Value)) return true;
+
+                visited.Add(currentId.Value);
+                var parent = categories.FirstOrDefault(c => c.CategoryId == currentId.Value);
+                currentId = parent?.ParentCategoryId;
+            }
+
+            return false;
+        }
+
         public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByProjectId(int projectId)
         {
             var response = new ServiceResponse<IEnumerable<ViewCategory>>();
@@ -308,6 +343,17 @@ namespace Application.Services
                     return response;
                 }
 
+                if (result.ParentCategoryId.HasValue)
+                {
+                    var existingParentCategory = await _unitOfWork.CategoryRepo.GetByIdNoTrackingAsync("CategoryId", result.ParentCategoryId.Value);
+                    if (existingParentCategory == null)
+                    {
+                        result.ParentCategoryId = null;
+                        await _unitOfWork.CategoryRepo.UpdateAsync(result);
+                    }
+                }
+
+
                 var category = new ViewCategory
                 {
                     CategoryId = categoryId,
@@ -341,12 +387,7 @@ namespace Application.Services
                 response.Message = "User not found.";
                 return response;
             }
-            if (user.Role != UserEnum.ADMIN)
-            {
-                response.Success = false;
-                response.Message = "You do not have permission to update this category.";
-                return response;
-            }
+
             try
             {
                 var result = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
@@ -355,6 +396,28 @@ namespace Application.Services
                     response.Success = false;
                     response.Message = "Category not found.";
                     return response;
+                }
+
+                if (updateCategory.ParentCategoryId.HasValue)
+                {
+                    var parentCategoryId = updateCategory.ParentCategoryId.Value;
+                    if (parentCategoryId < 1)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Category ID must be a positive integer.";
+                        return response;
+                    }
+                    var existingCategory = await _unitOfWork.CategoryRepo.GetByIdNoTrackingAsync("CategoryId", parentCategoryId);
+                    if (existingCategory == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Category cannot be found.";
+                        return response;
+                    }
+                    if (result.ParentCategoryId.HasValue && await HasCircularDependency(result, result.ParentCategoryId.Value))
+                    {
+                        throw new InvalidOperationException("Circular dependency detected.");
+                    }
                 }
 
                 var updateCate = _mapper.Map<Category>(updateCategory);

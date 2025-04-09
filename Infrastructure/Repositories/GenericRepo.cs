@@ -31,6 +31,11 @@ namespace Infrastructure.Repositories
             return await _dbSet.AsNoTracking().ToListAsync();
         }
 
+        public IQueryable<T> GetAllAsNoTrackingAsQueryable()
+        {
+            return _dbSet.AsNoTracking().AsQueryable();
+        }
+
         public async Task<T?> GetByIdNoTrackingAsync(string primaryKeyName, Guid id)
         {
             var parameter = Expression.Parameter(typeof(T), "e");
@@ -81,6 +86,12 @@ namespace Infrastructure.Repositories
             _dbSet.Update(entity);
             await _context.SaveChangesAsync();
         }
+        public async Task UpdateAllAsync(IEnumerable<T> entities)
+        {
+            _dbSet.UpdateRange(entities);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<bool> Find(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.AnyAsync(predicate);

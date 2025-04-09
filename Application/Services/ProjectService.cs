@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels;
+using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using CloudinaryDotNet;
@@ -9,7 +10,10 @@ using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.Asn1.Esf;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 
 namespace Application.Services
@@ -119,7 +123,7 @@ namespace Application.Services
                 if (specificUser.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "You account need to be verified before using this method.";
+                    response.Message = "You account needs to be verified before using this method.";
                     return response;
                 }
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
@@ -270,15 +274,128 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects()
+        private async Task<IQueryable<Project>> FilterProjects(User? user = null, QueryProjectDto? queryProjectDto = null)
+        {
+            var query = _unitOfWork.ProjectRepo.GetAllAsNoTrackingAsQueryable();
+            if (queryProjectDto != null)
+            {
+                if (queryProjectDto.CreatorId.HasValue)
+                {
+                    var existingCreator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", queryProjectDto.CreatorId.Value);
+                    if (existingCreator != null && !(user != null && user.Role == UserEnum.CUSTOMER && existingCreator.IsDeleted))
+                    {
+                        query = query.Where(p => p.CreatorId == existingCreator.UserId).AsQueryable();
+                    }
+                    else
+                    {
+                        query = query.Where(p => p.CreatorId != queryProjectDto.CreatorId.Value).AsQueryable();
+                    }
+                }
+                if (!string.IsNullOrEmpty(queryProjectDto.Title))
+                {
+                    query = query.Where(p => p.Title != null && p.Title.ToLower().Trim().Contains(queryProjectDto.Title.ToLower().Trim())).AsQueryable();
+                }
+                if (queryProjectDto.Status != null)
+                {
+                    query = query.Where(p => p.Status == queryProjectDto.Status).AsQueryable();
+                }
+                if (queryProjectDto.MinMinimumAmount.HasValue)
+                {
+                    query = query.Where(p => p.MinimumAmount >= queryProjectDto.MinMinimumAmount.Value);
+                }
+                if (queryProjectDto.MaxMinimumAmount.HasValue)
+                {
+                    query = query.Where(p => p.MinimumAmount <= queryProjectDto.MaxMinimumAmount.Value);
+                }
+                if (queryProjectDto.MaxTotalAmount.HasValue)
+                {
+                    query = query.Where(p => p.TotalAmount <= queryProjectDto.MaxTotalAmount.Value);
+                }
+                if (queryProjectDto.MinTotalAmount.HasValue)
+                {
+                    query = query.Where(p => p.TotalAmount >= queryProjectDto.MinTotalAmount.Value);
+                }
+                if (queryProjectDto.MaxEndDatetime.HasValue)
+                {
+                    query = query.Where(p => p.EndDatetime <= queryProjectDto.MaxEndDatetime.Value);
+                }
+                if (queryProjectDto.MinEndDatetime.HasValue)
+                {
+                    query = query.Where(p => p.EndDatetime >= queryProjectDto.MinEndDatetime.Value);
+                }
+                if (queryProjectDto.MinStartDatetime.HasValue)
+                {
+                    query = query.Where(p => p.StartDatetime >= queryProjectDto.MinStartDatetime.Value);
+                }
+                if (queryProjectDto.MaxStartDatetime.HasValue)
+                {
+                    query = query.Where(p => p.StartDatetime <= queryProjectDto.MaxStartDatetime.Value);
+                }
+                if (queryProjectDto.MinUpdateDatetime.HasValue)
+                {
+                    query = query.Where(p => p.UpdateDatetime >= queryProjectDto.MinUpdateDatetime.Value);
+                }
+                if (queryProjectDto.MaxUpdateDatetime.HasValue)
+                {
+                    query = query.Where(p => p.UpdateDatetime <= queryProjectDto.MaxUpdateDatetime.Value);
+                }
+            }
+            if (user == null)
+            {
+                query = query.Where(p => p.Status != ProjectEnum.DELETED && p.Status != ProjectEnum.INVISIBLE).AsQueryable();
+            }
+            else if (user.Role == UserEnum.CUSTOMER)
+            {
+                query = query.Where(p => p.Status != ProjectEnum.DELETED && !(p.Status == ProjectEnum.INVISIBLE && user.UserId != p.CreatorId)).AsQueryable();
+            }
+            return query;
+        }
+
+        public async Task<ServiceResponse<IEnumerable<ProjectDto>>> GetAllProjects(User? user = null, QueryProjectDto? queryProjectDto = null)
         {
             var response = new ServiceResponse<IEnumerable<ProjectDto>>();
 
             try
             {
-                var result = await _unitOfWork.ProjectRepo.GetAllAsync();
-                var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING || p.Status == ProjectEnum.HALTED && p.StartDatetime < p.EndDatetime); // Filter projects by status and date range
-
+                if (queryProjectDto != null)
+                {
+                    var validationContext = new ValidationContext(queryProjectDto);
+                    var validationResults = new List<ValidationResult>();
+                    if (!Validator.TryValidateObject(queryProjectDto, validationContext, validationResults, true))
+                    {
+                        var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                        response.Success = false;
+                        response.Message = string.Join("; ", errorMessages);
+                        return response;
+                    }
+                    if (queryProjectDto.MaxMinimumAmount != null && queryProjectDto.MinMinimumAmount != null && queryProjectDto.MaxMinimumAmount < queryProjectDto.MinMinimumAmount)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Minimum Amount";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxStartDatetime != null && queryProjectDto.MinStartDatetime != null && queryProjectDto.MaxStartDatetime < queryProjectDto.MinStartDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Start Date Time";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxUpdateDatetime != null && queryProjectDto.MinUpdateDatetime != null && queryProjectDto.MaxUpdateDatetime < queryProjectDto.MinUpdateDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Update Date Time";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxEndDatetime != null && queryProjectDto.MinEndDatetime != null && queryProjectDto.MaxEndDatetime < queryProjectDto.MinEndDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable End Date Time";
+                        return response;
+                    }
+                }
+                //var result = await _unitOfWork.ProjectRepo.GetAllAsync();
+                //var filteredResult = result.Where(p => p.Status == ProjectEnum.ONGOING || p.Status == ProjectEnum.HALTED && p.StartDatetime < p.EndDatetime);
+                var filteredResult = await (await FilterProjects(user, queryProjectDto)).ToListAsync();
                 var responseData = new List<ProjectDto>();
                 foreach (var project in filteredResult)
                 {
@@ -377,13 +494,25 @@ namespace Application.Services
             //return response;
         }
 
-        public async Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber, int pageSize)
+        public async Task<ServiceResponse<PaginationModel<ProjectDto>>> GetProjectsPaging(int pageNumber = 1, int pageSize = 5, User? user = null, QueryProjectDto? queryProjectDto = null)
         {
             var response = new ServiceResponse<PaginationModel<ProjectDto>>();
 
             try
             {
-                var (totalRecords, totalPages, projects) = await _unitOfWork.ProjectRepo.GetProjectsPaging(pageNumber, pageSize);
+                //var (totalRecords, totalPages, projects) = await _unitOfWork.ProjectRepo.GetProjectsPaging(pageNumber, pageSize);
+                var query = await FilterProjects(user, queryProjectDto);
+                if (pageNumber <= 0)
+                {
+                    pageNumber = 1;
+                }
+                if (pageSize <= 0)
+                {
+                    pageSize = 5;
+                }
+                var totalRecords = await query.CountAsync();
+                var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+                var projects = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
                 var creator = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().CreatorId);
                 var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().MonitorId);
                 var projectDtos = new List<ProjectDto>();
@@ -646,7 +775,7 @@ namespace Application.Services
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 // Send email notification
-                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title, projectStatus, reason);
+                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title ?? "[No Title | ID : " + project.ProjectId + "]", projectStatus, reason);
                 if (!emailSend)
                 {
                     response.Success = false;
@@ -681,6 +810,17 @@ namespace Application.Services
 
             try
             {
+                var validationContext = new ValidationContext(addCategory);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(addCategory, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(addCategory.ProjectId);
                 if (project == null)
                 {

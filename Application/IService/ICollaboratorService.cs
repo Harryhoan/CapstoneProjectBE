@@ -9,6 +9,7 @@ namespace Application.IService
     public interface ICollaboratorService
     {
         public Task<ServiceResponse<CollaboratorDTO>> CreateCollaborator(CreateCollaboratorDTO createCollaboratorDTO, Domain.Entities.User user);
+        public Task<ServiceResponse<CollaboratorDTO>> CreateCollaboratorByUserEmail(CreateCollaboratorByEmailDTO createCollaboratorDTO, Domain.Entities.User user);
         public Task<ServiceResponse<PaginationModel<CollaboratorDTO>>> GetPaginatedCollaborators(int page = 1, int pageSize = 20);
         public Task<ServiceResponse<List<CollaboratorDTO>>> GetCollaborators();
         public Task<ServiceResponse<PaginationModel<UserCollaboratorDTO>>> GetPaginatedCollaboratorsByProjectId(int projectId, int page = 1, int pageSize = 20);

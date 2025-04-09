@@ -25,9 +25,16 @@ namespace CapstonProjectBE.Controllers
         /// <returns></returns>
         [HttpGet("GetAllProject")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllProject()
+        public async Task<IActionResult> GetAllProject([FromQuery] QueryProjectDto? queryProjectDto)
         {
-            return Ok(await _projectService.GetAllProjects());
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var result = await _projectService.GetAllProjects(user, queryProjectDto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         /// <summary>
@@ -40,18 +47,39 @@ namespace CapstonProjectBE.Controllers
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null) { return Unauthorized(); }
-            return Ok(await _projectService.GetAllProjectByAdminAsync(user.UserId));
+            var result = await _projectService.GetAllProjectByAdminAsync(user.UserId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
+
         [HttpGet("GetProjectsPaging")]
-        public async Task<IActionResult> GetProjectsPaging(int pageNumber, int pageSize)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetProjectsPaging(int pageNumber, int pageSize, [FromQuery] QueryProjectDto? queryProjectDto)
         {
-            return Ok(await _projectService.GetProjectsPaging(pageNumber, pageSize));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var result = await _projectService.GetProjectsPaging(pageNumber, pageSize, user, queryProjectDto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [HttpGet("GetProjectById")]
         public async Task<IActionResult> GetProjectById(int id)
         {
-            return Ok(await _projectService.GetProjectById(id));
+            var result = await _projectService.GetProjectById(id);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [HttpGet("GetProjectByUserId")]
@@ -63,7 +91,13 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _projectService.GetProjectByUserIdAsync(user.UserId));
+            var result = await _projectService.GetProjectByUserIdAsync(user.UserId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [HttpPost("CreateProject")]
@@ -75,14 +109,33 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _projectService.CreateProject(user.UserId, projectDto));
+            var result = await _projectService.CreateProject(user.UserId, projectDto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+
         }
 
         [HttpPut("UpdateProject")]
-        [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
+        [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> UpdateProject(int projectId, [FromForm] UpdateProjectDto updateProjectDto)
         {
-            return Ok(await _projectService.UpdateProject(projectId, updateProjectDto));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _projectService.UpdateProject(projectId, updateProjectDto);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
         [HttpPut("UpdateProjectThumbnail")]
@@ -110,17 +163,29 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story));
+            var result = await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
         [HttpDelete("DeleteProject")]
         [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         public async Task<IActionResult> DeleteProject(int id)
         {
-            return Ok(await _projectService.DeleteProject(id));
+            var result = await _projectService.DeleteProject(id);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
-        [HttpPut("StaffApproveProject")]
         [Authorize(Roles = "STAFF, ADMIN")]
+        [HttpPut("StaffApproveProject")]
         public async Task<IActionResult> StaffApproveProject(int projectId, ProjectEnum status, string reason)
         {
             if (status == ProjectEnum.DELETED)
@@ -132,13 +197,32 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _projectService.StaffApproveAsync(projectId, user.UserId, status, reason));
+            var result = await _projectService.StaffApproveAsync(projectId, user.UserId, status, reason);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         [HttpPost("AddCategoryToProject")]
         public async Task<IActionResult> AddCategoryToProject([FromForm] AddCategoryToProject addCategoryToProject)
         {
-            return Ok(await _projectService.AddCategoryToProject(addCategoryToProject));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(addCategoryToProject.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _projectService.AddCategoryToProject(addCategoryToProject);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
     }
 }

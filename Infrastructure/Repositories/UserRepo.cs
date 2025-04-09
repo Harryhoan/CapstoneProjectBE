@@ -20,7 +20,7 @@ namespace Infrastructure.Repositories
             return await _dbContext.Users.AnyAsync(e => e.Email == sEmail);
         }
 
-        public async Task<User?> GetByEmailAsync(string sEmail) => await _dbSet.FirstOrDefaultAsync(u => u.Email == sEmail);
+        public async Task<User?> GetByEmailAsync(string email) => await _dbSet.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == email.Trim().ToLower() && !u.IsDeleted);
         public async Task<User> GetUserByEmailAddressAndPasswordHash(string email, string passwordHash)
         {
             var user = await _dbContext.Users.Include(u => u.Tokens)

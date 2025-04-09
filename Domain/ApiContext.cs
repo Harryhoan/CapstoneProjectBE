@@ -20,7 +20,7 @@ namespace Domain
         public DbSet<PostComment> PostComments { get; set; }
         public DbSet<Reward> Rewards { get; set; }
         public DbSet<Report> Reports { get; set; }
-        public DbSet<ProjectPlatform> GamePlatforms { get; set; }
+        public DbSet<ProjectPlatform> ProjectPlatforms { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Platform> Platforms { get; set; }
@@ -105,6 +105,8 @@ namespace Domain
                 .WithMany(c => c.Categories)
                 .HasForeignKey(c => c.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Category>()
+                .ToTable(t => t.HasCheckConstraint("CK_Category_NoCircularDependency", "CategoryId != ParentCategoryId"));
 
             modelBuilder.Entity<FAQ>()
                 .HasOne(g => g.Project)
