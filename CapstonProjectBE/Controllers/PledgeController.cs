@@ -74,11 +74,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetBackerByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             var result = await _pledgeService.GetBackerByProjectId(projectId);
             if (!result.Success) return BadRequest(result.Message);
             return Ok(result);

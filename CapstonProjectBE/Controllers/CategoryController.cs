@@ -101,16 +101,16 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "ADMIN, CUSTOMER, STAFF")]
+        [Authorize]
         [HttpDelete("DeleteCategoryFromProject")]
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             if (user == null)
             {
                 return Unauthorized();
@@ -123,7 +123,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "ADMIN, STAFF")]
+        [Authorize]
         [HttpPut("UpdateCategory")]
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
