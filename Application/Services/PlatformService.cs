@@ -285,12 +285,12 @@ namespace Application.Services
         //{
         //    if (user == null || !(user.UserId > 0))
         //    {
-        //        return new UnauthorizedObjectResult("This request is not authorized.");
+        //        return new UnauthorizedResult();
         //    }
         //    var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
         //    if (existingProject == null)
         //    {
-        //        return new NotFoundObjectResult("The project associated with the request cannot be found.");
+        //        return new NotFoundResult();
         //    }
         //    if (user.Role == UserEnum.CUSTOMER)
         //    {
@@ -299,7 +299,7 @@ namespace Application.Services
         //            var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
         //            if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
         //            {
-        //                return new ForbidResult("This request is forbidden.");
+        //                return new ForbidResult();
         //            }
         //        }
         //    }
@@ -307,7 +307,7 @@ namespace Application.Services
         //    {
         //        if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
         //        {
-        //            return new ForbidResult("This request is forbidden.");
+        //            return new ForbidResult();
         //        }
         //    }
 

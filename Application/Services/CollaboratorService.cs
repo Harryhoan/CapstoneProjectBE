@@ -429,29 +429,29 @@ namespace Application.Services
             {
                 //if (user == null || !(user.UserId > 0))
                 //{
-                //    return new UnauthorizedObjectResult("This request is not authorized.");
+                //    return new UnauthorizedResult();
                 //}
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundObjectResult("The project cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
-                    return new UnauthorizedObjectResult("This request is not authorized.");
+                    return new UnauthorizedResult();
                 }
                 if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {
-                        return new ForbidResult("This request is forbidden.");
+                        return new ForbidResult();
                     }
                     else if (user.UserId != existingProject.CreatorId)
                     {
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null)
                         {
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
                     }
                 }
@@ -460,7 +460,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
 
         public async Task<IActionResult?> CheckIfUserCanRemoveByProjectId(int userId, int projectId, User? user = null)
@@ -469,24 +469,24 @@ namespace Application.Services
             {
                 if (user == null || !(user.UserId > 0))
                 {
-                    return new UnauthorizedObjectResult("This request is not authorized.");
+                    return new UnauthorizedResult();
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundObjectResult("The project cannot be found.");
+                    return new NotFoundResult();
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null || existingUser.IsDeleted)
                 {
-                    return new NotFoundObjectResult("The user cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (user.Role == UserEnum.CUSTOMER && existingUser.UserId != user.UserId)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR))
                     {
-                        return new ForbidResult("This request is forbidden.");
+                        return new ForbidResult();
                     }
                 }
                 else
@@ -495,7 +495,7 @@ namespace Application.Services
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
                     }
                 }
@@ -504,7 +504,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
 
         public async Task<IActionResult?> CheckIfUserCanUpdateByProjectId(CollaboratorEnum role, int userId, int projectId, User? user = null)
@@ -513,30 +513,30 @@ namespace Application.Services
             {
                 if (user == null || !(user.UserId > 0))
                 {
-                    return new UnauthorizedObjectResult("This request is not authorized.");
+                    return new UnauthorizedResult();
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundObjectResult("The project cannot be found.");
+                    return new NotFoundResult();
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null || existingUser.IsDeleted)
                 {
-                    return new NotFoundObjectResult("The user cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     //if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && ((existingCollaborator.UserId != user.UserId && existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR) || (existingCollaborator.UserId == userId && (int) role < (int)existingCollaborator.Role))))
                     //{
-                    //    return new ForbidResult("This request is forbidden.");
+                    //    return new ForbidResult();
                     //}
                     if (existingCollaborator == null)
                     {
                         if (user.UserId != existingProject.CreatorId)
                         {
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
                     }
                     else if (user.UserId != existingProject.CreatorId)
@@ -545,13 +545,13 @@ namespace Application.Services
                         {
                             if (existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR)
                             {
-                                return new ForbidResult("This request is forbidden.");
+                                return new ForbidResult();
 
                             }
                         }
                         else if ((int)role < (int)existingCollaborator.Role)
                         {
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
                     }
                 }
@@ -561,7 +561,7 @@ namespace Application.Services
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
                     }
                 }
@@ -570,7 +570,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
 
 

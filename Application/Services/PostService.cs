@@ -524,23 +524,23 @@ namespace Application.Services
                 var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
                 if (existingPost == null)
                 {
-                    return new NotFoundObjectResult("The requested post cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (existingPost.Status != PostEnum.PUBLIC && (user == null || !(user.UserId > 0)))
                 {
-                    return new UnauthorizedObjectResult("This request is not authorized.");
+                    return new UnauthorizedResult();
                 }
 
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", existingPost.ProjectId);
                 if (existingProject == null)
                 {
-                    return new NotFoundObjectResult("The project associated with the requested post cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (existingPost.Status == PostEnum.PRIVATE || existingPost.Status == PostEnum.EXCLUSIVE)
                 {
                     if (user == null || !(user.UserId > 0))
                     {
-                        return new UnauthorizedObjectResult("This request is not authorized.");
+                        return new UnauthorizedResult();
                     }
                     else if (user.Role == UserEnum.CUSTOMER)
                     {
@@ -549,7 +549,7 @@ namespace Application.Services
                         if (existingCollaborator == null && user.UserId != existingPost.UserId && user.UserId != existingProject.CreatorId)
                         {
                             existingCollaborator = null;
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
 
                         else if (existingPost.Status == PostEnum.EXCLUSIVE)
@@ -558,14 +558,14 @@ namespace Application.Services
                             if ((existingPledge == null || existingPledge.Amount <= 0))
                             {
                                 existingPledge = null;
-                                return new ForbidResult("This request is forbidden.");
+                                return new ForbidResult();
                             }
                         }
                     }
                 }
                 else if (existingPost.Status == PostEnum.DELETED && (user == null || !(user.UserId > 0) || user.Role == UserEnum.CUSTOMER))
                 {
-                    return new NotFoundObjectResult("The requested post cannot be found.");
+                    return new NotFoundResult();
                 }
                 return null;
 
@@ -573,7 +573,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
     }
 
