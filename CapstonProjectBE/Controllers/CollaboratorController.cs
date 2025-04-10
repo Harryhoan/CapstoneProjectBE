@@ -20,7 +20,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "CUSTOMER")]
-        [HttpPost]
+        [HttpPost("CreateCollaborator")]
         public async Task<IActionResult> CreateCollaborator([FromForm] CreateCollaboratorDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -39,7 +39,7 @@ namespace CapstonProjectBE.Controllers
         }
 
         [Authorize(Roles = "CUSTOMER")]
-        [HttpPost]
+        [HttpPost("CreateCollaboratorByEmail")]
         public async Task<IActionResult> CreateCollaboratorByEmail([FromForm] CreateCollaboratorByEmailDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);

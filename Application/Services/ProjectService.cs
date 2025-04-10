@@ -274,6 +274,7 @@ namespace Application.Services
                 return response;
             }
         }
+
         private async Task<IQueryable<Project>> FilterProjects(User? user = null, QueryProjectDto? queryProjectDto = null)
         {
             var query = _unitOfWork.ProjectRepo.GetAllAsNoTrackingAsQueryable();
@@ -338,6 +339,16 @@ namespace Application.Services
                 if (queryProjectDto.MaxUpdateDatetime.HasValue)
                 {
                     query = query.Where(p => p.UpdateDatetime <= queryProjectDto.MaxUpdateDatetime.Value);
+                }
+                if (queryProjectDto.CategoryIds != null && queryProjectDto.CategoryIds.Any())
+                {
+                    var projectIds = await _unitOfWork.ProjectCategoryRepo.GetAllAsNoTrackingAsQueryable().Where(pc => queryProjectDto.CategoryIds.Contains(pc.CategoryId)).Select(pc => pc.ProjectId).ToListAsync();
+                    query = query.Where(p => projectIds.Contains(p.ProjectId));
+                }
+                if (queryProjectDto.PlatformIds != null && queryProjectDto.PlatformIds.Any())
+                {
+                    var projectIds = await _unitOfWork.ProjectPlatformRepo.GetAllAsNoTrackingAsQueryable().Where(pl => queryProjectDto.PlatformIds.Contains(pl.PlatformId)).Select(pc => pc.ProjectId).ToListAsync();
+                    query = query.Where(p => projectIds.Contains(p.ProjectId));
                 }
             }
             if (user == null)

@@ -199,7 +199,7 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var pledge = await _unitOfWork.PledgeRepo.GetPledgeByIdAsync(pledgeId);
+                var pledge = await _unitOfWork.PledgeRepo.GetByIdAsync(pledgeId);
 
                 if (pledge == null)
                 {

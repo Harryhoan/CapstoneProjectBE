@@ -459,7 +459,7 @@ namespace Application.Services
                 var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
                 if (existingPost == null || (existingPost.Status == PostEnum.DELETED && user.Role == UserEnum.CUSTOMER))
                 {
-                    return new NotFoundObjectResult("The requested post cannot be found.");
+                    return new NotFoundResult();
                 }
 
                 return await CheckIfUserHasPermissionsByProjectId(user, existingPost.ProjectId);
@@ -467,7 +467,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
 
 
@@ -478,7 +478,7 @@ namespace Application.Services
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null)
                 {
-                    return new NotFoundObjectResult("The project associated with the request cannot be found.");
+                    return new NotFoundResult();
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
@@ -491,7 +491,7 @@ namespace Application.Services
                         if ((existingPledge == null || existingPledge.Amount <= 0))
                         {
                             existingPledge = null;
-                            return new ForbidResult("This request is forbidden.");
+                            return new ForbidResult();
                         }
 
                     }
@@ -501,7 +501,7 @@ namespace Application.Services
             catch
             {
             }
-            return new BadRequestObjectResult("This request cannot be processed.");
+            return new BadRequestResult();
         }
 
     }

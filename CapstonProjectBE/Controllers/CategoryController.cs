@@ -44,10 +44,18 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
+
         [HttpGet("GetAllProjectByCategoryId")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllProjectByCategoryId(int categoryId)
         {
-            return Ok(await _categoryService.GetAllProjectByCategoryId(categoryId));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var result = await _categoryService.GetAllProjectByCategoryId(categoryId, user);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
         }
         [HttpGet("GetCategoryByParentCategoryId")]
         [AllowAnonymous]
@@ -78,7 +86,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> AddCategory([FromForm] AddCategory category)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) Unauthorized();
+            if (user == null) return Unauthorized();
             var result = await _categoryService.AddCategory(user.UserId, category);
             if (!result.Success)
             {
@@ -92,7 +100,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) Unauthorized();
+            if (user == null) return Unauthorized();
             var result = await _categoryService.DeleteCategory(user.UserId, categoryId);
             if (!result.Success)
             {
@@ -128,7 +136,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) Unauthorized();
+            if (user == null) return Unauthorized();
             var result = await _categoryService.UpdateCategory(user.UserId, categoryId, updateCate);
             if (!result.Success)
             {
