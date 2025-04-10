@@ -160,20 +160,20 @@ namespace Application.Services
 
                 var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
 
-                //var transferPledge = new Pledge
-                //{
-                //    UserId = creator.UserId,
-                //    ProjectId = projectId,
-                //    Amount = finalTotalPledgeForCreator,
-                //};
+                var transferPledge = new Pledge
+                {
+                    UserId = creator.UserId,
+                    ProjectId = projectId,
+                    Amount = finalTotalPledgeForCreator,
+                };
 
-                //await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
+                await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
 
-                //foreach (var pledgeDetail in pledgeDetails)
-                //{
-                //    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
-                //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
-                //}
+                foreach (var pledgeDetail in pledgeDetails)
+                {
+                    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
+                    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
+                }
 
                 await _unitOfWork.SaveChangeAsync();
 

@@ -623,16 +623,11 @@ namespace Application.Services
                     response.Message = "Collaborator not found";
                     return response;
                 }
-                Collaborator collaborator = new()
-                {
-                    ProjectId = existingProject.ProjectId,
-                    UserId = existingUser.UserId,
-                    Role = createCollaboratorDTO.Role
-                };
-                await _unitOfWork.CollaboratorRepo.UpdateAsync(collaborator);
-                collaborator.Project = existingProject;
-                collaborator.User = existingUser;
-                response.Data = _mapper.Map<CollaboratorDTO>(collaborator);
+                existingCollaborator.Role = createCollaboratorDTO.Role;
+                await _unitOfWork.CollaboratorRepo.UpdateAsync(existingCollaborator);
+                existingCollaborator.Project = existingProject;
+                existingCollaborator.User = existingUser;
+                response.Data = _mapper.Map<CollaboratorDTO>(existingCollaborator);
                 response.Success = true;
                 response.Message = "Collaborator updated successfully";
             }

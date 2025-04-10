@@ -126,11 +126,19 @@ namespace Application.Services
 
                 if (pledges == null || !pledges.Any())
                 {
-                    response.Success = true;
+                    response.Success = false;
                     response.Message = "No pledges found for the specified user and project.";
                     return response;
                 }
 
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+                pledges = pledges.Where(p => p.UserId != existingProject.CreatorId).ToList();
 
                 // Prepare the result list
                 var projectBackerDtos = new List<ProjectBackerDto>();
