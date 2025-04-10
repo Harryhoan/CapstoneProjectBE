@@ -43,10 +43,16 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (existingUser.IsDeleted || !existingUser.IsVerified)
+                if (existingUser.IsDeleted)
                 {
                     response.Success = false;
-                    response.Message = "This request is invalid";
+                    response.Message = "User deleted";
+                    return response;
+                }
+                if (!existingUser.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "User unverified";
                     return response;
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
@@ -116,10 +122,16 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (existingUser.IsDeleted || !existingUser.IsVerified)
+                if (existingUser.IsDeleted)
                 {
                     response.Success = false;
-                    response.Message = "This request is invalid";
+                    response.Message = "User deleted";
+                    return response;
+                }
+                if (!existingUser.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "User unverified";
                     return response;
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
