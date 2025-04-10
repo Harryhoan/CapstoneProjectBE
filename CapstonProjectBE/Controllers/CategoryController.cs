@@ -114,11 +114,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            if (check != null)
-            {
-                return check;
-            }
+            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            //if (check != null)
+            //{
+            //    return check;
+            //}
             if (user == null)
             {
                 return Unauthorized();
