@@ -190,16 +190,8 @@ namespace Application.Services
                     return response;
                 }
 
-                // Fetch rewards for the project
-                var rewards = await _unitOfWork.RewardRepo.GetRewardsByProjectIdAsync(projectId);
-                if (rewards == null || !rewards.Any())
-                {
-                    response.Success = false;
-                    response.Message = "No rewards found for the specified project.";
-                    return response;
-                }
-
-                // Sort rewards by amount in ascending order for easier comparison
+                // Fetch rewards for the project (can be empty)
+                var rewards = await _unitOfWork.RewardRepo.GetRewardsByProjectIdAsync(projectId) ?? new List<Reward>();
                 var sortedRewards = rewards.OrderBy(r => r.Amount).ToList();
 
                 // Dictionary to cache user data and reduce redundant calls
@@ -209,12 +201,8 @@ namespace Application.Services
                 var totalAmount = pledges.Sum(p => p.Amount);
                 var totalBackers = pledges.Select(p => p.UserId).Distinct().Count();
 
-                // Count the total number of each type of reward
-                var rewardCounts = new Dictionary<int, int>();
-                foreach (var reward in sortedRewards)
-                {
-                    rewardCounts[reward.RewardId] = 0;
-                }
+                // Initialize reward counts
+                var rewardCounts = sortedRewards.ToDictionary(r => r.RewardId, r => 0);
 
                 using (var workbook = new XLWorkbook())
                 {
@@ -241,7 +229,7 @@ namespace Application.Services
                     {
                         currentRow++;
 
-                        // Get or retrieve user data (username & email)
+                        // Get or retrieve user data
                         if (!userCache.TryGetValue(pledge.UserId, out var userData))
                         {
                             var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
@@ -264,7 +252,6 @@ namespace Application.Services
                         var reward = sortedRewards.LastOrDefault(r => r.Amount <= pledge.Amount);
                         worksheet.Cell(currentRow, 6).Value = reward?.Details ?? "No Reward";
 
-                        // Increment reward count if a reward is found
                         if (reward != null)
                         {
                             rewardCounts[reward.RewardId]++;
@@ -290,21 +277,23 @@ namespace Application.Services
                     worksheet.Cell(currentRow, 1).Value = "Total Backers:";
                     worksheet.Cell(currentRow, 2).Value = totalBackers;
 
-                    currentRow++;
-                    worksheet.Cell(currentRow, 1).Value = "Reward Summary:";
-                    foreach (var reward in sortedRewards)
+                    // Optional reward summary
+                    if (sortedRewards.Any())
                     {
                         currentRow++;
-                        worksheet.Cell(currentRow, 1).Value = reward.Details; // Replace with actual reward property
-                        worksheet.Cell(currentRow, 2).Value = rewardCounts[reward.RewardId];
+                        worksheet.Cell(currentRow, 1).Value = "Reward Summary:";
+                        foreach (var reward in sortedRewards)
+                        {
+                            currentRow++;
+                            worksheet.Cell(currentRow, 1).Value = reward.Details;
+                            worksheet.Cell(currentRow, 2).Value = rewardCounts[reward.RewardId];
+                        }
+
+                        var summaryRange = worksheet.Range(currentRow - sortedRewards.Count, 1, currentRow, 2);
+                        summaryRange.Style.Font.Bold = true;
+                        summaryRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        summaryRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
                     }
-
-                    // Style summary section
-                    var summaryRange = worksheet.Range(currentRow - sortedRewards.Count - 3, 1, currentRow, 2);
-                    summaryRange.Style.Font.Bold = true;
-                    summaryRange.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                    summaryRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-
 
                     // Auto-adjust column widths
                     worksheet.Columns().AdjustToContents();
@@ -329,8 +318,5 @@ namespace Application.Services
             }
             return response;
         }
-
-
-
     }
 }
