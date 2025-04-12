@@ -1,4 +1,5 @@
-﻿using Application.ViewModels.PlatformDTO;
+﻿using Application.ViewModels.CategoryDTO;
+using Application.ViewModels.PlatformDTO;
 using Domain.Enums;
 
 namespace Application.ViewModels.ProjectDTO
@@ -18,8 +19,8 @@ namespace Application.ViewModels.ProjectDTO
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
-        //public List<ProjectCategoryDto> Categories { get; set; } = new List<ProjectCategoryDto>();
-        //public List<ProjectPlatformDTO> Platforms { get; set; } = new List<ProjectPlatformDTO>();
+        public List<ViewCategory> Categories { get; set; } = new List<ViewCategory>();
+        public List<PlatformDTO.PlatformDTO> Platforms { get; set; } = new List<PlatformDTO.PlatformDTO>();
 
     }
 }
