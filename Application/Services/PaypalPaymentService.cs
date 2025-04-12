@@ -325,7 +325,12 @@ namespace Application.Services
                     response.Message = "This request is invalid.";
                     return response;
                 }
-
+                if (project.EndDatetime > DateTime.UtcNow)
+                {
+                    response.Success = false;
+                    response.Message = "This project has not ended yet.";
+                    return response;
+                }
                 var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
                 if (pledges == null || !pledges.Any())
                 {
