@@ -192,7 +192,7 @@ namespace Application.Services
 
                     await _unitOfWork.TokenRepo.AddAsync(newToken);
 
-                    var confirmationLink = $"https://koifarmmanagement-axevbhdzh9edauf8.eastus-01.azurewebsites.net/confirm?token={newToken.TokenValue}";
+                    var confirmationLink = $"https://marvelous-gentleness-production.up.railway.app/swagger/confirm?token={newToken.TokenValue}";
                     var emailSend = await EmailSender.SendConfirmationEmail(user.Email, confirmationLink);
 
                     if (!emailSend)
@@ -306,6 +306,99 @@ namespace Application.Services
             return null;
         }
 
+        public async Task<ServiceResponse<string>> ForgetPasswordAsync(string email)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                // Check if the user exists
+                var user = await _unitOfWork.UserRepo.GetByEmailAsync(email);
+                if (user == null || user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User with this email does not exist.";
+                    return response;
+                }
+
+                // Generate a password reset token
+                var resetToken = new Token
+                {
+                    TokenValue = Guid.NewGuid().ToString(),
+                    Type = "password_reset",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                    UserId = user.UserId
+                };
+
+                // Save the token to the database
+                await _unitOfWork.TokenRepo.AddAsync(resetToken);
+
+                // Construct the password reset link
+                var resetLink = $"https://marvelous-gentleness-production.up.railway.app/swagger/confirm?token={resetToken.TokenValue}";
+
+                // Send the reset link via email
+                var emailSent = await EmailSender.SendPasswordResetEmail(email, resetLink);
+                if (!emailSent)
+                {
+                    response.Success = false;
+                    response.Message = "Failed to send password reset email.";
+                    return response;
+                }
+
+                response.Success = true;
+                response.Message = "Password reset email sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = "An error occurred while processing the request.";
+                response.ErrorMessages = new List<string> { ex.Message };
+            }
+
+            return response;
+        }
+        public async Task<ServiceResponse<string>> ResetPasswordAsync(string token, string newPassword)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                // Validate the token
+                var resetToken = await _unitOfWork.TokenRepo.GetTokenByValueAsync(token);
+                if (resetToken == null || resetToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid or expired token.";
+                    return response;
+                }
+
+                // Retrieve the user associated with the token
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(resetToken.UserId);
+                if (user == null || user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+
+                // Update the user's password
+                user.Password = HashPassWithSHA256.HashWithSHA256(newPassword);
+                await _unitOfWork.UserRepo.UpdateAsync(user);
+
+                // Invalidate the token
+                await _unitOfWork.TokenRepo.RemoveAsync(resetToken);
+
+                response.Success = true;
+                response.Message = "Password reset successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = "An error occurred while resetting the password.";
+                response.ErrorMessages = new List<string> { ex.Message };
+            }
+
+            return response;
+        }
 
     }
 }

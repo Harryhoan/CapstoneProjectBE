@@ -216,13 +216,21 @@ namespace Application.Services
                     return response;
                 }
 
-                faq.Answer = UpdateFaq.Answer;
-                faq.Question = UpdateFaq.Question;
-                faq.UpdatedDatetime = DateTime.UtcNow;
-                await _unitOfWork.FAQRepo.UpdateAsync(faq);
+                // Delete the existing FAQ
+                await _unitOfWork.FAQRepo.RemoveAsync(faq);
+
+                // Create a new FAQ with the updated Question
+                var newFaq = new FAQ
+                {
+                    ProjectId = projectId,
+                    Question = UpdateFaq.Question,
+                    Answer = UpdateFaq.Answer,
+                    UpdatedDatetime = DateTime.UtcNow
+                };
+                await _unitOfWork.FAQRepo.AddAsync(newFaq);
 
                 response.Success = true;
-                response.Message = "Faq update successfully.";
+                response.Message = "Faq updated successfully.";
                 return response;
             }
             catch (Exception ex)
@@ -233,5 +241,6 @@ namespace Application.Services
                 return response;
             }
         }
+
     }
 }
