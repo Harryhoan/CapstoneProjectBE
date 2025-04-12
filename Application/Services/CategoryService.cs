@@ -172,7 +172,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "No categories found.";
                 }
             }
@@ -193,7 +193,7 @@ namespace Application.Services
 
                 if (projectCategories == null || !projectCategories.Any())
                 {
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "No projects found for the given category.";
                     return response;
                 }
@@ -235,7 +235,7 @@ namespace Application.Services
 
                 if (categories == null || !categories.Any())
                 {
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "No Categories found for the given Project.";
                     return response;
                 }
@@ -297,7 +297,7 @@ namespace Application.Services
 
                 if (projectCategories == null || !projectCategories.Any())
                 {
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "No ProjectCategories found for the given Project.";
                     return response;
                 }
@@ -370,7 +370,7 @@ namespace Application.Services
                 };
                 response.Data = category;
                 response.Success = true;
-                response.Message = "Category updated successfully";
+                response.Message = "Get Category successfully";
 
                 return response;
 
