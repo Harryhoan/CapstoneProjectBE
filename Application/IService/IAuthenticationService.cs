@@ -14,5 +14,7 @@ namespace Application.IService
         public Task<ServiceResponse<string>> ResendConfirmationTokenAsync(string email);
         public Task<ServiceResponse<RegisterDTO>> CreateStaffAccountAsync(int userId, RegisterDTO register);
         public Task<IActionResult?> CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(int projectId, User? user = null);
+        public Task<ServiceResponse<string>> ForgetPasswordAsync(string email);
+        public Task<ServiceResponse<string>> ResetPasswordAsync(string token, string newPassword);
     }
 }
