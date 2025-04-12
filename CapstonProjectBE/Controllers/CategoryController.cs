@@ -109,7 +109,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "ADMIN, CUSTOMER, STAFF")]
+        [Authorize]
         [HttpDelete("DeleteCategoryFromProject")]
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
@@ -131,7 +131,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
-        [Authorize(Roles = "ADMIN, STAFF")]
+        [Authorize]
         [HttpPut("UpdateCategory")]
         public async Task<IActionResult> UpdateCate(int categoryId, UpdateCategory updateCate)
         {

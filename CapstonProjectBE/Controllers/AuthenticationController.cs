@@ -69,6 +69,7 @@ namespace CapstonProjectBE.Controllers
                         token = result.DataToken,
                         role = result.Role,
                         avatar = result.Avatar,
+                        fullName = result.FullName,
                         hint = result.HintId,
                     }
                 );
@@ -108,6 +109,34 @@ namespace CapstonProjectBE.Controllers
             if (!result.Success) return BadRequest(result);
 
             return Ok(result);
+        }
+        [HttpPost("ForgetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgetPassword(string email)
+        {
+            var result = await _authenService.ForgetPasswordAsync(email);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
+        }
+        [HttpPost("ResetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string token, string newPassword)
+        {
+            var result = await _authenService.ResetPasswordAsync(token, newPassword);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
         }
     }
 }

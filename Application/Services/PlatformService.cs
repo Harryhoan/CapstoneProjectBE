@@ -98,6 +98,30 @@ namespace Application.Services
             }
             return response;
         }
+        public async Task<ServiceResponse<PlatformDTO>> GetPlatformByPlatformId(int platformId)
+        {
+            var response = new ServiceResponse<PlatformDTO>();
+            try
+            {
+                var platforms = await _unitOfWork.PlatformRepo.GetByIdAsync(platformId);
+                if (platforms == null)
+                {
+                    response.Success = false;
+                    response.Message = "Platform not found";
+                    return response;
+                }
+                var platformDTOs = _mapper.Map<PlatformDTO>(platforms);
+                response.Data = platformDTOs;
+                response.Success = true;
+                response.Message = "Platform retrieved successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get platforms: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<int>> CreatePlatform(CreatePlatformDTO createPlatformDTO)
         {
             var response = new ServiceResponse<int>();

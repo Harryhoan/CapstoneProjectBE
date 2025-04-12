@@ -20,5 +20,6 @@ namespace Application.IService
         public Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformAsync();
         public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByPlatformId(int platformId);
         public Task<ServiceResponse<List<PlatformDTO>>> GetAllPlatformByProjectId(int projectId);
+        public Task<ServiceResponse<PlatformDTO>> GetPlatformByPlatformId(int platformId);
     }
 }

@@ -51,14 +51,14 @@ namespace CapstonProjectBE.Controllers
         }
         [HttpPut("UpdateFaq")]
         [Authorize(Roles = "CUSTOMER")]
-        public async Task<IActionResult> UpdateFaq(int projectId, string question, [FromForm] FaqDto updateFaq)
+        public async Task<IActionResult> UpdateFaq(int projectId, string oldQuestion, [FromForm] FaqDto updateFaq)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
             {
                 return Unauthorized();
             }
-            return Ok(await _faqService.UpdateFaq(user.UserId, projectId, question, updateFaq));
+            return Ok(await _faqService.UpdateFaq(user.UserId, projectId, oldQuestion, updateFaq));
         }
         [HttpDelete("DeleteFaq")]
         [Authorize(Roles = "CUSTOMER")]
