@@ -162,20 +162,20 @@ namespace Application.Services
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Error = "Không tìm thấy người dùng với email này.";
+                    response.Error = "User not found.";
                     return response;
                 }
                 var token = await _unitOfWork.TokenRepo.FindByConditionAsync(user.UserId, "confirmation");
                 if (token == null)
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy token với người dùng này.";
+                    response.Message = "No token found for this user";
                     return response;
                 }
                 if (token.TokenValue == "success")
                 {
                     response.Success = false;
-                    response.Message = "Email của bạn đã được xác nhận.";
+                    response.Message = "Your account has been confirmed.";
                     return response;
                 }
                 if (DateTime.UtcNow > token.ExpiresAt)
@@ -198,23 +198,23 @@ namespace Application.Services
                     if (!emailSend)
                     {
                         response.Success = false;
-                        response.Message = "Gửi email thất bại.";
+                        response.Message = "Failed to send email.";
                         return response;
                     }
 
                     response.Success = true;
-                    response.Message = "Email xác nhận mới đã được gửi.";
+                    response.Message = "New confirmation Email has been sent.";
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Token xác nhận của bạn vẫn còn hiệu lực. Vui lòng kiểm tra email.";
+                    response.Message = "Confirmation token is still valid. Please double check your Email.";
                 }
             }
             catch (Exception e)
             {
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi.";
+                response.Message = "Failed to send Email.";
                 response.ErrorMessages = new List<string> { e.Message };
             }
             return response;

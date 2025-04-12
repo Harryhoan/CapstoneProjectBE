@@ -123,7 +123,7 @@ namespace Application.Services
                 if (specificUser.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "You account needs to be verified before using this method.";
+                    response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
