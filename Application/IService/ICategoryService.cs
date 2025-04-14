@@ -6,7 +6,7 @@ namespace Application.IService
 {
     public interface ICategoryService
     {
-        public Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory();
+        public Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory(string? name = null);
         public Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByProjectId(int projectId);
         public Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategoryByParentId(int parentId);
         public Task<ServiceResponse<ViewCategory>> GetCategoryByCategoryId(int categoryId);
