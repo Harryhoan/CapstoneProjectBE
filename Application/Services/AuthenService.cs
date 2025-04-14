@@ -7,6 +7,7 @@ using AutoMapper;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.Common;
 using System.Security.Claims;
@@ -271,39 +272,54 @@ namespace Application.Services
 
         public async Task<IActionResult?> CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(int projectId, User? user = null)
         {
-            if (user == null || !(user.UserId > 0))
+            try
             {
-                return new UnauthorizedResult();
-            }
-            if (user.IsDeleted || !user.IsVerified)
-            {
-                return new ForbidResult();
-            }
-            var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-            if (existingProject == null)
-            {
-                return new NotFoundResult();
-            }
-            if (user.Role == UserEnum.CUSTOMER)
-            {
-                if (user.UserId != existingProject.CreatorId)
+                if (user == null || !(user.UserId > 0))
                 {
-                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
+                    return new UnauthorizedResult();
+                }
+                if (user.IsDeleted || !user.IsVerified)
+                {
+                    //return new ForbidResult();
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                    return new ObjectResult(result);
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+                    if (user.UserId != existingProject.CreatorId)
                     {
-                        return new ForbidResult();
+                        var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
+                        {
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            return new ObjectResult(result);
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
+                else
                 {
-                    return new ForbidResult();
+                    if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
+                    {
+                        //return new ForbidResult();
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
+                        return new ObjectResult(result);
+                    }
                 }
-            }
 
-            return null;
+                return null;
+            }
+            catch
+            {
+            }
+            return new BadRequestResult();
         }
 
         public async Task<ServiceResponse<string>> ForgetPasswordAsync(string email)

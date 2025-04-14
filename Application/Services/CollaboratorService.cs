@@ -5,6 +5,7 @@ using Application.ViewModels.CollaboratorDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -446,7 +447,9 @@ namespace Application.Services
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new ObjectResult(result);
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
                 {
@@ -456,14 +459,18 @@ namespace Application.Services
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {
-                        return new ForbidResult();
+                        //return new ForbidResult();
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                        return new ObjectResult(result);
                     }
                     else if (user.UserId != existingProject.CreatorId)
                     {
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null)
                         {
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            return new ObjectResult(result);
                         }
                     }
                 }
@@ -483,22 +490,34 @@ namespace Application.Services
                 {
                     return new UnauthorizedResult();
                 }
+                if (user.IsDeleted || !user.IsVerified)
+                {
+                    //return new ForbidResult();
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                    return new ObjectResult(result);
+                }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null || existingUser.IsDeleted)
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The user associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 if (user.Role == UserEnum.CUSTOMER && existingUser.UserId != user.UserId)
                 {
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if ((existingCollaborator == null && user.UserId != existingProject.CreatorId) || (existingCollaborator != null && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR))
                     {
-                        return new ForbidResult();
+                        //return new ForbidResult();
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                        return new ObjectResult(result);
                     }
                 }
                 else
@@ -507,7 +526,9 @@ namespace Application.Services
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
+                            return new ObjectResult(result);
                         }
                     }
                 }
@@ -527,15 +548,25 @@ namespace Application.Services
                 {
                     return new UnauthorizedResult();
                 }
+                if (user.IsDeleted || !user.IsVerified)
+                {
+                    //return new ForbidResult();
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                    return new ObjectResult(result);
+                }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null || existingUser.IsDeleted)
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The user associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
@@ -548,7 +579,9 @@ namespace Application.Services
                     {
                         if (user.UserId != existingProject.CreatorId)
                         {
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            return new ObjectResult(result);
                         }
                     }
                     else if (user.UserId != existingProject.CreatorId)
@@ -557,13 +590,17 @@ namespace Application.Services
                         {
                             if (existingCollaborator.Role != CollaboratorEnum.ADMINISTRATOR)
                             {
-                                return new ForbidResult();
+                                //return new ForbidResult();
+                                var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the collaborator." };
+                                return new ObjectResult(result);
 
                             }
                         }
                         else if ((int)role < (int)existingCollaborator.Role)
                         {
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "A collaborator can only demote oneself, not promote." };
+                            return new ObjectResult(result);
                         }
                     }
                 }
@@ -573,7 +610,9 @@ namespace Application.Services
                     {
                         if (user.UserId != existingProject.MonitorId)
                         {
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
+                            return new ObjectResult(result);
                         }
                     }
                 }

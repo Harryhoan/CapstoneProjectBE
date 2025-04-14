@@ -283,14 +283,22 @@ namespace Application.Services
 
         public async Task<IActionResult?> CheckIfUserHasPermissionsByFileId(int fileId, Domain.Entities.User? user = null)
         {
-            if (user == null)
+            if (user == null || !(user.UserId > 0))
             {
                 return new UnauthorizedResult();
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                //return new ForbidResult();
+                var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                return new ObjectResult(result);
             }
             var existingFile = await _unitOfWork.FileRepo.GetByIdNoTrackingAsync("FileId", fileId);
             if (existingFile == null || (user.Role == UserEnum.CUSTOMER && existingFile.Status == "Deleted"))
             {
-                return new NotFoundResult();
+                //return new NotFoundResult();
+                var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "This file associated with the request cannot be found." };
+                return new NotFoundObjectResult(result);
             }
             return null;
         }

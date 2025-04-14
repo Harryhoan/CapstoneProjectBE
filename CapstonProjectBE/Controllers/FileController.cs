@@ -61,7 +61,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize]
         [HttpPut("Update")]
-        public async Task<IActionResult> UpdatePost([FromBody] UpdateFileDTO updateFileDTO)
+        public async Task<IActionResult> UpdateFile([FromBody] UpdateFileDTO updateFileDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             var check = await _fileService.CheckIfUserHasPermissionsByFileId(updateFileDTO.FileId, user);
