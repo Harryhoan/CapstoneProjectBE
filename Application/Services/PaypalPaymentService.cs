@@ -429,7 +429,7 @@ namespace Application.Services
                 if (user.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "Your account needs to be verified before using this method.";
+                    response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
                 if (project == null)
