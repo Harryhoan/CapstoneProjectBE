@@ -17,7 +17,7 @@ namespace Application.ViewModels.PostDTO
         public string Description { get; set; } = string.Empty;
         [Required(ErrorMessage = "Status is required")]
         //[RegularExpression("^(Deleted|Private|Exclusive|Public)$", ErrorMessage = "Status can only be \"Deleted\", \"Private\", \"Exclusive\" or \"Public\".")] 
-        [EnumDataType(typeof(CollaboratorEnum), ErrorMessage = "Role must be ADMINISTRATOR, EDITOR or VIEWER")]
+        [EnumDataType(typeof(PostEnum), ErrorMessage = "Post must be PRIVATE, DELETED, EXCLUSIVE or PUBLIC")]
         [JsonConverter(typeof(StringEnumConverter))]
         public PostEnum Status { get; set; }
 

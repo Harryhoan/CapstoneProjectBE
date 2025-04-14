@@ -1,0 +1,86 @@
+﻿using Application.IService;
+using Application.Utils;
+using Domain.Entities;
+using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Emit;
+
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace CapstonProjectBE.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ForgotPasswordController : ControllerBase
+    {
+        private readonly IForgotPasswordService _forgotPasswordService;
+        private readonly IUserService _userService;
+        private readonly IAuthenService _authenService;
+        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IAuthenService authenService, IUserService userService)
+        {
+            _authenService = authenService;
+            _forgotPasswordService = forgotPasswordService;
+            _userService = userService;
+        }
+        [HttpGet("Verify-Code")]
+        public async Task<IActionResult> VerifyCode([FromQuery] string code, [FromQuery] string email)
+        {
+            try
+            {
+                var user = await _forgotPasswordService.VerifyCode(code, email);
+                var authen = await _authenService.GetUserByTokenAsync(HttpContext.User);
+                return Ok(authen);
+            }
+            catch (Exception ex)
+            {   
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Send-Code")]
+        public async Task<IActionResult> CheckEmailAndSendCode([FromBody] string email)
+        {
+            var user = await _userService.GetUserByEmailAsync(email);
+            if (user != null)
+            {
+                var codeExist = await _forgotPasswordService.IsCodeExist(email);
+                if (codeExist.Data)
+                {
+                    await _forgotPasswordService.Delete(email);
+                }
+                string code = CodeGenerator.GenerateRandomVerifyCode();
+                await _forgotPasswordService.AddCode(code, email);
+                
+                var emailSent = await EmailSender.SendCode(email, code);
+                if (!emailSent)
+                {
+                    return BadRequest("Failed to send password reset email");
+                }
+                var result = new Dictionary<string, string>() {
+                    {"email",email }
+                };
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest("User not found!");
+            }
+
+        }
+
+        [HttpPost("Reset-Password")]
+        public async Task<IActionResult> ResetPassword(string email, string password)
+        {
+            var checkUser = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var userID = checkUser.UserId;
+            var user = await _userService.UpdatePasswordUser(email, password, userID);
+            if (user != null)
+            {
+                return Ok(user);
+            }
+            else
+            {
+                return BadRequest("Cannot reset password!");
+            }
+        }
+    }
+}

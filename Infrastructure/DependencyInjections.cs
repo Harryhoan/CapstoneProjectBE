@@ -28,6 +28,7 @@ namespace Infrastructure
             services.AddScoped<IProjectPlatformRepo, ProjectPlatformRepo>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IProjectCategoryRepo, ProjectCategoryRepo>();
+            services.AddScoped<IVerifyCodeRepo, VerifyCodeRepo>();
             return services;
         }
     }

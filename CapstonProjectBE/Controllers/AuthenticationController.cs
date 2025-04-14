@@ -110,5 +110,33 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+        [HttpPost("ForgetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ForgetPassword(string email)
+        {
+            var result = await _authenService.ForgetPasswordAsync(email);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
+        }
+        [HttpPost("ResetPassword")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResetPassword(string token, string newPassword)
+        {
+            var result = await _authenService.ResetPasswordAsync(token, newPassword);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            else
+            {
+                return Ok(result);
+            }
+        }
     }
 }

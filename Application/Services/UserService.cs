@@ -252,5 +252,70 @@ namespace Application.Services
                 return response;
             }
         }
+
+        public async Task<ServiceResponse<UserDTO>> GetUserByEmailAsync(string email)
+        {
+            var response = new ServiceResponse<UserDTO>();
+            try
+            {
+                var user = await _unitOfWork.UserRepo.FindEntityAsync(u => u.Email.Equals(email));
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                if (user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User has been deleted.";
+                    return response;
+                }
+                response.Data = _mapper.Map<UserDTO>(user);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<UserDTO>> UpdatePasswordUser(string email, string password, int id)
+        {
+            var response = new ServiceResponse<UserDTO>();
+            try
+            {
+                var hashedPassword = HashPassWithSHA256.HashWithSHA256(password);
+                var checkCode = await _unitOfWork.VerifyCodeRepo.FindEntityAsync(c => c.Email.Equals(email));
+                var user = await _unitOfWork.UserRepo.FindEntityAsync(u => u.Email.Equals(email) && u.UserId.Equals(id));
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found";
+                    return response;
+                }
+                if (checkCode == null)
+                {
+                    response.Success = false;
+                    response.Message = "Verification code not found or expired";
+                    return response;
+                }
+
+                user.Password = hashedPassword;
+                await _unitOfWork.UserRepo.UpdateAsync(user);
+                await _unitOfWork.VerifyCodeRepo.RemoveAsync(checkCode);
+
+                response.Data = _mapper.Map<UserDTO>(user);
+                response.Success = true;
+                response.Message = "Password updated successfully";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
     }
 }

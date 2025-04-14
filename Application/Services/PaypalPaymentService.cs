@@ -199,7 +199,7 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var pledge = await _unitOfWork.PledgeRepo.GetPledgeByIdAsync(pledgeId);
+                var pledge = await _unitOfWork.PledgeRepo.GetByIdAsync(pledgeId);
 
                 if (pledge == null)
                 {
@@ -325,7 +325,12 @@ namespace Application.Services
                     response.Message = "This request is invalid.";
                     return response;
                 }
-
+                if (project.EndDatetime > DateTime.UtcNow)
+                {
+                    response.Success = false;
+                    response.Message = "This project has not ended yet.";
+                    return response;
+                }
                 var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
                 if (pledges == null || !pledges.Any())
                 {
@@ -424,7 +429,7 @@ namespace Application.Services
                 if (user.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "Your account needs to be verified before using this method.";
+                    response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
                 if (project == null)

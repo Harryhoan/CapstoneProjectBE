@@ -2,6 +2,7 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels;
+using Application.ViewModels.CategoryDTO;
 using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
@@ -74,6 +75,8 @@ namespace Application.Services
                 {
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.MonitorId);
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.CreatorId);
+                    var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(projectItem.ProjectId);
+                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(projectItem.ProjectId);
 
                     var projectDto = new ProjectDto
                     {
@@ -89,7 +92,20 @@ namespace Application.Services
                         TotalAmount = projectItem.TotalAmount,
                         StartDatetime = projectItem.StartDatetime,
                         EndDatetime = projectItem.EndDatetime,
-                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(projectItem.ProjectId) // Calculate the total number of backers with valid ProjectId
+                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(projectItem.ProjectId),
+                        Categories = category.Select(c => new ViewCategory
+                        {
+                            CategoryId = c.CategoryId,
+                            Name = c.Category.Name,
+                            ParentCategoryId = c.Category.ParentCategoryId,
+                            Description = c.Category.Description
+                        }).ToList(),
+                        Platforms = platform.Select(p => new PlatformDTO
+                        {
+                            PlatformId = p.PlatformId,
+                            Name = p.Platform.Name,
+                            Description = p.Platform.Description ?? "Null"
+                        }).ToList()
                     };
 
                     responseData.Add(projectDto);
@@ -123,7 +139,7 @@ namespace Application.Services
                 if (specificUser.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "You account needs to be verified before using this method.";
+                    response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
@@ -274,6 +290,7 @@ namespace Application.Services
                 return response;
             }
         }
+
         private async Task<IQueryable<Project>> FilterProjects(User? user = null, QueryProjectDto? queryProjectDto = null)
         {
             var query = _unitOfWork.ProjectRepo.GetAllAsNoTrackingAsQueryable();
@@ -339,6 +356,16 @@ namespace Application.Services
                 {
                     query = query.Where(p => p.UpdateDatetime <= queryProjectDto.MaxUpdateDatetime.Value);
                 }
+                if (queryProjectDto.CategoryIds != null && queryProjectDto.CategoryIds.Any())
+                {
+                    var projectIds = await _unitOfWork.ProjectCategoryRepo.GetAllAsNoTrackingAsQueryable().Where(pc => queryProjectDto.CategoryIds.Contains(pc.CategoryId)).Select(pc => pc.ProjectId).ToListAsync();
+                    query = query.Where(p => projectIds.Contains(p.ProjectId));
+                }
+                if (queryProjectDto.PlatformIds != null && queryProjectDto.PlatformIds.Any())
+                {
+                    var projectIds = await _unitOfWork.ProjectPlatformRepo.GetAllAsNoTrackingAsQueryable().Where(pl => queryProjectDto.PlatformIds.Contains(pl.PlatformId)).Select(pc => pc.ProjectId).ToListAsync();
+                    query = query.Where(p => projectIds.Contains(p.ProjectId));
+                }
             }
             if (user == null)
             {
@@ -361,6 +388,7 @@ namespace Application.Services
                 {
                     var validationContext = new ValidationContext(queryProjectDto);
                     var validationResults = new List<ValidationResult>();
+
                     if (!Validator.TryValidateObject(queryProjectDto, validationContext, validationResults, true))
                     {
                         var errorMessages = validationResults.Select(r => r.ErrorMessage);
@@ -401,7 +429,8 @@ namespace Application.Services
                 {
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
-
+                    var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
+                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -416,7 +445,20 @@ namespace Application.Services
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
-                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId) // Calculate the total number of backers with valid ProjectId
+                        Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId),
+                        Categories = category.Select(c => new ViewCategory
+                        {
+                            CategoryId = c.CategoryId,
+                            Name = c.Category.Name,
+                            ParentCategoryId = c.Category.ParentCategoryId,
+                            Description = c.Category.Description
+                        }).ToList(),
+                        Platforms = platform.Select(p => new PlatformDTO
+                        {
+                            PlatformId = p.PlatformId,
+                            Name = p.Platform.Name,
+                            Description = p.Platform.Description ?? "Null"
+                        }).ToList()
                     };
 
                     responseData.Add(projectDto);
@@ -458,7 +500,8 @@ namespace Application.Services
                 }
                 var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                 var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
-
+                var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(id);
+                var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(id);
                 var responseData = new ProjectDetailDto
                 {
                     ProjectId = id,
@@ -474,7 +517,20 @@ namespace Application.Services
                     MinimumAmount = project.MinimumAmount,
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
-                    EndDatetime = project.EndDatetime
+                    EndDatetime = project.EndDatetime,
+                    Categories = category.Select(c => new ViewCategory
+                    {
+                        CategoryId = c.CategoryId,
+                        Name = c.Category.Name,
+                        ParentCategoryId = c.Category.ParentCategoryId,
+                        Description = c.Category.Description
+                    }).ToList(),
+                    Platforms = platform.Select(p => new PlatformDTO
+                    {
+                        PlatformId = p.PlatformId,
+                        Name = p.Platform.Name,
+                        Description = p.Platform.Description ?? "Null"
+                    }).ToList()
                 };
 
                 response.Success = true;

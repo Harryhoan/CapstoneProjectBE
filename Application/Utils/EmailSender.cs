@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Domain.Entities;
 using Domain.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -8,6 +9,86 @@ namespace Application.Utils
 {
     public class EmailSender
     {
+        public static async Task<bool> SendPasswordResetEmail(string toEmail, string resetLink)
+        {
+            var userName = "GameMkt";
+            var emailFrom = "thongsieusao3@gmail.com";
+            var password = "dfni ihvq panf lyjc";
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = "Password Reset Request";
+            message.Body = new TextPart("html")
+            {
+                Text =
+                $@"
+<html>
+    <head>
+        <style>
+            body {{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }}
+            .content {{
+                text-align: center;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .button {{
+                display: inline-block;
+                padding: 12px 24px;
+                background: linear-gradient(45deg, #007bff, #0056b3);
+                color: #ffffff;
+                text-decoration: none;
+                border-radius: 8px;
+                font-size: 18px;
+                font-weight: bold;
+                transition: background 0.3s ease-in-out, transform 0.2s;
+            }}
+            .button:hover {{
+                background: #ffffff;
+                transform: scale(1.05);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='content'>
+            <h2>Password Reset</h2>
+            <p>You have requested to reset your password. Please click the button below to reset your password:</p>
+            <a class='button' href='{resetLink}'>Reset Password</a>
+            <p>If you did not request this, please ignore this email.</p>
+        </div>
+    </body>
+</html>
+"
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
         public static async Task<bool> SendConfirmationEmail(
             string toEmail,
             string confirmationLink
@@ -434,6 +515,45 @@ namespace Application.Utils
     </body>
 </html>
 "
+            };
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                //authenticate account email
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public static async Task<bool> SendCode(string email, string code)
+        {
+            var userName = "GameMkt";
+            var emailFrom = "thongsieusao3@gmail.com";
+            var password = "dfni ihvq panf lyjc";
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", email));
+            message.Subject = "Verification Code";
+            message.Body = new TextPart("html")
+            {
+                Text = " <div class=\"container\" style=\"text-align: center\">\r\n "
+                + "<img\r\n src=\"https://cdn-icons-png.flaticon.com/512/3617/3617039.png\"\r\n alt=\"image\"\r\n class=\"image\"\r\n style=\"width: 160px; height: 160px;\"\r\n/>"
+                + "\r\n<div class=\"h4\" style=\"padding-top: 16px; font-size: 18px;\">Hi</div>\r\n"
+                + "<div style=\"padding-top: 16px; font-size: 20px;\">Here is the confirmation code for your online form:</div>\r\n"
+                + " <div class=\"code\" style=\"padding-top: 16px; font-size: 50px; font-weight: bold; color: #f57f0e;\"> " + code + " </div>\r\n"
+                + "<div style=\"padding-top: 16px; font-size: 18px;\">\r\nAll you have to do is copy the confirmation code and paste it to your\r\n form to complete the email verification process.\r\n</div>\r\n</div>"
             };
             using (var client = new SmtpClient())
             {

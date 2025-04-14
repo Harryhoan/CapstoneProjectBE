@@ -162,20 +162,20 @@ namespace Application.Services
                 if (user == null)
                 {
                     response.Success = false;
-                    response.Error = "Không tìm thấy người dùng với email này.";
+                    response.Error = "User not found.";
                     return response;
                 }
                 var token = await _unitOfWork.TokenRepo.FindByConditionAsync(user.UserId, "confirmation");
                 if (token == null)
                 {
                     response.Success = false;
-                    response.Message = "Không tìm thấy token với người dùng này.";
+                    response.Message = "No token found for this user";
                     return response;
                 }
                 if (token.TokenValue == "success")
                 {
                     response.Success = false;
-                    response.Message = "Email của bạn đã được xác nhận.";
+                    response.Message = "Your account has been confirmed.";
                     return response;
                 }
                 if (DateTime.UtcNow > token.ExpiresAt)
@@ -192,29 +192,29 @@ namespace Application.Services
 
                     await _unitOfWork.TokenRepo.AddAsync(newToken);
 
-                    var confirmationLink = $"https://koifarmmanagement-axevbhdzh9edauf8.eastus-01.azurewebsites.net/confirm?token={newToken.TokenValue}";
+                    var confirmationLink = $"https://marvelous-gentleness-production.up.railway.app/swagger/confirm?token={newToken.TokenValue}";
                     var emailSend = await EmailSender.SendConfirmationEmail(user.Email, confirmationLink);
 
                     if (!emailSend)
                     {
                         response.Success = false;
-                        response.Message = "Gửi email thất bại.";
+                        response.Message = "Failed to send email.";
                         return response;
                     }
 
                     response.Success = true;
-                    response.Message = "Email xác nhận mới đã được gửi.";
+                    response.Message = "New confirmation Email has been sent.";
                 }
                 else
                 {
                     response.Success = false;
-                    response.Message = "Token xác nhận của bạn vẫn còn hiệu lực. Vui lòng kiểm tra email.";
+                    response.Message = "Confirmation token is still valid. Please double check your Email.";
                 }
             }
             catch (Exception e)
             {
                 response.Success = false;
-                response.Message = "Đã xảy ra lỗi.";
+                response.Message = "Failed to send Email.";
                 response.ErrorMessages = new List<string> { e.Message };
             }
             return response;
@@ -273,16 +273,16 @@ namespace Application.Services
         {
             if (user == null || !(user.UserId > 0))
             {
-                return new UnauthorizedObjectResult("This request is not authorized.");
+                return new UnauthorizedResult();
             }
             if (user.IsDeleted || !user.IsVerified)
             {
-                return new ForbidResult("This request is forbidden.");
+                return new ForbidResult();
             }
             var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
             if (existingProject == null)
             {
-                return new NotFoundObjectResult("The project associated with the request cannot be found.");
+                return new NotFoundResult();
             }
             if (user.Role == UserEnum.CUSTOMER)
             {
@@ -291,7 +291,7 @@ namespace Application.Services
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
                     {
-                        return new ForbidResult("This request is forbidden.");
+                        return new ForbidResult();
                     }
                 }
             }
@@ -299,13 +299,106 @@ namespace Application.Services
             {
                 if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
                 {
-                    return new ForbidResult("This request is forbidden.");
+                    return new ForbidResult();
                 }
             }
 
             return null;
         }
 
+        public async Task<ServiceResponse<string>> ForgetPasswordAsync(string email)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                // Check if the user exists
+                var user = await _unitOfWork.UserRepo.GetByEmailAsync(email);
+                if (user == null || user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User with this email does not exist.";
+                    return response;
+                }
+
+                // Generate a password reset token
+                var resetToken = new Token
+                {
+                    TokenValue = Guid.NewGuid().ToString(),
+                    Type = "password_reset",
+                    CreatedAt = DateTime.UtcNow,
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                    UserId = user.UserId
+                };
+
+                // Save the token to the database
+                await _unitOfWork.TokenRepo.AddAsync(resetToken);
+
+                // Construct the password reset link
+                var resetLink = $"https://marvelous-gentleness-production.up.railway.app/swagger/confirm?token={resetToken.TokenValue}";
+
+                // Send the reset link via email
+                var emailSent = await EmailSender.SendPasswordResetEmail(email, resetLink);
+                if (!emailSent)
+                {
+                    response.Success = false;
+                    response.Message = "Failed to send password reset email.";
+                    return response;
+                }
+
+                response.Success = true;
+                response.Message = "Password reset email sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = "An error occurred while processing the request.";
+                response.ErrorMessages = new List<string> { ex.Message };
+            }
+
+            return response;
+        }
+        public async Task<ServiceResponse<string>> ResetPasswordAsync(string token, string newPassword)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                // Validate the token
+                var resetToken = await _unitOfWork.TokenRepo.GetTokenByValueAsync(token);
+                if (resetToken == null || resetToken.ExpiresAt < DateTime.UtcNow)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid or expired token.";
+                    return response;
+                }
+
+                // Retrieve the user associated with the token
+                var user = await _unitOfWork.UserRepo.GetByIdAsync(resetToken.UserId);
+                if (user == null || user.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+
+                // Update the user's password
+                user.Password = HashPassWithSHA256.HashWithSHA256(newPassword);
+                await _unitOfWork.UserRepo.UpdateAsync(user);
+
+                // Invalidate the token
+                await _unitOfWork.TokenRepo.RemoveAsync(resetToken);
+
+                response.Success = true;
+                response.Message = "Password reset successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = "An error occurred while resetting the password.";
+                response.ErrorMessages = new List<string> { ex.Message };
+            }
+
+            return response;
+        }
 
     }
 }
