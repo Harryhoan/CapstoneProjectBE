@@ -15,7 +15,7 @@ namespace Application.IService
         public Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto);
         public Task<ServiceResponse<UpdateProjectDto>> UpdateProject(int projectId, UpdateProjectDto updateProjectDto);
         public Task<ServiceResponse<ProjectThumbnailDto>> UpdateProjectThumbnail(int projectId, IFormFile thumbnail);
-        public Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectEnum projectStatus, string reason);
+        public Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectStatusEnum projectStatus, string reason);
         public Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story);
         public Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId);
         public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId);

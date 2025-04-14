@@ -9,7 +9,9 @@ namespace Domain.Entities
         public string PaymentId { get; set; } = string.Empty;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public PledgeDetailEnum Status { get; set; }
-
+        public decimal Amount { get; set; }
+        public string TransactionId { get; set; } = string.Empty;
+        public string InvoiceUrl { get; set; } = string.Empty;
         public virtual Pledge Pledge { get; set; } = null!;
     }
 }

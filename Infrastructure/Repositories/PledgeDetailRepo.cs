@@ -16,5 +16,9 @@ namespace Infrastructure.Repositories
         {
             return await _context.PledgeDetails.Where(pd => pd.PledgeId == pledgeId).ToListAsync();
         }
+        public async Task<PledgeDetail?> GetByPaymentIdAsync(string paymentId)
+        {
+            return await _context.Set<PledgeDetail>().FirstOrDefaultAsync(pd => pd.PaymentId == paymentId);
+        }
     }
 }

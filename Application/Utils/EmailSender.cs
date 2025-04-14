@@ -444,7 +444,7 @@ namespace Application.Utils
         public static async Task<bool> SendProjectResponseEmail(
             string toEmail,
             string projectTitle,
-            ProjectEnum projectStatus,
+            ProjectStatusEnum projectStatus,
             string reason
         )
         {
