@@ -186,9 +186,9 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "STAFF, ADMIN")]
         [HttpPut("StaffApproveProject")]
-        public async Task<IActionResult> StaffApproveProject(int projectId, ProjectEnum status, string reason)
+        public async Task<IActionResult> StaffApproveProject(int projectId, ProjectStatusEnum status, string reason)
         {
-            if (status == ProjectEnum.DELETED)
+            if (status == ProjectStatusEnum.DELETED)
             {
                 return BadRequest("Invalid status: DELETED is not allowed.");
             }

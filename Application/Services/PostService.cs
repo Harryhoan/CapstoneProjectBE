@@ -110,7 +110,7 @@ namespace Application.Services
                             else if (post.Status == PostEnum.EXCLUSIVE)
                             {
                                 var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
-                                if ((existingPledge == null || existingPledge.Amount <= 0))
+                                if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                                 {
                                     response.Success = false;
                                     response.Message = "Post not accessible";
@@ -174,7 +174,7 @@ namespace Application.Services
                         posts.RemoveAll(p => (p.Status == PostEnum.PRIVATE || p.Status == PostEnum.EXCLUSIVE) && p.UserId != userId);
                     }
                     var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
-                    if ((existingPledge == null || existingPledge.Amount <= 0) && existingCollaborator == null)
+                    if ((existingPledge == null || existingPledge.TotalAmount <= 0) && existingCollaborator == null)
                     {
                         posts.RemoveAll(p => p.Status == PostEnum.EXCLUSIVE);
                     }
@@ -228,7 +228,7 @@ namespace Application.Services
                         }
 
                         var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(currentUser.UserId, existingProject.ProjectId);
-                        if ((existingPledge == null || existingPledge.Amount <= 0) && existingCollaborator == null)
+                        if ((existingPledge == null || existingPledge.TotalAmount <= 0) && existingCollaborator == null)
                         {
                             if (posts[i].Status == PostEnum.EXCLUSIVE)
                             {
@@ -555,7 +555,7 @@ namespace Application.Services
                         else if (existingPost.Status == PostEnum.EXCLUSIVE)
                         {
                             var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
-                            if ((existingPledge == null || existingPledge.Amount <= 0))
+                            if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                             {
                                 existingPledge = null;
                                 return new ForbidResult();

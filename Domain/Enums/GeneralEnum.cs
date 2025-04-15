@@ -5,16 +5,18 @@
     //    // Placeholder for other enums
     //}
 
-    public enum ProjectEnum
+    public enum ProjectStatusEnum
     {
-        ONGOING,
-        HALTED,
+        VISIBLE,
         INVISIBLE,
         DELETED
     }
-    public enum FileEnum
+    public enum TransactionStatusEnum
     {
-
+        PENDING,
+        RECEIVING,
+        REFUNDED,
+        TRANSFERED
     }
     public enum UserEnum
     {

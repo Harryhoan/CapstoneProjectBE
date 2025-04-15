@@ -9,11 +9,98 @@ namespace Application.Utils
 {
     public class EmailSender
     {
+        private static (string UserName, string EmailFrom, string Password) GetEmailCredentials()
+        {
+            return ("GameMkt", "thongsieusao3@gmail.com", "dfni ihvq panf lyjc");
+        }
+        public static async Task<bool> SendBillingEmail(string toEmail, string projectTitle, decimal amount, string invoiceNumber)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = "Billing Receipt for Your Pledge";
+
+            message.Body = new TextPart("html")
+            {
+                Text =
+                $@"
+<html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .content {{
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 20px;
+            }}
+            .details {{
+                margin-top: 20px;
+            }}
+            .footer {{
+                margin-top: 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #888;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='content'>
+            <div class='header'>
+                <h2>Thank You for Your Pledge!</h2>
+            </div>
+            <p>Dear Supporter,</p>
+            <p>We are pleased to confirm your pledge for the project <strong>{projectTitle}</strong>.</p>
+            <div class='details'>
+                <p><strong>Invoice Number:</strong> {invoiceNumber}</p>
+                <p><strong>Amount:</strong> ${amount:F2}</p>
+            </div>
+            <p>Your support is greatly appreciated. If you have any questions, feel free to contact us.</p>
+            <div class='footer'>
+                <p>GameMkt Team</p>
+            </div>
+        </div>
+    </body>
+</html>
+"
+            };
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
         public static async Task<bool> SendPasswordResetEmail(string toEmail, string resetLink)
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
@@ -94,9 +181,7 @@ namespace Application.Utils
             string confirmationLink
         )
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
@@ -173,9 +258,7 @@ namespace Application.Utils
         }
         public static async Task<bool> SendProjectConfirmationEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, Enum status)
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
@@ -280,9 +363,7 @@ namespace Application.Utils
     bool isSuccessful
 )
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
@@ -365,9 +446,7 @@ namespace Application.Utils
             bool isSuccessful
         )
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
@@ -445,13 +524,11 @@ namespace Application.Utils
         public static async Task<bool> SendProjectResponseEmail(
             string toEmail,
             string projectTitle,
-            ProjectEnum projectStatus,
+            ProjectStatusEnum projectStatus,
             string reason
         )
         {
-            var userName = "GameMkt";
-            var emailFrom = "thongsieusao3@gmail.com";
-            var password = "dfni ihvq panf lyjc";
+            var (userName, emailFrom, password) = GetEmailCredentials();
 
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));

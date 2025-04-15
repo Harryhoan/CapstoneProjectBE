@@ -14,7 +14,7 @@ namespace Application.ViewModels.ProjectDTO
         public int Backers { get; set; } = 0;
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public ProjectEnum Status { get; set; }
+        public ProjectStatusEnum Status { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }

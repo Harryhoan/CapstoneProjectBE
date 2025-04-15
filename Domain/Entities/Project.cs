@@ -13,7 +13,8 @@ namespace Domain.Entities
         public string? Story { get; set; }
         public string? Description { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public ProjectEnum Status { get; set; }
+        public ProjectStatusEnum Status { get; set; }
+        public TransactionStatusEnum TransactionStatus { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
