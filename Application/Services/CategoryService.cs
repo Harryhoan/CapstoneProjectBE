@@ -149,9 +149,9 @@ namespace Application.Services
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
             return response;
-        } 
+        }
 
-        public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory()
+        public async Task<ServiceResponse<IEnumerable<ViewCategory>>> GetAllCategory(string? name = null)
         {
             var response = new ServiceResponse<IEnumerable<ViewCategory>>();
 
@@ -160,6 +160,11 @@ namespace Application.Services
                 var result = await _unitOfWork.CategoryRepo.GetAllAsync();
                 if (result != null && result.Any())
                 {
+
+                    var filteredResult = !string.IsNullOrEmpty(name)
+                    ? result.Where(c => c.Name != null && c.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
+                    : result;
+
                     response.Data = result.Select(c => new ViewCategory
                     {
                         CategoryId = c.CategoryId,
