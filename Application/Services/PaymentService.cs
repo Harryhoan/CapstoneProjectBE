@@ -40,7 +40,7 @@ namespace Application.Services
             };
             Pledge pledge = new Pledge
             {
-                Amount = (decimal)money,
+                TotalAmount = (decimal)money,
                 ProjectId = projectId,
                 UserId = userId
             };

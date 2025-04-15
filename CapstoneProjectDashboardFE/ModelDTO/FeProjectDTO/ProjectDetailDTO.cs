@@ -24,7 +24,7 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO
         [JsonProperty("description")]
         public string? Description { get; set; }
         [JsonProperty("status")]
-        public ProjectEnum Status { get; set; }
+        public ProjectStatusEnum Status { get; set; }
         [JsonProperty("minimum-amount")]
         public decimal MinimumAmount { get; set; }
         [JsonProperty("total-amount")]

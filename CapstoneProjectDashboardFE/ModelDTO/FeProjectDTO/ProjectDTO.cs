@@ -18,7 +18,7 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO
         [JsonProperty("title")]
         public string? Title { get; set; }
         [JsonProperty("status")]
-        public ProjectEnum Status { get; set; }
+        public ProjectStatusEnum Status { get; set; }
         [JsonProperty("end-datetime")]
         public DateTime EndDatetime { get; set; }
     }

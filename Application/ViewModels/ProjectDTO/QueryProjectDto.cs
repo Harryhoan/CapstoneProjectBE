@@ -18,7 +18,7 @@ namespace Application.ViewModels.ProjectDTO
         //public string? Description { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         //[EnumDataType(typeof(ProjectEnum?), ErrorMessage = "Status must be ONGOING, INVISIBLE, HALTED or DELETED")]
-        public ProjectEnum? Status { get; set; } = null;
+        public ProjectStatusEnum? Status { get; set; } = null;
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]
         public decimal? MinMinimumAmount { get; set; } = null;
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]

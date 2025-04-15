@@ -488,7 +488,7 @@ namespace Application.Services
                     {
                         existingCollaborator = null;
                         var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
-                        if ((existingPledge == null || existingPledge.Amount <= 0))
+                        if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                         {
                             existingPledge = null;
                             return new ForbidResult();

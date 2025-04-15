@@ -9,6 +9,6 @@ namespace Application.ViewModels.ProjectDTO
         public string? Thumbnail { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime EndDatetime { get; set; }
-        public ProjectEnum Status { get; set; }
+        public ProjectStatusEnum Status { get; set; }
     }
 }

@@ -19,6 +19,8 @@
     <PackageReference Include="MimeKit" Version="4.9.0" />
     <PackageReference Include="payOS" Version="1.0.9" />
     <PackageReference Include="PayPal" Version="1.9.1" />
+    <PackageReference Include="PayPalInvoiceSDK" Version="2.10.117" />
+    <PackageReference Include="RestApiSDK" Version="0.11.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
   </ItemGroup>

@@ -223,7 +223,7 @@ namespace Application.Services
                     await _unitOfWork.CollaboratorRepo.RemoveAsync(collaborators[i]);
                     collaborators.RemoveAt(i);
                 }
-                else if (existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
+                else if (existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
                     if (user != null)
                     {
@@ -444,15 +444,15 @@ namespace Application.Services
                 //    return new UnauthorizedResult();
                 //}
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
                 {
                     return new NotFoundResult();
                 }
-                if (user == null && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
+                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
                     return new UnauthorizedResult();
                 }
-                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.INVISIBLE)
+                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {
@@ -484,7 +484,7 @@ namespace Application.Services
                     return new UnauthorizedResult();
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
                 {
                     return new NotFoundResult();
                 }
@@ -528,7 +528,7 @@ namespace Application.Services
                     return new UnauthorizedResult();
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectEnum.DELETED))
+                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
                 {
                     return new NotFoundResult();
                 }
