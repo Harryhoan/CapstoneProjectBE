@@ -1,4 +1,5 @@
-﻿using Application.IService;
+﻿using Application.Commons;
+using Application.IService;
 using Application.Utils;
 using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -15,29 +16,23 @@ namespace CapstonProjectBE.Controllers
         private readonly IForgotPasswordService _forgotPasswordService;
         private readonly IUserService _userService;
         private readonly IAuthenService _authenService;
-        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IAuthenService authenService, IUserService userService)
+        private readonly AppConfiguration _config;
+        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IAuthenService authenService, IUserService userService, AppConfiguration appConfiguration)
         {
             _authenService = authenService;
             _forgotPasswordService = forgotPasswordService;
             _userService = userService;
+            _config = appConfiguration;
         }
         [HttpGet("Verify-Code")]
-        public async Task<IActionResult> VerifyCode([FromQuery] string code, [FromQuery] string email)
+        public async Task<IActionResult> VerifyCode([FromQuery] string code,[FromQuery] string email)
         {
-            try
-            {
-                var user = await _forgotPasswordService.VerifyCode(code, email);
-                var authen = await _authenService.GetUserByTokenAsync(HttpContext.User);
-                return Ok(authen);
-            }
-            catch (Exception ex)
-            {   
-                return BadRequest(ex.Message);
-            }
+            var user = await _forgotPasswordService.VerifyCode(code, email);
+            return Ok(user);
         }
 
         [HttpPost("Send-Code")]
-        public async Task<IActionResult> CheckEmailAndSendCode([FromBody] string email)
+        public async Task<IActionResult> CheckEmailAndSendCode([FromForm] string email)
         {
             var user = await _userService.GetUserByEmailAsync(email);
             if (user != null)
@@ -68,11 +63,10 @@ namespace CapstonProjectBE.Controllers
         }
 
         [HttpPost("Reset-Password")]
-        public async Task<IActionResult> ResetPassword(string email, string password)
+        public async Task<IActionResult> ResetPassword(string email, string newPassword)
         {
-            var checkUser = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var userID = checkUser.UserId;
-            var user = await _userService.UpdatePasswordUser(email, password, userID);
+            var check = await _userService.GetUserByEmailAsync(email);
+            var user = await _userService.UpdatePasswordUser(email, newPassword, check.Data.UserId);
             if (user != null)
             {
                 return Ok(user);

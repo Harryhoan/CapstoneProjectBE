@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.Utils;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
 using Domain.Entities;
@@ -30,7 +31,7 @@ namespace Application.Services
                 {
                     Email = email,
                     Code = code,
-                    CreateAt = DateTime.Now,
+                    CreateAt = DateTime.UtcNow,
                 };
                 await _unitOfWork.VerifyCodeRepo.AddAsync(verifyCode);
                 response.Data = verifyCode;
@@ -118,7 +119,7 @@ namespace Application.Services
                 } 
 
                 var createAt = verifyCode.CreateAt;
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
                 TimeSpan timeSpan = now - createAt;
                 if (timeSpan.TotalSeconds > 60)
                 {   
@@ -126,6 +127,7 @@ namespace Application.Services
                     response.Message = "Verify code expired";
                     return response;
                 }
+
 
                 response.Data = _mapper.Map<UserDTO>(user);
                 response.Success = true;
