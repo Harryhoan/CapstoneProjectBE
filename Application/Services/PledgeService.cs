@@ -206,7 +206,7 @@ namespace Application.Services
                 var userCache = new Dictionary<int, (string Username, string Email)>();
 
                 // Calculate total amount and total backers
-                var totalAmount = pledges.Sum(p => p.Amount);
+                var totalAmount = pledges.Sum(p => p.TotalAmount);
                 var totalBackers = pledges.Select(p => p.UserId).Distinct().Count();
 
                 // Initialize reward counts
@@ -250,14 +250,14 @@ namespace Application.Services
                         worksheet.Cell(currentRow, 1).Value = pledge.PledgeId;
                         worksheet.Cell(currentRow, 2).Value = userData.Username;
                         worksheet.Cell(currentRow, 3).Value = userData.Email;
-                        worksheet.Cell(currentRow, 4).Value = pledge.Amount;
+                        worksheet.Cell(currentRow, 4).Value = pledge.TotalAmount;
 
                         var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
                         var status = pledgeDetails.FirstOrDefault()?.Status;
                         worksheet.Cell(currentRow, 5).Value = status.ToString();
 
                         // Find the highest reward less than or equal to the pledge amount
-                        var reward = sortedRewards.LastOrDefault(r => r.Amount <= pledge.Amount);
+                        var reward = sortedRewards.LastOrDefault(r => r.Amount <= pledge.TotalAmount);
                         worksheet.Cell(currentRow, 6).Value = reward?.Details ?? "No Reward";
 
                         if (reward != null)

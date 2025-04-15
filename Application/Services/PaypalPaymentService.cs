@@ -5,9 +5,12 @@ using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
 using PayPal;
 using PayPal.Api;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
 {
@@ -63,7 +66,7 @@ namespace Application.Services
                     response.Message = "This project has not ended yet.";
                     return response;
                 }
-                if (project.Status == ProjectEnum.DELETED)
+                if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This request is invalid.";
@@ -73,6 +76,18 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "This project has not reached the minimum amount.";
+                    return response;
+                }
+                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                {
+                    response.Success = false;
+                    response.Message = "The total amount of this project has been refunded.";
+                    return response;
+                }
+                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERED)
+                {
+                    response.Success = false;
+                    response.Message = "The total amount of this project has been transferred to the creator.";
                     return response;
                 }
                 var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
@@ -94,6 +109,12 @@ namespace Application.Services
                     response.Message = "Creator unverified.";
                     return response;
                 }
+                if (string.IsNullOrEmpty(creator.PaymentAccount) || !new EmailAddressAttribute().IsValid(creator.PaymentAccount))
+                {
+                    response.Success = false;
+                    response.Message = "Payment Account invalid.";
+                    return response;
+                }
                 var pledges = await _unitOfWork.PledgeRepo.GetManyPledgeByUserIdAndProjectIdAsync(userId, projectId);
                 if (pledges == null || !pledges.Any())
                 {
@@ -112,27 +133,23 @@ namespace Application.Services
                     }
                 }
 
-                foreach (var item in pledgeDetails)
-                {
-                    if (item.Status == PledgeDetailEnum.TRANSFERRED)
-                    {
-                        response.Success = false;
-                        response.Message = "The money has already been transferred.";
-                        return response;
-                    }
-                    //if (item.Status == PledgeDetailEnum.REFUNDED)
-                    //{
-                    //    response.Success = false;
-                    //    response.Message = "This pledge has already been transferred.";
-                    //    return response;
-                    //}
-                }
+                //foreach (var item in pledgeDetails)
+                //{
+                //    if (item.Status == PledgeDetailEnum.TRANSFERRED)
+                //    {
+                //        response.Success = false;
+                //        response.Message = "The money has already been transferred.";
+                //        return response;
+                //    }
+                //}
 
                 var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
-                var apiContext = new APIContext(new OAuthTokenCredential(
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
+
+                string invoiceNumber = $"INV-{projectId}-{creator.UserId}-{Guid.NewGuid()}";
 
                 var payout = new Payout
                 {
@@ -148,32 +165,57 @@ namespace Application.Services
                     recipient_type = PayoutRecipientType.EMAIL,
                     amount = new Currency
                     {
-                        value = finalTotalPledgeForCreator.ToString(),
+                        value = finalTotalPledgeForCreator.ToString("F2"),
                         currency = "USD"
                     },
-                    receiver = creator.Email,
+                    receiver = creator.PaymentAccount,
                     note = "Transfer of pledged funds",
-                    sender_item_id = projectId.ToString()
+                    sender_item_id = invoiceNumber
                 }
             }
                 };
 
                 var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
 
+                // Fetch the payout details to retrieve the transaction ID
+                var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
+                var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
+
+                if (string.IsNullOrEmpty(transactionId))
+                {
+                    response.Success = false;
+                    response.Message = "Transaction ID not found for the payout item.";
+                    return response;
+                }
                 var transferPledge = new Pledge
                 {
                     UserId = creator.UserId,
                     ProjectId = projectId,
-                    Amount = finalTotalPledgeForCreator,
+                    TotalAmount = finalTotalPledgeForCreator,
                 };
 
                 await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
 
-                foreach (var pledgeDetail in pledgeDetails)
+                // Create a new PledgeDetail with the updated properties
+                var transferPledgeDetail = new PledgeDetail
                 {
-                    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
-                    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
-                }
+                    PledgeId = transferPledge.PledgeId,
+                    PaymentId = createdPayout.batch_header.payout_batch_id,
+                    InvoiceId = invoiceNumber,
+                    Amount = finalTotalPledgeForCreator,
+                    InvoiceUrl = invoiceUrl ?? string.Empty,
+                    Status = PledgeDetailEnum.TRANSFERRED
+                };
+
+                await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
+
+                //foreach (var pledgeDetail in pledgeDetails)
+                //{
+                //    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
+                //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
+                //    pledgeDetail.TransactionId = transactionId;
+                //}
 
                 await _unitOfWork.SaveChangeAsync();
 
@@ -194,6 +236,7 @@ namespace Application.Services
             return response;
         }
 
+
         public async Task<ServiceResponse<string>> CreateRefundAsync(int userId, int pledgeId)
         {
             var response = new ServiceResponse<string>();
@@ -208,7 +251,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -220,6 +263,12 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "User deleted.";
+                    return response;
+                }
+                if (!user.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "User unverified.";
                     return response;
                 }
 
@@ -242,21 +291,59 @@ namespace Application.Services
                     response.Message = "This project has reached the minimum amount.";
                     return response;
                 }
-                if (project.Status == ProjectEnum.DELETED)
+                if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This project has been deleted.";
                     return response;
                 }
-
-                var apiContext = new APIContext(new OAuthTokenCredential(
+                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                {
+                    response.Success = false;
+                    response.Message = "The total amount of this project has been refunded.";
+                    return response;
+                }
+                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERED)
+                {
+                    response.Success = false;
+                    response.Message = "The total amount of this project has been transferred to the creator.";
+                    return response;
+                }
+                var refundUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                if (refundUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
+                if (refundUser.IsDeleted)
+                {
+                    response.Success = false;
+                    response.Message = "User deleted.";
+                    return response;
+                }
+                if (!refundUser.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "User unverified.";
+                    return response;
+                }
+                if (string.IsNullOrEmpty(refundUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(refundUser.PaymentAccount))
+                {
+                    response.Success = false;
+                    response.Message = "Payment Account invalid.";
+                    return response;
+                }
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
 
-                string totalAmountInUSD = pledge.Amount.ToString("F2");
+                var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
 
-                project.TotalAmount -= pledge.Amount;
+                string totalAmountInUSD = finalTotalAmount.ToString("F2");
+
+                project.TotalAmount -= pledge.TotalAmount;
 
                 var payout = new Payout
                 {
@@ -275,22 +362,37 @@ namespace Application.Services
                                 value = totalAmountInUSD,
                                 currency = "USD"
                             },
-                            receiver = user.PaymentAccount,
+                            receiver = refundUser.PaymentAccount,
                             note = "Refund for your pledge",
                             sender_item_id = pledge.PledgeId.ToString()
                         }
                     }
                 };
+                await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                 var createdPayout = payout.Create(apiContext, false);
+                var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
+                var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
 
-                //pledge.Amount = 0;
-                //PledgeDetail pledgeDetail = new PledgeDetail();
-                //pledgeDetail.PledgeId = pledge.PledgeId;
-                //pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
-                await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                if (string.IsNullOrEmpty(transactionId))
+                {
+                    response.Success = false;
+                    response.Message = "Transaction ID not found for the payout item.";
+                    return response;
+                }
+
+                pledge.TotalAmount = 0;
+                PledgeDetail pledgeDetail = new()
+                {
+                    PledgeId = pledge.PledgeId,
+                    Status = PledgeDetailEnum.REFUNDED,
+                    InvoiceId = transactionId,
+                    Amount = finalTotalAmount,
+                    InvoiceUrl = invoiceUrl ?? string.Empty
+                };
                 await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-
+                await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                 response.Success = true;
                 response.Message = "Payout created successfully.";
             }
@@ -319,7 +421,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.Status == ProjectEnum.DELETED || project.Status == ProjectEnum.INVISIBLE)
+                if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This request is invalid.";
@@ -339,7 +441,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var apiContext = new APIContext(new OAuthTokenCredential(
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
@@ -352,9 +454,10 @@ namespace Application.Services
                     if (!pledgeDetails.Any(pd => pd.Status == PledgeDetailEnum.REFUNDED))
                     {
                         var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
-                        if (user != null && !user.IsDeleted)
+                        if (user != null && !user.IsDeleted && user.IsVerified)
                         {
-                            string totalAmountInUSD = pledge.Amount.ToString("F2");
+                            var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
+                            string totalAmountInUSD = finalTotalAmount.ToString("F2");
 
                             payoutItems.Add(new PayoutItem
                             {
@@ -384,8 +487,42 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
+                foreach (var pledge in pledges)
+                {
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                    if (!pledgeDetails.Any(pd => pd.Status == PledgeDetailEnum.REFUNDED))
+                    {
+                        var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                        if (user != null && !user.IsDeleted && user.IsVerified)
+                        {
+                            var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                            var transactionId = payoutDetails.items.FirstOrDefault(i => i.payout_item.sender_item_id.Equals(pledge.PledgeId.ToString()))?.transaction_id;
+                            //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
+
+                            if (!string.IsNullOrEmpty(transactionId))
+                            {
+                                var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
+
+                                pledge.TotalAmount = 0;
+                                PledgeDetail pledgeDetail = new()
+                                {
+                                    PaymentId = createdPayout.batch_header.payout_batch_id,
+                                    PledgeId = pledge.PledgeId,
+                                    Status = PledgeDetailEnum.REFUNDED,
+                                    InvoiceId = transactionId,
+                                    Amount = finalTotalAmount,
+                                    InvoiceUrl = $"https://sandbox.paypal.com/unifiedtransactions/?filter=0&query={transactionId}"
+                                };
+                                await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                                await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                            }
+                        }
+                    }
+                }
+
 
                 project.TotalAmount = 0;
+                project.TransactionStatus = TransactionStatusEnum.REFUNDED;
                 await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                 response.Success = true;
@@ -438,16 +575,17 @@ namespace Application.Services
                     response.Message = "Project Id not found.";
                     return response;
                 }
-                if (project.Status == ProjectEnum.DELETED || project.Status == ProjectEnum.INVISIBLE)
+                if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This request is invalid.";
                     return response;
                 }
-                if (project.Status == ProjectEnum.HALTED)
+
+                if (project.TransactionStatus != TransactionStatusEnum.RECEIVING)
                 {
                     response.Success = false;
-                    response.Message = "This project has been halted.";
+                    response.Message = "This project is currently not accepting any pledge.";
                     return response;
                 }
                 if (project.EndDatetime <= DateTime.UtcNow)
@@ -462,7 +600,7 @@ namespace Application.Services
                     response.Message = "You are not allowed to pledge to your own Game Project.";
                     return response;
                 }
-                var apiContext = new APIContext(new OAuthTokenCredential(
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
@@ -538,10 +676,16 @@ namespace Application.Services
             var response = new ServiceResponse<Payment>();
             try
             {
-                var apiContext = new APIContext(new OAuthTokenCredential(
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
-                ).GetAccessToken());
+                ).GetAccessToken())
+                {
+                    Config = new Dictionary<string, string>
+            {
+                { "mode", "sandbox" }
+            }
+                };
 
                 var payment = Payment.Get(apiContext, paymentId);
 
@@ -573,6 +717,7 @@ namespace Application.Services
                     response.Message = "Payment is not approved yet.";
                     return response;
                 }
+
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
 
                 if (project == null)
@@ -589,7 +734,6 @@ namespace Application.Services
                 var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
                 // Prepare to execute the payment
-
                 await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 var paymentExecution = new PaymentExecution() { payer_id = payerId };
                 var executedPayment = payment.Execute(apiContext, paymentExecution);
@@ -601,12 +745,22 @@ namespace Application.Services
                     return response;
                 }
 
+                // Retrieve the invoice number from the transaction
+                var invoiceNumber = transaction.invoice_number;
+
+                if (string.IsNullOrEmpty(invoiceNumber))
+                {
+                    response.Success = false;
+                    response.Message = "Invoice number not found.";
+                    return response;
+                }
+
                 if (existingPledge == null)
                 {
                     Domain.Entities.Pledge newPledge = new Domain.Entities.Pledge
                     {
                         UserId = userId,
-                        Amount = amount,
+                        TotalAmount = amount,
                         ProjectId = projectId
                     };
 
@@ -616,6 +770,9 @@ namespace Application.Services
                     {
                         PledgeId = newPledge.PledgeId,
                         PaymentId = paymentId,
+                        Amount = amount,
+                        InvoiceId = invoiceNumber, // Store the invoice number in the transactionId field
+                        InvoiceUrl = $"https://www.sandbox.paypal.com/unifiedtransactions/?filter=0&query={invoiceNumber}",
                         Status = PledgeDetailEnum.PLEDGED
                     };
 
@@ -623,7 +780,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    existingPledge.Amount += amount;
+                    existingPledge.TotalAmount += amount;
                     await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
 
                     var getPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
@@ -633,14 +790,22 @@ namespace Application.Services
                         response.Message = "Pledge not found.";
                         return response;
                     }
+
                     Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
                     {
                         PledgeId = getPledge.PledgeId,
                         PaymentId = paymentId,
+                        Amount = amount,
+                        InvoiceId = invoiceNumber, // Store the invoice number in the transactionId field
                         Status = PledgeDetailEnum.PLEDGED
                     };
 
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                }
+                var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
+                if (!string.IsNullOrEmpty(userEmail))
+                {
+                    await EmailSender.SendBillingEmail(userEmail, project.Title ?? "Null", amount, invoiceNumber);
                 }
 
                 response.Success = true;
@@ -654,6 +819,147 @@ namespace Application.Services
 
             return response;
         }
+        public async Task<ServiceResponse<string>> GetTransactionIdByInvoiceIdAsync(string invoiceId)
+        {
+            var response = new ServiceResponse<string>();
 
+            try
+            {
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
+                    _configuration["PayPal:ClientId"],
+                    _configuration["PayPal:ClientSecret"]
+                ).GetAccessToken())
+                {
+                    Config = new Dictionary<string, string>
+            {
+                { "mode", "sandbox" } // Change to "live" for production
+            }
+                };
+
+                // Search for payments using the invoice number
+                var paymentHistory = Payment.List(apiContext, count: 10); // Retrieve the last 10 payments
+
+                var payment = paymentHistory.payments
+                    .FirstOrDefault(p => p.transactions.Any(t => t.invoice_number == invoiceId));
+
+                if (payment != null)
+                {
+                    var transactionId = payment.transactions.FirstOrDefault()?.related_resources
+                        ?.FirstOrDefault()?.sale?.id;
+
+                    if (!string.IsNullOrEmpty(transactionId))
+                    {
+                        response.Success = true;
+                        response.Data = transactionId;
+                        response.Message = "Transaction ID retrieved successfully.";
+                    }
+                    else
+                    {
+                        response.Success = false;
+                        response.Message = "Transaction ID not found.";
+                    }
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "No payments found for the given invoice ID.";
+                }
+            }
+            catch (PayPalException ex)
+            {
+                response.Success = false;
+                response.Message = $"PayPal error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error: {ex.Message}";
+            }
+
+            return response;
+        }
+        public async Task<ServiceResponse<string>> CreateInvoiceAsync(string itemName, decimal itemPrice, int quantity)
+        {
+            var response = new ServiceResponse<string>();
+
+            try
+            {
+                // Set up API context
+                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
+                    _configuration["PayPal:ClientId"],
+                    _configuration["PayPal:ClientSecret"]
+                ).GetAccessToken())
+                {
+                    Config = new Dictionary<string, string>
+            {
+                { "mode", "sandbox" } // Change to "live" for production
+            }
+                };
+
+                // Create invoice object
+                var invoice = new Invoice
+                {
+                    merchant_info = new MerchantInfo
+                    {
+                        email = "sb-41eyn38365498@business.example.com"
+                    },
+                    billing_info = new List<BillingInfo>
+            {
+                new BillingInfo
+                {
+                    email = "harryhoang203@gmail.com"
+                }
+            },
+                    items = new List<InvoiceItem>
+            {
+                new InvoiceItem
+                {
+                    name = itemName,
+                    quantity = quantity,
+                    unit_price = new Currency
+                    {
+                        currency = "USD",
+                        value = itemPrice.ToString("F2")
+                    }
+                }
+            },
+                    note = "Thank you for your business!",
+                    payment_term = new PaymentTerm
+                    {
+                        term_type = "NET_30" // Payment due in 30 days
+                    }
+                };
+
+                // Create the invoice
+                var createdInvoice = invoice.Create(apiContext);
+
+                if (createdInvoice != null && !string.IsNullOrEmpty(createdInvoice.id))
+                {
+                    // Optionally send the invoice
+                    createdInvoice.Send(apiContext);
+
+                    response.Success = true;
+                    response.Data = createdInvoice.id;
+                    response.Message = "Invoice created and sent successfully.";
+                }
+                else
+                {
+                    response.Success = false;
+                    response.Message = "Failed to create the invoice.";
+                }
+            }
+            catch (PayPalException ex)
+            {
+                response.Success = false;
+                response.Message = $"PayPal error: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Error: {ex.Message}";
+            }
+
+            return response;
+        }
     }
 }

@@ -1,9 +1,11 @@
 ﻿using Application.IService;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class PaypalPaymentController : ControllerBase
@@ -85,6 +87,29 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RefundAllPledgesForProjectAsync(int projectId)
         {
             var result = await _paypalPaymentService.RefundAllPledgesForProjectAsync(projectId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+        [HttpPost("CreateTransactionUrlViaInvoiceNumber")]
+        [Authorize]
+        public async Task<IActionResult> CreateTransactionUrlViaInvoiceNumberAsync(string invoiceNumber)
+        {
+            var result = await _paypalPaymentService.GetTransactionIdByInvoiceIdAsync(invoiceNumber);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
+        [HttpPost("CreateInvoice")]
+
+        [Authorize]
+        public async Task<IActionResult> CreateInvoice(string itemName, decimal itemPrice, int quantity)
+        {
+            var result = await _paypalPaymentService.CreateInvoiceAsync(itemName, itemPrice, quantity);
             if (!result.Success)
             {
                 return BadRequest(result);

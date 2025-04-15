@@ -32,13 +32,13 @@ namespace CapstonProjectBE
                     try
                     {
                         var paypalPaymentService = scope.ServiceProvider.GetRequiredService<IPaypalPaymentService>();
-                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !String.IsNullOrEmpty(p.User.Email) && p.Status != Domain.Enums.ProjectEnum.DELETED).ToListAsync();
+                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !String.IsNullOrEmpty(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
                         foreach (var project in projects)
                         {
                             //What about invisible projects? Can't the money from invisible projects be transferred as well?
-                            if (project.Status == Domain.Enums.ProjectEnum.ONGOING && DateTime.UtcNow >= project.EndDatetime)
+                            if (project.TransactionStatus == Domain.Enums.TransactionStatusEnum.RECEIVING && DateTime.UtcNow >= project.EndDatetime)
                             {
-                                project.Status = Domain.Enums.ProjectEnum.HALTED;
+                                project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
                                 dbContext.Update(project);
                                 if (paypalPaymentService != null)
                                 {

@@ -180,8 +180,9 @@ namespace Application.Services
                 project.MonitorId = assignedStaff.UserId;
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
-                project.Status = ProjectEnum.INVISIBLE;
+                project.Status = ProjectStatusEnum.INVISIBLE;
                 project.UpdateDatetime = createProjectDto.StartDatetime;
+                project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
                 {
@@ -369,11 +370,11 @@ namespace Application.Services
             }
             if (user == null)
             {
-                query = query.Where(p => p.Status != ProjectEnum.DELETED && p.Status != ProjectEnum.INVISIBLE).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && p.Status != ProjectStatusEnum.INVISIBLE).AsQueryable();
             }
             else if (user.Role == UserEnum.CUSTOMER)
             {
-                query = query.Where(p => p.Status != ProjectEnum.DELETED && !(p.Status == ProjectEnum.INVISIBLE && user.UserId != p.CreatorId)).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !(p.Status == ProjectStatusEnum.INVISIBLE && user.UserId != p.CreatorId)).AsQueryable();
             }
             return query;
         }
@@ -776,7 +777,7 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectEnum projectStatus, string reason)
+        public async Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectStatusEnum projectStatus, string reason)
         {
             var response = new ServiceResponse<ProjectStatusDTO>();
 
@@ -805,7 +806,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.Status == ProjectEnum.DELETED)
+                if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "This project has been deleted.";
@@ -824,7 +825,17 @@ namespace Application.Services
                     response.Message = "Creator not found.";
                     return response;
                 }
-
+                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERED) 
+                {
+                    if (projectStatus == ProjectStatusEnum.VISIBLE)
+                    {
+                        project.TransactionStatus = TransactionStatusEnum.RECEIVING;
+                    }
+                    else
+                    {
+                        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                    }
+                }
                 project.Status = projectStatus;
                 project.UpdateDatetime = DateTime.UtcNow;
 
