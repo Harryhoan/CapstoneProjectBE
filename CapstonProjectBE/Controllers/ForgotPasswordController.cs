@@ -1,4 +1,5 @@
-﻿using Application.Commons;
+﻿using Application;
+using Application.Commons;
 using Application.IService;
 using Application.Utils;
 using Domain.Entities;
@@ -17,12 +18,14 @@ namespace CapstonProjectBE.Controllers
         private readonly IUserService _userService;
         private readonly IAuthenService _authenService;
         private readonly AppConfiguration _config;
-        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IAuthenService authenService, IUserService userService, AppConfiguration appConfiguration)
+        private readonly IUnitOfWork _unitOfWork;
+        public ForgotPasswordController(IForgotPasswordService forgotPasswordService, IAuthenService authenService, IUserService userService, AppConfiguration appConfiguration, IUnitOfWork unitOfWork)
         {
             _authenService = authenService;
             _forgotPasswordService = forgotPasswordService;
             _userService = userService;
             _config = appConfiguration;
+            _unitOfWork = unitOfWork;
         }
         [HttpGet("Verify-Code")]
         public async Task<IActionResult> VerifyCode([FromQuery] string code,[FromQuery] string email)

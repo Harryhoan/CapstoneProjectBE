@@ -128,6 +128,8 @@ namespace Application.Services
                     return response;
                 }
 
+                verifyCode.IsVerified = true;
+                await _unitOfWork.VerifyCodeRepo.UpdateAsync(verifyCode);
 
                 response.Data = _mapper.Map<UserDTO>(user);
                 response.Success = true;

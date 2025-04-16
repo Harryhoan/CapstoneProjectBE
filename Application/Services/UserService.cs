@@ -289,16 +289,17 @@ namespace Application.Services
                 var hashedPassword = HashPassWithSHA256.HashWithSHA256(password);
                 var checkCode = await _unitOfWork.VerifyCodeRepo.FindEntityAsync(c => c.Email.Equals(email));
                 var user = await _unitOfWork.UserRepo.FindEntityAsync(u => u.Email.Equals(email) && u.UserId.Equals(id));
+      
                 if (user == null)
                 {
                     response.Success = false;
                     response.Message = "User not found";
                     return response;
                 }
-                if (checkCode == null)
+                if (checkCode == null || checkCode.IsVerified == false)
                 {
                     response.Success = false;
-                    response.Message = "Verification code not found or expired";
+                    response.Message = "Verification code not found or not verified";
                     return response;
                 }
 
