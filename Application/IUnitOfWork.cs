@@ -22,6 +22,7 @@ namespace Application
         public IProjectCategoryRepo ProjectCategoryRepo { get; }
         public IPlatformRepo PlatformRepo { get; }
         public IProjectPlatformRepo ProjectPlatformRepo { get; }
+        public IVerifyCodeRepo VerifyCodeRepo { get; }
 
         public Task<int> SaveChangeAsync();
     }

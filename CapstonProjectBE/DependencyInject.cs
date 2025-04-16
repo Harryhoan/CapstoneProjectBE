@@ -29,6 +29,7 @@ namespace CapstonProjectBE
             services.AddScoped<ICollaboratorService, CollaboratorService>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IPlatformService, PlatformService>();
+            services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
             services.AddHealthChecks();

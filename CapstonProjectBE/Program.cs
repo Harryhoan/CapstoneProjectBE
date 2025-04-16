@@ -156,18 +156,18 @@ namespace CapstonProjectBE
 
             var app = builder.Build();
 
-           //app.UseDeveloperExceptionPage();
+            //app.UseDeveloperExceptionPage();
 
-           //if (app.Environment.IsDevelopment())
-           //{
-           //     app.UseSwagger();
-           //    app.UseSwaggerUI();
-           //}
-           //app.UseSwagger();
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI();
+            //}
+            //app.UseSwagger();
             //app.UseSwaggerUI(c =>
             //{
             //    c.SwaggerEndpoint("swagger/v1/swagger.json", "GameMkt v1");
-            //   c.RoutePrefix = string.Empty;
+            //    c.RoutePrefix = string.Empty;
             //});
 
             #region

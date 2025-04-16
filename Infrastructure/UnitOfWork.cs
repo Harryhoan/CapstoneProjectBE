@@ -25,9 +25,10 @@ namespace Infrastructure
         private readonly IProjectCategoryRepo _projectCategoryRepo;
         private readonly IPlatformRepo _platformRepo;
         private readonly IProjectPlatformRepo _projectPlatformRepo;
-
+        private readonly IVerifyCodeRepo _verifyCodeRepo;
+        
         public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo,
-            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo, IProjectCategoryRepo projectCategoryRepo, IPlatformRepo platformRepo, IProjectPlatformRepo projectPlatformRepo)
+            ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo, IProjectCategoryRepo projectCategoryRepo, IPlatformRepo platformRepo, IProjectPlatformRepo projectPlatformRepo, IVerifyCodeRepo verifyCodeRepo)
 
 
         {
@@ -50,6 +51,7 @@ namespace Infrastructure
             _projectCategoryRepo = projectCategoryRepo;
             _platformRepo = platformRepo;
             _projectPlatformRepo = projectPlatformRepo;
+            _verifyCodeRepo = verifyCodeRepo;
         }
 
         public IUserRepo UserRepo => _userRepo;
@@ -82,6 +84,7 @@ namespace Infrastructure
         public IProjectCategoryRepo ProjectCategoryRepo => _projectCategoryRepo;
         public IPlatformRepo PlatformRepo => _platformRepo;
         public IProjectPlatformRepo ProjectPlatformRepo => _projectPlatformRepo;
+        public IVerifyCodeRepo VerifyCodeRepo => _verifyCodeRepo;
         public async Task<int> SaveChangeAsync()
         {
             try
