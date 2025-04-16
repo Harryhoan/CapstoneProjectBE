@@ -9,5 +9,6 @@ namespace Application.ViewModels.PledgeDTO
         public PledgeDetailEnum Status { get; set; }
         public string TransactionId { get; set; } = string.Empty;
         public string InvoiceUrl { get; set; } = string.Empty;
+        public DateTime CreatedDatetime { get; set; }
     }
 }
