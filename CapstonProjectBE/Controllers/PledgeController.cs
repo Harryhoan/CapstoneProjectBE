@@ -69,7 +69,7 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-        [HttpGet("GetBackerByUser/{projectId}")]
+        [HttpGet("GetBacker/{projectId}")]
         [Authorize]
         public async Task<IActionResult> GetBackerByProjectId([FromRoute] int projectId)
         {

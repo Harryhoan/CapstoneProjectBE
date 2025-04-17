@@ -853,7 +853,7 @@ namespace Application.Services
 
                 var responseData = new ProjectStatusDTO
                 {
-                    projectId = projectId,
+                    ProjectId = projectId,
                     Reason = reason,
                     Status = projectStatus.ToString()
                 };

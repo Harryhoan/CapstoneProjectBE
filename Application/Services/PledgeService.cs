@@ -37,7 +37,7 @@ namespace Application.Services
                 {
                     var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
                     var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
-                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                    pledgeDto.PledgeDetails = pledgeDetailDtos;
                 }
                 response.Data = pledgeDtos;
                 response.Success = true;
@@ -70,7 +70,7 @@ namespace Application.Services
                 {
                     var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeDto.PledgeId);
                     var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
-                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                    pledgeDto.PledgeDetails = pledgeDetailDtos;
                 }
 
                 response.Data = pledgeDtos;
@@ -101,7 +101,7 @@ namespace Application.Services
                 var pledgeDto = _mapper.Map<PledgeDto>(pledge);
                 var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledgeId);
                 var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
-                pledgeDto.pledgeDetail = pledgeDetailDtos;
+                pledgeDto.PledgeDetails = pledgeDetailDtos;
 
                 response.Data = pledgeDto;
                 response.Success = true;
@@ -121,7 +121,14 @@ namespace Application.Services
             var response = new ServiceResponse<List<ProjectBackerDto>>();
             try
             {
-                // Fetch pledges for the user in the specified project
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+
                 var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
 
                 if (pledges == null || !pledges.Any())
@@ -131,14 +138,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
-                if (existingProject == null)
-                {
-                    response.Success = false;
-                    response.Message = "Project not found";
-                    return response;
-                }
-                pledges = pledges.Where(p => p.UserId != existingProject.CreatorId).ToList();
+                pledges.RemoveAll(p => p.UserId == existingProject.CreatorId || p.TotalAmount <= 0);
 
                 // Prepare the result list
                 var projectBackerDtos = new List<ProjectBackerDto>();
@@ -146,7 +146,7 @@ namespace Application.Services
                 foreach (var pledge in pledges)
                 {
                     // Fetch backer (user) details
-                    var user = await _unitOfWork.UserRepo.GetByIdAsync(pledge.UserId);
+                    var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
                     if (user == null)
                     {
                         continue; // Skip if user not found
@@ -154,19 +154,21 @@ namespace Application.Services
 
                     // Fetch pledge details
                     var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-                    var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
-
+                    //var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    var projectBackerDetailDtos = _mapper.Map<List<ProjectBackerDetailDto>>(pledgeDetails);
                     // Map pledge to PledgeDto and include pledge details
-                    var pledgeDto = _mapper.Map<PledgeDto>(pledge);
-                    pledgeDto.pledgeDetail = pledgeDetailDtos;
+                    //var pledgeDto = _mapper.Map<PledgeDto>(pledge);
+                    //pledgeDto.PledgeDetails = pledgeDetailDtos;
 
                     // Create ProjectBackerDto
                     var projectBackerDto = new ProjectBackerDto
                     {
-                        backerId = user.UserId,
-                        backerName = user.Fullname,
-                        backerAvatar = user.Avatar ?? string.Empty,
-                        pledge = pledgeDto
+                        BackerId = user.UserId,
+                        BackerName = user.Fullname,
+                        BackerAvatar = user.Avatar ?? string.Empty,
+                        //pledge = pledgeDto,
+                        TotalAmount = pledge.TotalAmount,
+                        ProjectBackerDetails = projectBackerDetailDtos
                     };
 
                     projectBackerDtos.Add(projectBackerDto);
@@ -174,12 +176,12 @@ namespace Application.Services
 
                 response.Data = projectBackerDtos;
                 response.Success = true;
-                response.Message = "Pledges retrieved successfully.";
+                response.Message = "Backers retrieved successfully.";
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Failed to retrieve pledges: {ex.Message}";
+                response.Message = $"Failed to retrieve backers: {ex.Message}";
             }
 
             return response;
