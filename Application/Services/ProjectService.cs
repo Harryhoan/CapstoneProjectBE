@@ -749,7 +749,7 @@ namespace Application.Services
             var response = new ServiceResponse<List<UserProjectsDto>>();
             try
             {
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -764,6 +764,7 @@ namespace Application.Services
                     response.Message = "Projects not found.";
                     return response;
                 }
+                projects.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED);
                 var projectList = _mapper.Map<List<UserProjectsDto>>(projects);
                 response.Data = projectList;
                 response.Success = true;

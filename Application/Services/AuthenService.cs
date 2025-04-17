@@ -322,6 +322,47 @@ namespace Application.Services
             return new BadRequestResult();
         }
 
+        public async Task<IActionResult?> CheckIfUserCanGetByProjectId(int projectId, User? user = null)
+        {
+            try
+            {
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new ObjectResult(result);
+                }
+                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                {
+                    return new UnauthorizedResult();
+                }
+                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                {
+                    if (user.IsDeleted && !user.IsVerified)
+                    {
+                        //return new ForbidResult();
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                        return new ObjectResult(result);
+                    }
+                    else if (user.UserId != existingProject.CreatorId)
+                    {
+                        var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (existingCollaborator == null)
+                        {
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            return new ObjectResult(result);
+                        }
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+            }
+            return new BadRequestResult();
+        }
+
         public async Task<ServiceResponse<string>> ForgetPasswordAsync(string email)
         {
             var response = new ServiceResponse<string>();
