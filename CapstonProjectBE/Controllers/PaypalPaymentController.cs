@@ -93,17 +93,6 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-        [HttpPost("CreateTransactionUrlViaInvoiceNumber")]
-        [Authorize]
-        public async Task<IActionResult> CreateTransactionUrlViaInvoiceNumberAsync(string invoiceNumber)
-        {
-            var result = await _paypalPaymentService.GetTransactionIdByInvoiceIdAsync(invoiceNumber);
-            if (!result.Success)
-            {
-                return BadRequest(result);
-            }
-            return Ok(result);
-        }
         [HttpPost("CreateInvoice")]
 
         [Authorize]
