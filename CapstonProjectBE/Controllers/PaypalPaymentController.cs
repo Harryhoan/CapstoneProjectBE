@@ -93,12 +93,12 @@ namespace CapstonProjectBE.Controllers
             }
             return Ok(result);
         }
-        [HttpPost("CreateInvoice")]
 
+        [HttpPost("CreateInvoice")]
         [Authorize]
-        public async Task<IActionResult> CreateInvoice(string itemName, decimal itemPrice, int quantity)
+        public IActionResult CreateInvoice(string itemName, decimal itemPrice, int quantity)
         {
-            var result = await _paypalPaymentService.CreateInvoiceAsync(itemName, itemPrice, quantity);
+            var result = _paypalPaymentService.CreateInvoiceAsync(itemName, itemPrice, quantity);
             if (!result.Success)
             {
                 return BadRequest(result);

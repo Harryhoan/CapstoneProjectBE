@@ -5,6 +5,7 @@ using Application.ViewModels.CommentDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -459,7 +460,9 @@ namespace Application.Services
                 var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
                 if (existingPost == null || (existingPost.Status == PostEnum.DELETED && user.Role == UserEnum.CUSTOMER))
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The post associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
 
                 return await CheckIfUserHasPermissionsByProjectId(user, existingPost.ProjectId);
@@ -478,7 +481,9 @@ namespace Application.Services
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null)
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
@@ -491,7 +496,9 @@ namespace Application.Services
                         if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                         {
                             existingPledge = null;
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The customer cannot comment without becoming a backer or a collaborator." };
+                            return new ObjectResult(result);
                         }
 
                     }

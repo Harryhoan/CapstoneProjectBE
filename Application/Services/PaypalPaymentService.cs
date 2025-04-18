@@ -144,6 +144,12 @@ namespace Application.Services
                 //}
 
                 var finalTotalPledgeForCreator = project.TotalAmount - (project.TotalAmount * 5 / 100);
+                if (finalTotalPledgeForCreator <= 0)
+                {
+                    response.Success = false;
+                    response.Message = "There is no money to transfer.";
+                    return response;
+                }
                 var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
@@ -334,16 +340,21 @@ namespace Application.Services
                     response.Message = "Payment Account invalid.";
                     return response;
                 }
+
+                var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
+                if (finalTotalAmount <= 0)
+                {
+                    response.Success = false;
+                    response.Message = "There is no money to refund.";
+                    return response;
+                }
+                string totalAmountInUSD = finalTotalAmount.ToString("F2");
+
+                project.TotalAmount -= pledge.TotalAmount;
                 var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
                 ).GetAccessToken());
-
-                var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
-
-                string totalAmountInUSD = finalTotalAmount.ToString("F2");
-
-                project.TotalAmount -= pledge.TotalAmount;
 
                 var payout = new Payout
                 {
@@ -457,21 +468,24 @@ namespace Application.Services
                         if (user != null && !user.IsDeleted && user.IsVerified)
                         {
                             var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
-                            string totalAmountInUSD = finalTotalAmount.ToString("F2");
-
-                            payoutItems.Add(new PayoutItem
+                            if (finalTotalAmount > 0)
                             {
-                                recipient_type = PayoutRecipientType.EMAIL,
-                                amount = new Currency
+                                string totalAmountInUSD = finalTotalAmount.ToString("F2");
+
+                                payoutItems.Add(new PayoutItem
                                 {
-                                    value = totalAmountInUSD,
-                                    currency = "USD"
-                                },
-                                receiver = user.PaymentAccount,
-                                note = "Refund for your pledge",
-                                sender_item_id = pledge.PledgeId.ToString()
-                            });
-                            await _unitOfWork.SaveChangeAsync();
+                                    recipient_type = PayoutRecipientType.EMAIL,
+                                    amount = new Currency
+                                    {
+                                        value = totalAmountInUSD,
+                                        currency = "USD"
+                                    },
+                                    receiver = user.PaymentAccount,
+                                    note = "Refund for your pledge",
+                                    sender_item_id = pledge.PledgeId.ToString()
+                                });
+                                await _unitOfWork.SaveChangeAsync();
+                            }
                         }
                     }
                 }
@@ -547,9 +561,12 @@ namespace Application.Services
 
             try
             {
-                string totalAmount = amount.ToString("F2");
-
-                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (!(amount > 0))
+                {
+                    response.Success = false;
+                    response.Message = "The amount of the payment must be above 0.";
+                    return response;
+                }
                 var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (user == null)
                 {
@@ -569,6 +586,7 @@ namespace Application.Services
                     response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (project == null)
                 {
                     response.Success = false;
@@ -600,6 +618,7 @@ namespace Application.Services
                     response.Message = "You are not allowed to pledge to your own Game Project.";
                     return response;
                 }
+                string totalAmount = amount.ToString("F2");
                 var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
                     _configuration["PayPal:ClientId"],
                     _configuration["PayPal:ClientSecret"]
@@ -819,7 +838,7 @@ namespace Application.Services
 
             return response;
         }
-        public async Task<ServiceResponse<string>> GetTransactionIdByInvoiceIdAsync(string invoiceId)
+        public ServiceResponse<string> GetTransactionIdByInvoiceIdAsync(string invoiceId)
         {
             var response = new ServiceResponse<string>();
 
@@ -878,7 +897,7 @@ namespace Application.Services
 
             return response;
         }
-        public async Task<ServiceResponse<string>> CreateInvoiceAsync(string itemName, decimal itemPrice, int quantity)
+        public ServiceResponse<string> CreateInvoiceAsync(string itemName, decimal itemPrice, int quantity)
         {
             var response = new ServiceResponse<string>();
 

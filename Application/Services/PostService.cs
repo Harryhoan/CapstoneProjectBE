@@ -6,6 +6,7 @@ using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -524,7 +525,9 @@ namespace Application.Services
                 var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
                 if (existingPost == null)
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The post associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 if (existingPost.Status != PostEnum.PUBLIC && (user == null || !(user.UserId > 0)))
                 {
@@ -534,7 +537,9 @@ namespace Application.Services
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", existingPost.ProjectId);
                 if (existingProject == null)
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 if (existingPost.Status == PostEnum.PRIVATE || existingPost.Status == PostEnum.EXCLUSIVE)
                 {
@@ -549,7 +554,9 @@ namespace Application.Services
                         if (existingCollaborator == null && user.UserId != existingPost.UserId && user.UserId != existingProject.CreatorId)
                         {
                             existingCollaborator = null;
-                            return new ForbidResult();
+                            //return new ForbidResult();
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
+                            return new ObjectResult(result);
                         }
 
                         else if (existingPost.Status == PostEnum.EXCLUSIVE)
@@ -558,14 +565,18 @@ namespace Application.Services
                             if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                             {
                                 existingPledge = null;
-                                return new ForbidResult();
+                                //return new ForbidResult();
+                                var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The post is exclusive to backers only." };
+                                return new ObjectResult(result);
                             }
                         }
                     }
                 }
                 else if (existingPost.Status == PostEnum.DELETED && (user == null || !(user.UserId > 0) || user.Role == UserEnum.CUSTOMER))
                 {
-                    return new NotFoundResult();
+                    //return new NotFoundResult();
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The post associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
                 }
                 return null;
 

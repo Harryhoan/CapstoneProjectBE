@@ -87,7 +87,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetCollaboratorsByProjectId(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _collaboratorService.CheckIfUserHasPermissionsByProjectId(projectId, user);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
             if (check != null)
             {
                 return check;
@@ -105,7 +105,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetPaginatedCollaboratorsByProjectId(int projectId, int page = 1, int pageSize = 20)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _collaboratorService.CheckIfUserHasPermissionsByProjectId(projectId, user);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
             if (check != null)
             {
                 return check;

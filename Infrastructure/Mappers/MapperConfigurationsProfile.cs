@@ -74,6 +74,7 @@ namespace Infrastructure.Mappers
 
             CreateMap<Collaborator, UserCollaboratorDTO>()
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User));
+            CreateMap<PledgeDetail, ProjectBackerDetailDto>().ReverseMap();
         }
     }
 }

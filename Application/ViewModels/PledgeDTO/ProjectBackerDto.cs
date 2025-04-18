@@ -8,9 +8,11 @@ namespace Application.ViewModels.PledgeDTO
 {
     public class ProjectBackerDto
     {
-        public int? backerId { get; set; }
-        public string backerName { get; set; } = string.Empty;
-        public string backerAvatar { get; set; } = string.Empty;
-        public PledgeDto pledge { get; set; } = null!;
+        public int BackerId { get; set; }
+        public string BackerName { get; set; } = string.Empty;
+        public string BackerAvatar { get; set; } = string.Empty;
+        //public PledgeDto pledge { get; set; } = null!;
+        public decimal TotalAmount { get; set; }
+        public List<ProjectBackerDetailDto> ProjectBackerDetails { get; set; } = new List<ProjectBackerDetailDto>();
     }
 }

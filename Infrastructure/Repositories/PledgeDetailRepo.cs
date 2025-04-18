@@ -7,18 +7,18 @@ namespace Infrastructure.Repositories
 {
     public class PledgeDetailRepo : GenericRepo<PledgeDetail>, IPledgeDetailRepo
     {
-        private readonly ApiContext _context;
+        private readonly ApiContext _dbContext;
         public PledgeDetailRepo(ApiContext context) : base(context)
         {
-            _context = context;
+            _dbContext = context;
         }
         public async Task<List<PledgeDetail>> GetPledgeDetailByPledgeId(int pledgeId)
         {
-            return await _context.PledgeDetails.Where(pd => pd.PledgeId == pledgeId).ToListAsync();
+            return await _dbContext.PledgeDetails.Where(pd => pd.PledgeId == pledgeId).ToListAsync();
         }
         public async Task<PledgeDetail?> GetByPaymentIdAsync(string paymentId)
         {
-            return await _context.Set<PledgeDetail>().FirstOrDefaultAsync(pd => pd.PaymentId == paymentId);
+            return await _dbContext.Set<PledgeDetail>().FirstOrDefaultAsync(pd => pd.PaymentId == paymentId);
         }
     }
 }
