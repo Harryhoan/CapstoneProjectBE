@@ -72,6 +72,19 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
+        [Authorize(Roles = "ADMIN, STAFF")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetComments()
+        {
+            var result = await _commentService.GetComments();
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
 
         [HttpGet("GetComment")]
         public async Task<IActionResult> GetCommentsByPostId(int postId)
@@ -100,6 +113,12 @@ namespace CapstonProjectBE.Controllers
         [HttpGet("GetCommentsByProjectId")]
         public async Task<IActionResult> GetCommentsByProjectId(int projectId)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _commentService.GetCommentsByProjectId(projectId);
             if (!result.Success)
             {
@@ -109,9 +128,47 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
 
+        [HttpGet("project/count")]
+        public async Task<IActionResult> GetCountCommentByProjectId(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _commentService.GetCommentCountByProjectId(projectId, user);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        [HttpGet("post/count")]
+        public async Task<IActionResult> GetCountCommentByPostId(int postId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var result = await _commentService.GetCommentCountByPostId(postId, user);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+
+
         [HttpGet("pagination/project")]
         public async Task<IActionResult> GetPaginatedCommentsByProjectId(int projectId, int page = 1, int pageSize = 20)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _commentService.GetPaginatedCommentsByProjectId(projectId, page, pageSize);
             if (!result.Success)
             {
@@ -157,6 +214,10 @@ namespace CapstonProjectBE.Controllers
             {
                 return Forbid();
             }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
             var result = await _commentService.UpdateComment(updateCommentDTO);
             if (!result.Success)
             {
@@ -176,6 +237,10 @@ namespace CapstonProjectBE.Controllers
                 return Unauthorized();
             }
             if (user.Role == UserEnum.CUSTOMER && !(await _commentService.CheckIfCommentHasUserId(commentId, user.UserId)))
+            {
+                return Forbid();
+            }
+            if (user.IsDeleted || !user.IsVerified)
             {
                 return Forbid();
             }
