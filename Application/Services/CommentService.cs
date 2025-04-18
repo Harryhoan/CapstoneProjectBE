@@ -3,6 +3,7 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.CommentDTO;
 using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -44,7 +45,7 @@ namespace Application.Services
                 //    response.Message = "User not found";
                 //    return response;
                 //}
-                var existingPost = await _unitOfWork.PostRepo.GetByIdAsync(createPostCommentDTO.PostId);
+                var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", createPostCommentDTO.PostId);
                 if (existingPost == null)
                 {
                     response.Success = false;
@@ -53,16 +54,30 @@ namespace Application.Services
                 }
                 if (createPostCommentDTO.ParentCommentId != null)
                 {
-                    var existingParentComment = await _unitOfWork.CommentRepo.GetByIdAsync((int)createPostCommentDTO.ParentCommentId);
+                    var existingParentComment = await _unitOfWork.CommentRepo.GetByIdNoTrackingAsync("CommentId", (int)createPostCommentDTO.ParentCommentId);
                     if (existingParentComment == null)
                     {
                         response.Success = false;
                         response.Message = "Parent Comment not found";
                         return response;
                     }
+                    var existingPostComment = await _unitOfWork.PostCommentRepo.FindEntityAsync(pc => pc.CommentId == existingParentComment.CommentId);
+                    if (existingPostComment == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Comment not found in any post";
+                        return response;
+                    }
+                    if (existingPostComment.PostId != existingPost.PostId)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Comment found in another post";
+                        return response;
+                    }
+
                 }
 
-                Comment comment = new()
+                Domain.Entities.Comment comment = new()
                 {
                     UserId = user.UserId,
                     Content = createPostCommentDTO.Content,
@@ -121,7 +136,7 @@ namespace Application.Services
                 //    response.Message = "User not found";
                 //    return response;
                 //}
-                var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createProjectCommentDTO.ProjectId);
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createProjectCommentDTO.ProjectId);
                 if (existingProject == null)
                 {
                     response.Success = false;
@@ -130,23 +145,38 @@ namespace Application.Services
                 }
                 if (createProjectCommentDTO.ParentCommentId != null)
                 {
-                    var existingParentComment = await _unitOfWork.CommentRepo.GetByIdAsync((int)createProjectCommentDTO.ParentCommentId);
+                    var existingParentComment = await _unitOfWork.CommentRepo.GetByIdNoTrackingAsync("CommentId", (int)createProjectCommentDTO.ParentCommentId);
                     if (existingParentComment == null)
                     {
                         response.Success = false;
                         response.Message = "Parent Comment not found";
                         return response;
                     }
+                    var existingProjectComment = await _unitOfWork.ProjectCommentRepo.FindEntityAsync(pc => pc.CommentId == existingParentComment.CommentId);
+                    if (existingProjectComment == null)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Comment not found in any project";
+                        return response;
+                    }
+                    if (existingProjectComment.ProjectId != existingProject.ProjectId)
+                    {
+                        response.Success = false;
+                        response.Message = "Parent Comment found in another project";
+                        return response;
+                    }
                 }
 
-                Comment comment = new Comment();
-                comment.UserId = user.UserId;
-                comment.Content = createProjectCommentDTO.Content;
-                comment.CommentId = 0;
-                comment.Status = "Created";
-                comment.ParentCommentId = createProjectCommentDTO.ParentCommentId;
-                comment.CreatedDatetime = DateTime.UtcNow;
-                comment.UpdatedDatetime = DateTime.UtcNow;
+                Domain.Entities.Comment comment = new()
+                {
+                    UserId = user.UserId,
+                    Content = createProjectCommentDTO.Content,
+                    CommentId = 0,
+                    Status = "Created",
+                    ParentCommentId = createProjectCommentDTO.ParentCommentId,
+                    CreatedDatetime = DateTime.UtcNow,
+                    UpdatedDatetime = DateTime.UtcNow
+                };
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
                 {
@@ -173,7 +203,101 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<ServiceResponse<int>> GetCommentCountByPostId(int postId, User? user = null)
+        {
+            var response = new ServiceResponse<int>();
 
+            try
+            {
+                var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
+                if (existingPost == null)
+                {
+                    response.Success = false;
+                    response.Message = "Post not found";
+                    return response;
+                }
+
+                int count = 0;
+                if (user == null || user.Role == UserEnum.CUSTOMER)
+                {
+                    count = await _unitOfWork.CommentRepo.Count(c => c.PostComment != null && c.PostComment.PostId == postId && !c.Status.ToLower().Trim().Contains("deleted"));
+                }
+                else
+                {
+                    count = await _unitOfWork.CommentRepo.Count(c => c.PostComment != null && c.PostComment.PostId == postId);
+                }
+                response.Success = true;
+                response.Data = count;
+                response.Message = "Retrieve comment count successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create comment: {ex.Message}";
+            }
+            return response;
+        }
+        public async Task<ServiceResponse<List<CommentDTO>>> GetComments()
+        {
+            var response = new ServiceResponse<List<CommentDTO>>();
+
+            try
+            {
+                var comments = await _unitOfWork.CommentRepo.GetAllAsNoTrackingAsync();
+                var commentDTOs = _mapper.Map<List<CommentDTO>>(comments);
+                response.Data = commentDTOs;
+                response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No comment found.";
+                }
+                else
+                {
+                    response.Message = "Retrieve comment(s) successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get comments: {ex.Message}";
+            }
+            return response;
+        }
+
+        public async Task<ServiceResponse<int>> GetCommentCountByProjectId(int projectId, User? user = null)
+        {
+            var response = new ServiceResponse<int>();
+
+            try
+            {
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found";
+                    return response;
+                }
+                int count = 0;
+                if (user == null || user.Role == UserEnum.CUSTOMER)
+                {
+                    count = await _unitOfWork.CommentRepo.Count(c => c.ProjectComment != null && c.ProjectComment.ProjectId == projectId && !c.Status.ToLower().Trim().Contains("deleted"));
+                }
+                else
+                {
+                    count = await _unitOfWork.CommentRepo.Count(c => c.ProjectComment != null && c.ProjectComment.ProjectId == projectId);
+                }
+
+                response.Data = count;
+                response.Message = "Retrieve comment count successfully.";
+                response.Success = true;
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to create comment: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<PaginationModel<CommentDTO>>> GetPaginatedCommentsByProjectId(int projectId, int page = 1, int pageSize = 20)
         {
             var response = new ServiceResponse<PaginationModel<CommentDTO>>();

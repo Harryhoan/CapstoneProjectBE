@@ -17,5 +17,7 @@ namespace Application.IRepositories
         Task RemoveAsync(T entity);
         Task<bool> Find(Expression<Func<T, bool>> predicate);
         Task<T?> FindEntityAsync(Expression<Func<T, bool>> predicate);
+        public Task<int> Count(Expression<Func<T, bool>>? predicate = null);
+
     }
 }
