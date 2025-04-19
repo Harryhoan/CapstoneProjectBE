@@ -1,6 +1,7 @@
 using Application.Commons;
 using Application.ViewModels;
 using AutoMapper;
+using CapstonProjectBE.BackgroundServices;
 using CapstonProjectBE.Middlewares;
 using CloudinaryDotNet;
 using Domain;
