@@ -13,7 +13,7 @@ namespace Application.Utils
         {
             return ("GameMkt", "thongsieusao3@gmail.com", "dfni ihvq panf lyjc");
         }
-        public static async Task<bool> SendBillingEmail(string toEmail, string projectTitle, decimal amount, string invoiceNumber)
+        public static async Task<bool> SendBillingEmail(string toEmail, string projectTitle, decimal amount, string invoiceNumber, string invoicePath)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -22,10 +22,9 @@ namespace Application.Utils
             message.To.Add(new MailboxAddress("", toEmail));
             message.Subject = "Billing Receipt for Your Pledge";
 
-            message.Body = new TextPart("html")
+            var bodyBuilder = new BodyBuilder
             {
-                Text =
-                $@"
+                HtmlBody = $@"
 <html>
     <head>
         <style>
@@ -75,9 +74,16 @@ namespace Application.Utils
             </div>
         </div>
     </body>
-</html>
-"
+</html>"
             };
+
+            // Attach the invoice PDF
+            if (!string.IsNullOrEmpty(invoicePath) && System.IO.File.Exists(invoicePath))
+            {
+                bodyBuilder.Attachments.Add(invoicePath);
+            }
+
+            message.Body = bodyBuilder.ToMessageBody();
 
             using (var client = new SmtpClient())
             {
@@ -97,6 +103,7 @@ namespace Application.Utils
                 }
             }
         }
+
 
         public static async Task<bool> SendPasswordResetEmail(string toEmail, string resetLink)
         {

@@ -5,12 +5,21 @@ using AutoMapper;
 using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
+using iText.IO.Font;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas.Draw;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Pdfa;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
 using PayPal;
 using PayPal.Api;
 using System.ComponentModel.DataAnnotations;
+using Paragraph = iText.Layout.Element.Paragraph;
 
 namespace Application.Services
 {
@@ -822,10 +831,14 @@ namespace Application.Services
                     await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                 }
                 var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
-                if (!string.IsNullOrEmpty(userEmail))
-                {
-                    await EmailSender.SendBillingEmail(userEmail, project.Title ?? "Null", amount, invoiceNumber);
-                }
+                //if (!string.IsNullOrEmpty(userEmail))
+                //{
+                //    // Generate the invoice
+                //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
+
+                //    // Send the invoice via email
+                //    await EmailSender.SendBillingEmail(userEmail, "Your Invoice", amount, "Please find your invoice attached.", invoicePath);
+                //}
 
                 response.Success = true;
                 response.Message = "Payment successful.";
@@ -838,6 +851,102 @@ namespace Application.Services
 
             return response;
         }
+        private string GenerateInvoice(string userEmail, string projectTitle, decimal amount, string invoiceNumber)
+        {
+            var invoicePath = Path.Combine(Path.GetTempPath(), $"{invoiceNumber}.pdf");
+
+            // Define font and color resources
+            string fontFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "FreeSans.ttf");
+            string colorProfilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "sRGB_CS_profile.icm");
+
+            using (var writer = new PdfWriter(invoicePath))
+            {
+                using (var pdf = new PdfADocument(writer, PdfAConformanceLevel.PDF_A_1B,
+                    new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1",
+                    new FileStream(colorProfilePath, FileMode.Open, FileAccess.Read))))
+                {
+                    PdfFont font = PdfFontFactory.CreateFont(fontFile, PdfEncodings.WINANSI, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+                    Document document = new Document(pdf);
+                    document.SetFont(font);
+
+                    // Header
+                    Paragraph header = new Paragraph("INVOICE")
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetFontSize(20)
+                        .SetBold();
+                    document.Add(header);
+
+                    Paragraph subheader = new Paragraph("Generated using iText7 in .NET")
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetFontSize(10);
+                    document.Add(subheader);
+
+                    document.Add(new LineSeparator(new SolidLine()));
+
+                    // Seller Details
+                    Paragraph sellerHeader = new Paragraph("Sold by:")
+                        .SetBold()
+                        .SetTextAlignment(TextAlignment.LEFT);
+                    Paragraph sellerDetail = new Paragraph("GameMkt")
+                        .SetTextAlignment(TextAlignment.LEFT);
+                    Paragraph sellerAddress = new Paragraph($"Project: {projectTitle}")
+                        .SetTextAlignment(TextAlignment.LEFT);
+                    Paragraph sellerContact = new Paragraph("+1 123-456-7890")
+                        .SetTextAlignment(TextAlignment.LEFT);
+
+                    document.Add(sellerHeader);
+                    document.Add(sellerDetail);
+                    document.Add(sellerAddress);
+                    document.Add(sellerContact);
+
+                    // Customer Details
+                    Paragraph customerHeader = new Paragraph("Customer details:")
+                        .SetBold()
+                        .SetTextAlignment(TextAlignment.RIGHT);
+                    Paragraph customerDetail = new Paragraph(userEmail)
+                        .SetTextAlignment(TextAlignment.RIGHT);
+                    Paragraph customerAddress = new Paragraph("Customer Address (if available)")
+                        .SetTextAlignment(TextAlignment.RIGHT);
+
+                    document.Add(customerHeader);
+                    document.Add(customerDetail);
+                    document.Add(customerAddress);
+
+                    // Invoice Details
+                    Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}")
+                        .SetTextAlignment(TextAlignment.LEFT)
+                        .SetBold();
+                    document.Add(invoiceDetails);
+
+                    // Table for Order Details
+                    Table table = new Table(3, true);
+                    table.SetFontSize(9);
+
+                    // Table Headers
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph("Description")));
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph("Amount")));
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph("Total")));
+
+                    // Table Data
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph(projectTitle)));
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph($"{amount:C}")));
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph($"{amount:C}")));
+
+                    // Grand Total
+                    table.AddCell(new Cell(1, 2).SetTextAlignment(TextAlignment.RIGHT).Add(new Paragraph("Grand Total:")));
+                    table.AddCell(new Cell(1, 1).SetTextAlignment(TextAlignment.LEFT).Add(new Paragraph($"{amount:C}")));
+
+                    document.Add(table);
+                    table.Flush();
+                    table.Complete();
+
+                    document.Close();
+                }
+            }
+
+            return invoicePath;
+        }
+
         public ServiceResponse<string> GetTransactionIdByInvoiceIdAsync(string invoiceId)
         {
             var response = new ServiceResponse<string>();
