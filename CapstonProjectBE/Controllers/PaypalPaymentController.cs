@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
-    [EnableCors("AllowOrigin")]
+    [EnableCors("AllowAll")]
     [Route("api/[controller]")]
     [ApiController]
     public class PaypalPaymentController : ControllerBase

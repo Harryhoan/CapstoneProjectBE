@@ -1,5 +1,6 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
+using Application.ViewModels.ProjectDTO;
 using Domain.Entities;
 
 namespace Application.IService
@@ -11,5 +12,6 @@ namespace Application.IService
         public Task<ServiceResponse<List<PledgeDto>>> GetPledgeByUserId(int userId);
         public Task<ServiceResponse<string>> ExportPledgeToExcelByProjectId(int projectId);
         public Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int projectId);
+        public Task<ServiceResponse<List<ProjectBackerForAdminDto>>> GetBackerByProjectIdForAdmin(int projectId);
     }
 }

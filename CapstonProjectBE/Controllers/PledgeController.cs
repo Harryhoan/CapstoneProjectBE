@@ -83,6 +83,20 @@ namespace CapstonProjectBE.Controllers
             if (!result.Success) return BadRequest(result.Message);
             return Ok(result);
         }
+        [HttpGet("GetBackerByAdmin/{projectId}")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> GetBackerByProjectIdForAdmin([FromRoute] int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _pledgeService.GetBackerByProjectIdForAdmin(projectId);
+            if (!result.Success) return BadRequest(result.Message);
+            return Ok(result);
+        }
         [HttpGet("ExportPledgesToExcel/{projectId}")]
         [Authorize(Roles = "CUSTOMER, STAFF, ADMIN")]
         public async Task<IActionResult> ExportPledgesToExcel(int projectId)
