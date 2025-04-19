@@ -1,6 +1,7 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
+using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using ClosedXML.Excel;
 using Domain.Entities;
@@ -115,7 +116,68 @@ namespace Application.Services
                 return response;
             }
         }
+        public async Task<ServiceResponse<List<ProjectBackerForAdminDto>>> GetBackerByProjectIdForAdmin(int projectId)
+        {
+            var response = new ServiceResponse<List<ProjectBackerForAdminDto>>();
+            try
+            {
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                if (!pledges.Any() || pledges == null)
+                {
+                    response.Success = false;
+                    response.Message = "No pledges found for the specified user and project.";
+                    return response;
+                }
 
+                var backerPledge = new List<ProjectBackerForAdminDto>();
+                foreach (var pledge in pledges)
+                {
+                    // Fetch backer (user) details
+                    var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                    if (user == null)
+                    {
+                        continue; // Skip if user not found
+                    }
+
+                    // Fetch pledge details
+                    var pledgeDetails = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                    //var pledgeDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    var projectBackerDetailDtos = _mapper.Map<List<PledgeDetailDto>>(pledgeDetails);
+                    // Map pledge to PledgeDto and include pledge details
+                    //var pledgeDto = _mapper.Map<PledgeDto>(pledge);
+                    //pledgeDto.PledgeDetails = pledgeDetailDtos;
+
+                    // Create ProjectBackerDto
+                    var projectBackerDto = new ProjectBackerForAdminDto
+                    {
+                        BackerId = user.UserId,
+                        BackerName = user.Fullname,
+                        BackerAvatar = user.Avatar ?? string.Empty,
+                        //pledge = pledgeDto,
+                        TotalAmount = pledge.TotalAmount,
+                        PledgeDetailDtos = projectBackerDetailDtos
+                    };
+
+                    backerPledge.Add(projectBackerDto);
+                }
+                response.Data = backerPledge;
+                response.Success = true;
+                response.Message = "Backers retrieved successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get project backers: {ex.Message}";
+            }
+            return response;
+        }
         public async Task<ServiceResponse<List<ProjectBackerDto>>> GetBackerByProjectId(int projectId)
         {
             var response = new ServiceResponse<List<ProjectBackerDto>>();
