@@ -6,7 +6,7 @@ using Domain;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CapstonProjectBE
+namespace CapstonProjectBE.BackgroundServices
 {
     public class Background : BackgroundService
     {
@@ -32,7 +32,7 @@ namespace CapstonProjectBE
                     try
                     {
                         var paypalPaymentService = scope.ServiceProvider.GetRequiredService<IPaypalPaymentService>();
-                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !String.IsNullOrEmpty(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
+                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !string.IsNullOrEmpty(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
                         foreach (var project in projects)
                         {
                             //What about invisible projects? Can't the money from invisible projects be transferred as well?
@@ -49,27 +49,27 @@ namespace CapstonProjectBE
                                         //{
                                         //    await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
                                         //}
-                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
+                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
                                         if (!emailSend)
                                         {
 
                                         }
-                                        if (project.Monitor != null && !(String.IsNullOrEmpty(project.Monitor.Email)))
+                                        if (project.Monitor != null && !string.IsNullOrEmpty(project.Monitor.Email))
                                         {
-                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
+                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
                                         }
                                     }
                                     else if (project.TotalAmount > 0)
                                     {
                                         await paypalPaymentService.TransferPledgeToCreatorAsync(project.CreatorId, project.ProjectId);
-                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, true);
+                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, true);
                                         if (!emailSend)
                                         {
 
                                         }
-                                        if (project.Monitor != null && !(String.IsNullOrEmpty(project.Monitor.Email)))
+                                        if (project.Monitor != null && !string.IsNullOrEmpty(project.Monitor.Email))
                                         {
-                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, String.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
+                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
                                         }
                                     }
                                 }
