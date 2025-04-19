@@ -95,6 +95,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         dbContext.PledgeDetails.Update(pledgeDetails[i]);
                                     }
                                 }
+                                i++;
                             }
                         }
 
