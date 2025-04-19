@@ -88,8 +88,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> ExportPledgesToExcel(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) return Unauthorized();
-
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _pledgeService.ExportPledgeToExcelByProjectId(projectId);
             if (!result.Success || string.IsNullOrEmpty(result.Data)) return BadRequest(result.Message);
             var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);

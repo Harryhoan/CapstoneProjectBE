@@ -16,7 +16,7 @@
         PENDING,
         RECEIVING,
         REFUNDED,
-        TRANSFERED
+        TRANSFERRED,
     }
     public enum UserEnum
     {
@@ -35,7 +35,9 @@
     {
         PLEDGED,
         TRANSFERRED,
-        REFUNDED
+        REFUNDED,
+        TRANSFERRING,
+        REFUNDING
     }
     public enum CollaboratorEnum
     {

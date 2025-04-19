@@ -1,4 +1,5 @@
 ﻿using Application.IService;
+using DocumentFormat.OpenXml.VariantTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +27,10 @@ namespace CapstonProjectBE.Controllers
             if (user == null)
             {
                 return Unauthorized();
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
             }
             var result = await _paypalPaymentService.CreatePaymentAsync(user.UserId, projectId, amount, "https://game-mkt.vercel.app/payment/result", "http://localhost:50875/user/cart");
 
@@ -57,6 +62,10 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
             var result = await _paypalPaymentService.CreateRefundAsync(user.UserId, pledgeId);
             if (!result.Success)
             {
@@ -74,6 +83,10 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
             var result = await _paypalPaymentService.TransferPledgeToCreatorAsync(user.UserId, projectId);
             if (!result.Success)
             {
@@ -86,7 +99,16 @@ namespace CapstonProjectBE.Controllers
         [Authorize(Roles = "STAFF, ADMIN")]
         public async Task<IActionResult> RefundAllPledgesForProjectAsync(int projectId)
         {
-            var result = await _paypalPaymentService.RefundAllPledgesForProjectAsync(projectId);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user  == null)
+            {
+                return Unauthorized();
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
+            }
+            var result = await _paypalPaymentService.RefundAllPledgesForProjectAsync(user.UserId, projectId);
             if (!result.Success)
             {
                 return BadRequest(result);

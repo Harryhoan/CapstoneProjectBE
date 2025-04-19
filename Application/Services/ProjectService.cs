@@ -826,7 +826,7 @@ namespace Application.Services
                     response.Message = "Creator not found.";
                     return response;
                 }
-                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERED) 
+                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERRED) 
                 {
                     if (projectStatus == ProjectStatusEnum.VISIBLE)
                     {

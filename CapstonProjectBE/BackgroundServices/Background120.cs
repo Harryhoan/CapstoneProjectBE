@@ -8,18 +8,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CapstonProjectBE.BackgroundServices
 {
-    public class Background : BackgroundService
+    public class Background120 : BackgroundService
     {
-        private readonly ILogger<Background> _logger;
+        private readonly ILogger<Background120> _logger;
         private readonly IServiceProvider _serviceProvider;
 
-        public Background(ILogger<Background> logger, IServiceProvider serviceProvider)
+        public Background120(ILogger<Background120> logger, IServiceProvider serviceProvider)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
         }
 
-        private async Task updateProductAsync()
+        private async Task UpdateProjectAsync()
         {
             if (_serviceProvider != null)
             {
@@ -126,12 +126,12 @@ namespace CapstonProjectBE.BackgroundServices
                 {
                     using var scope = _serviceProvider.CreateScope();
                     var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                    await updateProductAsync();
+                    await UpdateProjectAsync();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Background processing failed");
-                    Console.WriteLine($"Background processing failed: {ex.Message}");
+                    _logger.LogError(ex, "Background processing per 120 seconds failed");
+                    Console.WriteLine($"Background processing per 120 seconds failed: {ex.Message}");
                 }
                 await Task.Delay(TimeSpan.FromSeconds(120), stoppingToken);
             }
