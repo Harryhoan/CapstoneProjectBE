@@ -106,5 +106,11 @@ namespace Infrastructure.Repositories
             return await _dbSet.CountAsync(func);
         }
 
+        public async Task<bool> Any(Expression<Func<T, bool>>? predicate = null)
+        {
+            var func = predicate ?? (_dbSet => true);
+            return await _dbSet.AnyAsync(func);
+        }
+
     }
 }

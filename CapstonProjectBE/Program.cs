@@ -61,7 +61,7 @@ namespace CapstonProjectBE
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
-            builder.Services.AddHostedService<Background>();
+            builder.Services.AddHostedService<Background120>();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddCors(options =>
             {
@@ -95,6 +95,14 @@ namespace CapstonProjectBE
             .AddJwtBearer(options =>
             {
                 IConfiguration config = builder.Configuration; // Correct way to access the configuration
+                var secretKey = config["JWTSection:SecretKey"];
+
+                // Check if secretKey is null or empty
+                if (string.IsNullOrEmpty(secretKey))
+                {
+                    throw new InvalidOperationException("JWT secret key is missing in the configuration.");
+                }
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -104,7 +112,7 @@ namespace CapstonProjectBE
 
                     ValidIssuer = config["JWTSection:Issuer"],
                     ValidAudience = config["JWTSection:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWTSection:SecretKey"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
                 };
                 options.Events = new JwtBearerEvents
                 {
