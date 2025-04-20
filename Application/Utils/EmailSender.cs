@@ -104,6 +104,175 @@ namespace Application.Utils
             }
         }
 
+        public static async Task<bool> SendPayPalLoginEmailToBacker(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = $"PAYPAL LOGIN REQUEST: GameMkt has commenced a refund for the project {"\"" + projectTitle + "\""}";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+<html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .content {{
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 20px;
+            }}
+            .details {{
+                margin-top: 20px;
+            }}
+            .footer {{
+                margin-top: 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #888;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='content'>
+            <div class='header'>
+                <h2>Initiated Payout in Paypal By GameMkt</h2>
+            </div>
+            <p>Dear User,</p>
+            <p>An attempt has been made to send an amount of money to your existing Paypal account <strong>{"\"" + paymentAccount + "\""}</strong> from the platform GameMkt as compensation for your apparent pledge to the project <strong>{"\"" + projectTitle + "\""}</strong>.</p>
+            <div class='details'>
+                <p><strong>Payout ID:</strong> {payoutBatchId}</p>
+                <p><strong>Amount:</strong> ${amount:F2}</p>
+            </div>
+            <p>It it in your best interests that you are thereby requested to <strong>LOG IN</strong> to your Paypal account in order to ensure the payout has been successfully processed and completed. Any pledge to a project requires at the time of the pledge your understanding of and consent to GameMkt's platform fee which is not refundable. Receipts provided by GameMkt may not be immediately up-to-date. Apologies for any inconvenience.</p>
+            <div class='footer'>
+                <p>GameMkt Team</p>
+            </div>
+        </div>
+    </body>
+</html>"
+            };
+
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+        public static async Task<bool> SendPayPalLoginEmailToCreator(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = $"PAYPAL LOGIN REQUEST: GameMkt has commenced a transaction for the project {"\"" + projectTitle + "\""}";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+<html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .content {{
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 20px;
+            }}
+            .details {{
+                margin-top: 20px;
+            }}
+            .footer {{
+                margin-top: 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #888;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='content'>
+            <div class='header'>
+                <h2>Initiated Payout in Paypal By GameMkt</h2>
+            </div>
+            <p>Dear Campaingner and Creator,</p>
+            <p>An attempt has been made to send an amount of money to your existing Paypal account <strong>{"\"" + paymentAccount + "\""}</strong> from the platform GameMkt as your project <strong>{"\"" + projectTitle + "\""}</strong> has reached its goal.</p>
+            <div class='details'>
+                <p><strong>Payout ID:</strong> {payoutBatchId}</p>
+                <p><strong>Amount:</strong> ${amount:F2}</p>
+            </div>
+            <p>It it in your best interests that you are thereby requested to <strong>LOG IN</strong> to your Paypal account in order to ensure the payout has been successfully processed. Receipts provided by GameMkt may not be immediately up-to-date. Apologies for any inconvenience.</p>
+            <div class='footer'>
+                <p>GameMkt Team</p>
+            </div>
+        </div>
+    </body>
+</html>"
+            };
+
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
 
         public static async Task<bool> SendPasswordResetEmail(string toEmail, string resetLink)
         {

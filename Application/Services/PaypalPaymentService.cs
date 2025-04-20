@@ -288,8 +288,16 @@ namespace Application.Services
                             Status = PledgeDetailEnum.TRANSFERRING
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
+                        if (!string.IsNullOrEmpty(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
+                        {
+                            var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId);
+                            if (!emailSend)
+                            {
+
+                            }
+                        }
                     }
-                    else 
+                    else
                     {
                         response.Success = false;
                         response.Message = "Transference failed with the transaction status of the relevant item being " + payoutItem.transaction_status;
@@ -507,6 +515,14 @@ namespace Application.Services
                         };
                         await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                        if (!string.IsNullOrEmpty(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
+                        {
+                            var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId);
+                            if (!emailSend)
+                            {
+
+                            }
+                        }
                     }
                     else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                     {
@@ -615,7 +631,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (await _unitOfWork.PledgeDetailRepo.Any(pd => pd.Pledge != null && pd.Pledge.ProjectId == project.ProjectId && (pd.Status == PledgeDetailEnum.TRANSFERRED  || pd.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (await _unitOfWork.PledgeDetailRepo.Any(pd => pd.Pledge != null && pd.Pledge.ProjectId == project.ProjectId && (pd.Status == PledgeDetailEnum.TRANSFERRED || pd.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     response.Success = false;
                     response.Message = "Transferred funds cannot be refunded.";
@@ -755,6 +771,13 @@ namespace Application.Services
                         detail.PaymentId = createdPayout.batch_header.payout_batch_id;
                         detail.Status = PledgeDetailEnum.REFUNDING;
                         await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
+                        var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                        if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrEmpty(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrEmpty(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
+                        var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
+                        if (!emailSend)
+                        {
+
+                        }
                     }
                 }
 
