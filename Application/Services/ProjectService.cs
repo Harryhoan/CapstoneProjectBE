@@ -11,6 +11,7 @@ using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Org.BouncyCastle.Asn1.Esf;
@@ -576,6 +577,8 @@ namespace Application.Services
 
                 foreach (var project in projects)
                 {
+                    var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
+                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -589,7 +592,20 @@ namespace Application.Services
                         MinimumAmount = project.MinimumAmount,
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
-                        EndDatetime = project.EndDatetime
+                        EndDatetime = project.EndDatetime,
+                        Categories = category.Select(c => new ViewCategory
+                        {
+                            CategoryId = c.CategoryId,
+                            Name = c.Category.Name,
+                            ParentCategoryId = c.Category.ParentCategoryId,
+                            Description = c.Category.Description
+                        }).ToList(),
+                        Platforms = platform.Select(p => new PlatformDTO
+                        {
+                            PlatformId = p.PlatformId,
+                            Name = p.Platform.Name,
+                            Description = p.Platform.Description ?? "Null"
+                        }).ToList()
                     };
 
                     projectDtos.Add(projectDto);
