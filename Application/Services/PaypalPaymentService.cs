@@ -570,6 +570,12 @@ namespace Application.Services
 
             try
             {
+                if (amount > 100000)
+                {
+                    response.Success = false;
+                    response.Message = "The amount can not exceed 100000$ in one back.";
+                    return response;
+                }
                 if (!(amount > 0))
                 {
                     response.Success = false;

@@ -28,6 +28,19 @@ namespace Application.Services
                     response.Message = "User not found.";
                     return response;
                 }
+
+                // Check the number of reports created by the user in the last 5 minutes
+                var fiveMinutesAgo = DateTime.UtcNow.AddMinutes(-5);
+                var recentReports = await _unitOfWork.ReportRepo.GetReportsByUserIdAndTimeAsync(userId, fiveMinutesAgo);
+
+                const int maxReportsAllowed = 5; // Set the limit
+                if (recentReports.Count() >= maxReportsAllowed)
+                {
+                    response.Success = false;
+                    response.Message = $"You can only create up to {maxReportsAllowed} reports within 5 minutes.";
+                    return response;
+                }
+
                 var newReport = new Report
                 {
                     UserId = existingUser.UserId,
@@ -57,6 +70,7 @@ namespace Application.Services
                 return response;
             }
         }
+
         public async Task<ServiceResponse<IEnumerable<Report>>> GetAllReportAsync()
         {
             var response = new ServiceResponse<IEnumerable<Report>>();
