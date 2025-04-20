@@ -16,5 +16,11 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.Reports.Where(r => r.UserId == userId).ToListAsync();
         }
+        public async Task<IEnumerable<Report>> GetReportsByUserIdAndTimeAsync(int userId, DateTime fromTime)
+        {
+            return await _context.Reports
+                .Where(r => r.UserId == userId && r.CreateDatetime >= fromTime)
+                .ToListAsync();
+        }
     }
 }
