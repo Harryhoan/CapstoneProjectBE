@@ -210,39 +210,56 @@ namespace Application.Services
         {
             var collaborators = await _unitOfWork.CollaboratorRepo.GetCollaboratorsByUserId(userId);
             var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
-            if (existingUser == null /*|| existingUser.IsDeleted*/)
+
+            if (existingUser == null)
             {
                 await _unitOfWork.CollaboratorRepo.RemoveAll(collaborators);
                 return null;
             }
+
             int i = 0;
             while (i < collaborators.Count)
             {
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", collaborators[i].ProjectId);
+
                 if (existingProject == null)
                 {
                     await _unitOfWork.CollaboratorRepo.RemoveAsync(collaborators[i]);
                     collaborators.RemoveAt(i);
+                    continue;
                 }
-                else if (existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+
+                if (existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
-                    if (user != null)
+                    if (user == null)
                     {
-                        if (user.Role == UserEnum.CUSTOMER && user.UserId != userId && user.UserId != existingProject.CreatorId)
+                        collaborators.RemoveAt(i);
+                        continue;
+                    }
+                    else if (user.Role == UserEnum.CUSTOMER)
+                    {
+                        if (user.UserId != userId && user.UserId != existingProject.CreatorId)
                         {
                             var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
                             if (existingCollaborator == null)
                             {
                                 collaborators.RemoveAt(i);
+                                continue;
                             }
                         }
                     }
                 }
-                else
+                else if (existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED)
                 {
-                    i++;
+                    if (user == null || user.Role == UserEnum.CUSTOMER)
+                    {
+                        collaborators.RemoveAt(i);
+                        continue;
+                    }
                 }
+                i++;
             }
+
             return collaborators;
         }
 
