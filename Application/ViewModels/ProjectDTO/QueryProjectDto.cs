@@ -17,8 +17,12 @@ namespace Application.ViewModels.ProjectDTO
         public string? Title { get; set; } = null;
         //public string? Description { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        //[EnumDataType(typeof(ProjectEnum?), ErrorMessage = "Status must be ONGOING, INVISIBLE, HALTED or DELETED")]
-        public ProjectStatusEnum? Status { get; set; } = null;
+        //[EnumDataType(typeof(ProjectStatusEnum?), ErrorMessage = "Please choose an appropriate project status")]
+        public ProjectStatusEnum? ProjectStatus { get; set; } = null;
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        //[EnumDataType(typeof(TransactionStatusEnum?), ErrorMessage = "Please choose an appropriate transaction status")]
+        public TransactionStatusEnum? TransactionStatus { get; set; } = null;
+
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]
         public decimal? MinMinimumAmount { get; set; } = null;
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]

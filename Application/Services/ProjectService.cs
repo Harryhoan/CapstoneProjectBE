@@ -89,6 +89,7 @@ namespace Application.Services
                         Title = projectItem.Title,
                         Description = projectItem.Description,
                         Status = projectItem.Status,
+                        TransactionStatus = projectItem.TransactionStatus,
                         MinimumAmount = projectItem.MinimumAmount,
                         TotalAmount = projectItem.TotalAmount,
                         StartDatetime = projectItem.StartDatetime,
@@ -113,7 +114,15 @@ namespace Application.Services
                 }
                 response.Data = responseData;
                 response.Success = true;
-                response.Message = "Get all projects successfully.";
+                response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No project found";
+                }
+                else
+                {
+                    response.Message = "Retrieve project(s) successfully";
+                }
                 return response;
             }
             catch (Exception ex)
@@ -194,6 +203,7 @@ namespace Application.Services
                     Title = project.Title,
                     Description = project.Description,
                     Status = project.Status,
+                    TransactionStatus = project.TransactionStatus,
                     MinimumAmount = project.MinimumAmount,
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
@@ -250,33 +260,19 @@ namespace Application.Services
 
             return response;
         }
-        public async Task<ServiceResponse<string>> UpdateProjectStoryAsync(int userId, int projectId, string story)
+        public async Task<ServiceResponse<string>> UpdateProjectStoryAsync(int projectId, string story)
         {
             var response = new ServiceResponse<string>();
 
             try
             {
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 if (project == null)
                 {
                     response.Success = false;
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (user == null)
-                {
-                    response.Success = false;
-                    response.Message = "User not found.";
-                    return response;
-                }
-                if (user.UserId != project.CreatorId)
-                {
-                    response.Success = false;
-                    response.Message = "You are not authorized to update this project.";
-                    return response;
-                }
-
                 project.Story = story;
                 project.UpdateDatetime = DateTime.UtcNow;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
@@ -314,9 +310,13 @@ namespace Application.Services
                 {
                     query = query.Where(p => p.Title != null && p.Title.ToLower().Trim().Contains(queryProjectDto.Title.ToLower().Trim())).AsQueryable();
                 }
-                if (queryProjectDto.Status != null)
+                if (queryProjectDto.ProjectStatus != null)
                 {
-                    query = query.Where(p => p.Status == queryProjectDto.Status).AsQueryable();
+                    query = query.Where(p => p.Status == queryProjectDto.ProjectStatus).AsQueryable();
+                }
+                if (queryProjectDto.TransactionStatus != null)
+                {
+                    query = query.Where(p => p.TransactionStatus == queryProjectDto.TransactionStatus).AsQueryable();
                 }
                 if (queryProjectDto.MinMinimumAmount.HasValue)
                 {
@@ -431,8 +431,8 @@ namespace Application.Services
                 {
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
-                    var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
-                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
+                    var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
+                    var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -443,19 +443,20 @@ namespace Application.Services
                         Title = project.Title,
                         Description = project.Description,
                         Status = project.Status,
+                        TransactionStatus = project.TransactionStatus,
                         MinimumAmount = project.MinimumAmount,
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
                         Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId),
-                        Categories = category.Select(c => new ViewCategory
+                        Categories = categories.Select(c => new ViewCategory
                         {
                             CategoryId = c.CategoryId,
                             Name = c.Category.Name,
                             ParentCategoryId = c.Category.ParentCategoryId,
                             Description = c.Category.Description
                         }).ToList(),
-                        Platforms = platform.Select(p => new PlatformDTO
+                        Platforms = platforms.Select(p => new PlatformDTO
                         {
                             PlatformId = p.PlatformId,
                             Name = p.Platform.Name,
@@ -502,8 +503,8 @@ namespace Application.Services
                 }
                 var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                 var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
-                var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(id);
-                var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(id);
+                var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(id);
+                var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(id);
                 var responseData = new ProjectDetailDto
                 {
                     ProjectId = id,
@@ -516,18 +517,19 @@ namespace Application.Services
                     Title = project.Title,
                     Description = project.Description,
                     Status = project.Status,
+                    TransactionStatus = project.TransactionStatus,
                     MinimumAmount = project.MinimumAmount,
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
                     EndDatetime = project.EndDatetime,
-                    Categories = category.Select(c => new ViewCategory
+                    Categories = categories.Select(c => new ViewCategory
                     {
                         CategoryId = c.CategoryId,
                         Name = c.Category.Name,
                         ParentCategoryId = c.Category.ParentCategoryId,
                         Description = c.Category.Description
                     }).ToList(),
-                    Platforms = platform.Select(p => new PlatformDTO
+                    Platforms = platforms.Select(p => new PlatformDTO
                     {
                         PlatformId = p.PlatformId,
                         Name = p.Platform.Name,
@@ -558,6 +560,43 @@ namespace Application.Services
 
             try
             {
+                if (queryProjectDto != null)
+                {
+                    var validationContext = new ValidationContext(queryProjectDto);
+                    var validationResults = new List<ValidationResult>();
+
+                    if (!Validator.TryValidateObject(queryProjectDto, validationContext, validationResults, true))
+                    {
+                        var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                        response.Success = false;
+                        response.Message = string.Join("; ", errorMessages);
+                        return response;
+                    }
+                    if (queryProjectDto.MaxMinimumAmount != null && queryProjectDto.MinMinimumAmount != null && queryProjectDto.MaxMinimumAmount < queryProjectDto.MinMinimumAmount)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Minimum Amount";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxStartDatetime != null && queryProjectDto.MinStartDatetime != null && queryProjectDto.MaxStartDatetime < queryProjectDto.MinStartDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Start Date Time";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxUpdateDatetime != null && queryProjectDto.MinUpdateDatetime != null && queryProjectDto.MaxUpdateDatetime < queryProjectDto.MinUpdateDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable Update Date Time";
+                        return response;
+                    }
+                    if (queryProjectDto.MaxEndDatetime != null && queryProjectDto.MinEndDatetime != null && queryProjectDto.MaxEndDatetime < queryProjectDto.MinEndDatetime)
+                    {
+                        response.Success = false;
+                        response.Message = "Invalid range for the queryable End Date Time";
+                        return response;
+                    }
+                }
                 //var (totalRecords, totalPages, projects) = await _unitOfWork.ProjectRepo.GetProjectsPaging(pageNumber, pageSize);
                 var query = await FilterProjects(user, queryProjectDto);
                 if (pageNumber <= 0)
@@ -577,8 +616,8 @@ namespace Application.Services
 
                 foreach (var project in projects)
                 {
-                    var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
-                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
+                    var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
+                    var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -589,18 +628,19 @@ namespace Application.Services
                         Title = project.Title,
                         Description = project.Description,
                         Status = project.Status,
+                        TransactionStatus = project.TransactionStatus,
                         MinimumAmount = project.MinimumAmount,
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
-                        Categories = category.Select(c => new ViewCategory
+                        Categories = categories.Select(c => new ViewCategory
                         {
                             CategoryId = c.CategoryId,
                             Name = c.Category.Name,
                             ParentCategoryId = c.Category.ParentCategoryId,
                             Description = c.Category.Description
                         }).ToList(),
-                        Platforms = platform.Select(p => new PlatformDTO
+                        Platforms = platforms.Select(p => new PlatformDTO
                         {
                             PlatformId = p.PlatformId,
                             Name = p.Platform.Name,
@@ -619,7 +659,14 @@ namespace Application.Services
                 };
 
                 response.Success = true;
-                response.Message = "Projects retrieved successfully.";
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No project found";
+                }
+                else
+                {
+                    response.Message = "Retrieve project(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -784,7 +831,15 @@ namespace Application.Services
                 var projectList = _mapper.Map<List<UserProjectsDto>>(projects);
                 response.Data = projectList;
                 response.Success = true;
-                response.Message = "Get projects by user id successfully.";
+                response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No project found";
+                }
+                else
+                {
+                    response.Message = "Retrieve project(s) by user ID successfully";
+                }
                 return response;
             }
             catch (Exception ex)

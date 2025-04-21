@@ -208,7 +208,7 @@ namespace Application.Services
                     .Select(pc => _mapper.Map<ProjectDto>(pc.Project))
                     .ToList();
 
-                if (user == null) 
+                if (user == null)
                 {
                     projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || p.Status == ProjectStatusEnum.INVISIBLE);
                 }
@@ -217,7 +217,7 @@ namespace Application.Services
                     projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || (p.Status == ProjectStatusEnum.INVISIBLE && user.UserId != p.CreatorId));
                 }
 
-                    response.Data = projectList;
+                response.Data = projectList;
                 response.Success = true;
                 response.Message = "Projects retrieved successfully.";
             }
