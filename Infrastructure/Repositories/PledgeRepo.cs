@@ -23,12 +23,12 @@ namespace Infrastructure.Repositories
             return await _dbContext.Pledges
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.ProjectId == projectId);
         }
-        public async Task<List<Pledge>> GetManyPledgeByUserIdAndProjectIdAsync(int userId, int projectId)
+        public async Task<List<Pledge>> GetManyPledgesByUserIdAndProjectIdAsync(int userId, int projectId)
         {
             return await _dbContext.Pledges
                 .Where(p => p.UserId == userId && p.ProjectId == projectId).ToListAsync();
         }
-        public async Task<List<Pledge>> GetPledgeByUserIdAsync(int userId)
+        public async Task<List<Pledge>> GetPledgesByUserIdAsync(int userId)
         {
             return await _dbContext.Pledges.Where(p => p.UserId == userId).ToListAsync();
         }
