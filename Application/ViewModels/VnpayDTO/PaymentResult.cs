@@ -17,7 +17,7 @@ namespace Application.ViewModels.VnpayDTO
         /// <summary>
         /// Thông tin mô tả nội dung thanh toán, viết bằng tiếng Việt không dấu.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         /// <summary>
         /// Thời gian phản hồi từ VNPAY, được ghi nhận tại thời điểm giao dịch kết thúc.
@@ -32,21 +32,21 @@ namespace Application.ViewModels.VnpayDTO
         /// <summary>
         /// Phương thức thanh toán được sử dụng, ví dụ: thẻ tín dụng, ví điện tử, hoặc chuyển khoản ngân hàng.
         /// </summary>
-        public string PaymentMethod { get; set; }
+        public string PaymentMethod { get; set; } = string.Empty;
 
         /// <summary>
         /// Phản hồi chi tiết từ hệ thống VNPAY về giao dịch.
         /// </summary>
-        public PaymentResponse PaymentResponse { get; set; }
+        public PaymentResponse PaymentResponse { get; set; } = new();
 
         /// <summary>
         /// Trạng thái giao dịch sau khi thực hiện, ví dụ: Chờ xử lý, Thành công, hoặc Thất bại.
         /// </summary>
-        public TransactionStatus TransactionStatus { get; set; }
+        public TransactionStatus TransactionStatus { get; set; } = new();
 
         /// <summary>
         /// Thông tin ngân hàng liên quan đến giao dịch, bao gồm tên ngân hàng và mã ngân hàng.
         /// </summary>
-        public BankingInfor BankingInfor { get; set; }
+        public BankingInfor BankingInfor { get; set; } = new();
     }
 }

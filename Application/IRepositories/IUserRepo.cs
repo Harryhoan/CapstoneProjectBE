@@ -6,7 +6,7 @@ namespace Application.IRepositories
     {
         Task<bool> CheckEmailAddressExisted(string sEmail);
         Task<User?> GetByEmailAsync(string email);
-        Task<User> GetUserByEmailAddressAndPasswordHash(string email, string passwordHash);
+        Task<User?> GetUserByEmailAddressAndPasswordHash(string email, string passwordHash);
         Task<IEnumerable<User>> GetAllUser();
         int GetCount();
     }
