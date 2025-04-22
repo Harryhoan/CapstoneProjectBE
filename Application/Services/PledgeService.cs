@@ -57,7 +57,7 @@ namespace Application.Services
             var response = new ServiceResponse<List<PledgeDto>>();
             try
             {
-                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAsync(userId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByUserIdAsync(userId);
 
                 if (pledges == null)
                 {
