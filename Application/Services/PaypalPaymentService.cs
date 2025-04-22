@@ -638,7 +638,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(project.ProjectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(project.ProjectId);
                 if (pledges == null || !pledges.Any())
                 {
                     response.Success = false;

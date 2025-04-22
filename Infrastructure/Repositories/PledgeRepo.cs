@@ -32,7 +32,7 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.Pledges.Where(p => p.UserId == userId).ToListAsync();
         }
-        public async Task<List<Pledge>> GetPledgeByProjectIdAsync(int projectId)
+        public async Task<List<Pledge>> GetPledgesByProjectIdAsync(int projectId)
         {
             return await _dbContext.Pledges.Where(p => p.ProjectId == projectId).ToListAsync();
         }

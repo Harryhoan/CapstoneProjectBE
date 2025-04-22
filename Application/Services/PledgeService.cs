@@ -128,7 +128,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(projectId);
                 if (!pledges.Any() || pledges == null)
                 {
                     response.Success = false;
@@ -191,7 +191,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(projectId);
 
                 if (pledges == null || !pledges.Any())
                 {
@@ -254,7 +254,7 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var pledges = await _unitOfWork.PledgeRepo.GetPledgeByProjectIdAsync(projectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(projectId);
                 if (pledges == null || !pledges.Any())
                 {
                     response.Success = false;
