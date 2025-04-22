@@ -165,11 +165,12 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> UpdateProjectStory(int projectId, string story)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null)
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
             {
-                return Unauthorized();
+                return check;
             }
-            var result = await _projectService.UpdateProjectStoryAsync(user.UserId, projectId, story);
+            var result = await _projectService.UpdateProjectStoryAsync(projectId, story);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -181,6 +182,12 @@ namespace CapstonProjectBE.Controllers
         [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         public async Task<IActionResult> DeleteProject(int id)
         {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(id, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _projectService.DeleteProject(id);
             if (!result.Success)
             {

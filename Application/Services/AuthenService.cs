@@ -296,7 +296,7 @@ namespace Application.Services
                     if (user.UserId != existingProject.CreatorId)
                     {
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                        if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role == Domain.Enums.CollaboratorEnum.EDITOR))
+                        if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.EDITOR))
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
@@ -334,7 +334,8 @@ namespace Application.Services
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is invisible." };
+                    return new UnauthorizedObjectResult(result);
                 }
                 if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {

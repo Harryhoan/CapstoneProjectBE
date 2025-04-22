@@ -3,6 +3,7 @@ using Application.ServiceResponse;
 using Application.ViewModels.RewardDTO;
 using AutoMapper;
 using Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
 {
@@ -22,7 +23,18 @@ namespace Application.Services
 
             try
             {
+                var validationContext = new ValidationContext(reward);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(reward, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
                 var newReward = _mapper.Map<Reward>(reward);
+                newReward.CreatedDatetime = DateTime.UtcNow;
                 await _unitOfWork.RewardRepo.AddAsync(newReward);
 
                 response.Data = reward;
@@ -194,6 +206,16 @@ namespace Application.Services
 
             try
             {
+                var validationContext = new ValidationContext(updateReward);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(updateReward, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
                 var existingReward = await _unitOfWork.RewardRepo.GetByIdAsync(rewardId);
 
                 if (existingReward == null)
@@ -205,7 +227,6 @@ namespace Application.Services
 
                 existingReward.Amount = updateReward.Amount;
                 existingReward.Details = updateReward.Details;
-                existingReward.CreatedDatetime = updateReward.CreatedDatetime;
 
                 await _unitOfWork.RewardRepo.UpdateAsync(existingReward);
 
@@ -213,7 +234,6 @@ namespace Application.Services
                 {
                     RewardId = existingReward.RewardId,
                     Amount = updateReward.Amount,
-                    CreatedDatetime = updateReward.CreatedDatetime,
                     Details = updateReward.Details,
                     ProjectId = existingReward.ProjectId,
                 };

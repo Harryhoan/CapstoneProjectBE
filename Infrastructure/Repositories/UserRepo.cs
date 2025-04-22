@@ -21,7 +21,7 @@ namespace Infrastructure.Repositories
         }
 
         public async Task<User?> GetByEmailAsync(string email) => await _dbSet.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == email.Trim().ToLower() && !u.IsDeleted);
-        public async Task<User> GetUserByEmailAddressAndPasswordHash(string email, string passwordHash)
+        public async Task<User?> GetUserByEmailAddressAndPasswordHash(string email, string passwordHash)
         {
             var user = await _dbContext.Users.Include(u => u.Tokens)
                 .FirstOrDefaultAsync(record => record.Email == email && record.Password == passwordHash);

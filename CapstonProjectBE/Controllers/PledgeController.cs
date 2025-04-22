@@ -87,12 +87,6 @@ namespace CapstonProjectBE.Controllers
         [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetBackerByProjectIdForAdmin([FromRoute] int projectId)
         {
-            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            if (check != null)
-            {
-                return check;
-            }
             var result = await _pledgeService.GetBackerByProjectIdForAdmin(projectId);
             if (!result.Success) return BadRequest(result.Message);
             return Ok(result);
