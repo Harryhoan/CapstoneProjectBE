@@ -334,7 +334,8 @@ namespace Application.Services
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is invisible." };
+                    return new UnauthorizedObjectResult(result);
                 }
                 if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
