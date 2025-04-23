@@ -49,8 +49,8 @@ namespace Application.Services
                 var newFAQ = _mapper.Map<FAQ>(createFAQ);
 
                 newFAQ.ProjectId = projectId;
-                newFAQ.CreatedDatetime = DateTime.UtcNow.ToLocalTime();
-                newFAQ.UpdatedDatetime = DateTime.UtcNow.ToLocalTime();
+                newFAQ.CreatedDatetime = DateTime.UtcNow;
+                newFAQ.UpdatedDatetime = DateTime.UtcNow;
                 await _unitOfWork.FAQRepo.AddAsync(newFAQ);
 
                 response.Data = newFAQ;
@@ -225,7 +225,7 @@ namespace Application.Services
                     ProjectId = projectId,
                     Question = UpdateFaq.Question,
                     Answer = UpdateFaq.Answer,
-                    UpdatedDatetime = DateTime.UtcNow.ToLocalTime()
+                    UpdatedDatetime = DateTime.UtcNow
                 };
                 await _unitOfWork.FAQRepo.AddAsync(newFaq);
 

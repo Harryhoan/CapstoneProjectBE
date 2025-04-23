@@ -21,6 +21,6 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeUserDTO
         [JsonProperty("Bio")]
         public string Bio { get; set; } = string.Empty;
         [JsonProperty("created-datetime")]
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.ToLocalTime();
+        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow;
     }
 }
