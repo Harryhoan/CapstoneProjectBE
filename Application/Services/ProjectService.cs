@@ -274,7 +274,7 @@ namespace Application.Services
                     return response;
                 }
                 project.Story = story;
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.ToLocalTime();
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 response.Success = true;
@@ -787,7 +787,7 @@ namespace Application.Services
 
                 // Update the thumbnail URL in the database
                 project.Thumbnail = uploadResult.Url.ToString();
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.ToLocalTime();
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
 
@@ -909,7 +909,7 @@ namespace Application.Services
                     }
                 }
                 project.Status = projectStatus;
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.ToLocalTime();
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
