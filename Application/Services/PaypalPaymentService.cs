@@ -127,7 +127,7 @@ namespace Application.Services
                     response.Message = "Payment Account invalid.";
                     return response;
                 }
-                var pledges = await _unitOfWork.PledgeRepo.GetManyPledgesByUserIdAndProjectIdAsync(userId, projectId);
+                var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(projectId);
                 if (pledges == null || !pledges.Any())
                 {
                     response.Success = false;
