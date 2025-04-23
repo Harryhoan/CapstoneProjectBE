@@ -12,7 +12,7 @@ namespace Domain.Entities
         public decimal Amount { get; set; }
         public string InvoiceId { get; set; } = string.Empty;
         public string InvoiceUrl { get; set; } = string.Empty;
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.ToLocalTime();
         public virtual Pledge Pledge { get; set; } = null!;
     }
 }

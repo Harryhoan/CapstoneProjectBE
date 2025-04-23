@@ -34,7 +34,7 @@ namespace Application.Services
                 }
 
                 var newReward = _mapper.Map<Reward>(reward);
-                newReward.CreatedDatetime = DateTime.UtcNow;
+                newReward.CreatedDatetime = DateTime.UtcNow.ToLocalTime();
                 await _unitOfWork.RewardRepo.AddAsync(newReward);
 
                 response.Data = reward;
