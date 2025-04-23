@@ -26,7 +26,7 @@ namespace CapstonProjectBE.Middlewares
 
                     if (token != null && token.User != null)
                     {
-                        if (DateTime.UtcNow.ToLocalTime() > token.ExpiresAt)
+                        if (DateTime.UtcNow > token.ExpiresAt)
                         {
                             await context.Response.WriteAsync("Token xác nhận đã hết hạn. Vui lòng yêu cầu gửi lại email xác nhận.");
                             return;

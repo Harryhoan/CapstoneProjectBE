@@ -72,7 +72,7 @@ namespace Application.Services
                     response.Message = "You are not allowed to do this method.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.UtcNow.ToLocalTime())
+                if (project.EndDatetime > DateTime.UtcNow)
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -195,8 +195,8 @@ namespace Application.Services
                 // Fetch the payout details to retrieve the transaction ID
                 var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                 //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                var startTime = DateTime.UtcNow.ToLocalTime();
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.ToLocalTime() - startTime).TotalMinutes <= 1)
+                var startTime = DateTime.UtcNow;
+                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -470,8 +470,8 @@ namespace Application.Services
                 var createdPayout = payout.Create(apiContext, false);
                 await Task.Delay(TimeSpan.FromSeconds(10));
                 var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                var startTime = DateTime.UtcNow.ToLocalTime();
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.ToLocalTime() - startTime).TotalMinutes <= 1)
+                var startTime = DateTime.UtcNow;
+                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -592,7 +592,7 @@ namespace Application.Services
                     response.Message = "This request is invalid.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.UtcNow.ToLocalTime())
+                if (project.EndDatetime > DateTime.UtcNow)
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -807,12 +807,12 @@ namespace Application.Services
 
         private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
         {
-            var startTime = DateTime.UtcNow.ToLocalTime();
+            var startTime = DateTime.UtcNow;
             var payoutDetails = Payout.Get(apiContext, batchId);
 
             while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
                     payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) &&
-                   (DateTime.UtcNow.ToLocalTime() - startTime).TotalMinutes <= 2)
+                   (DateTime.UtcNow - startTime).TotalMinutes <= 2)
             {
                 await Task.Delay(TimeSpan.FromSeconds(10));
                 payoutDetails = Payout.Get(apiContext, batchId);
@@ -839,7 +839,7 @@ namespace Application.Services
         //            response.Message = "This request is invalid.";
         //            return response;
         //        }
-        //        if (project.EndDatetime > DateTime.UtcNow.ToLocalTime())
+        //        if (project.EndDatetime > DateTime.UtcNow)
         //        {
         //            response.Success = false;
         //            response.Message = "This project has not ended yet.";
@@ -904,8 +904,8 @@ namespace Application.Services
         //        var createdPayout = payout.Create(apiContext, false);
         //        await Task.Delay(TimeSpan.FromSeconds(10));
         //        var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-        //        var startTime = DateTime.UtcNow.ToLocalTime();
-        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.ToLocalTime() - startTime).TotalMinutes <= 1)
+        //        var startTime = DateTime.UtcNow;
+        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
         //        {
         //            await Task.Delay(TimeSpan.FromSeconds(10));
         //            payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -1096,7 +1096,7 @@ namespace Application.Services
                     response.Message = "This project is currently not accepting any pledge.";
                     return response;
                 }
-                if (project.EndDatetime <= DateTime.UtcNow.ToLocalTime())
+                if (project.EndDatetime <= DateTime.UtcNow)
                 {
                     response.Success = false;
                     response.Message = "This project has ended.";
@@ -1394,7 +1394,7 @@ namespace Application.Services
         //            document.Add(customerAddress);
 
         //            // Invoice Details
-        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow.ToLocalTime():yyyy-MM-dd HH:mm:ss}")
+        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}")
         //                .SetTextAlignment(TextAlignment.LEFT)
         //                .SetBold();
         //            document.Add(invoiceDetails);

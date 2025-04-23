@@ -60,7 +60,7 @@ namespace Application.Services
                 post.Description = createPostDTO.Description;
                 post.Status = createPostDTO.Status;
                 //post.PostId = 0;
-                post.CreatedDatetime = DateTime.UtcNow.ToLocalTime();
+                post.CreatedDatetime = DateTime.UtcNow;
                 await _unitOfWork.PostRepo.AddAsync(post);
                 response.Data = post.PostId;
                 response.Success = true;

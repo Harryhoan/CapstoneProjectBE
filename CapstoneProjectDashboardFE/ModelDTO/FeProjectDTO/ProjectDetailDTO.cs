@@ -30,8 +30,8 @@ namespace CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO
         [JsonProperty("total-amount")]
         public decimal TotalAmount { get; set; }
         [JsonProperty("start-datetime")]
-        public DateTime StartDatetime { get; set; } = DateTime.UtcNow.ToLocalTime();
+        public DateTime StartDatetime { get; set; } = DateTime.UtcNow;
         [JsonProperty("end-datetime")]
-        public DateTime EndDatetime { get; set; } = DateTime.UtcNow.ToLocalTime();
+        public DateTime EndDatetime { get; set; } = DateTime.UtcNow;
     }
 }
