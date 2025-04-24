@@ -276,7 +276,8 @@ namespace Application.Services
             {
                 if (user == null || !(user.UserId > 0))
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This user is not authorized. Try logging in." };
+                    return new UnauthorizedObjectResult(result);
                 }
                 if (user.IsDeleted || !user.IsVerified)
                 {
@@ -296,10 +297,15 @@ namespace Application.Services
                     if (user.UserId != existingProject.CreatorId)
                     {
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                        if (existingCollaborator == null || (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.EDITOR))
+                        if (existingCollaborator == null)
                         {
                             //return new ForbidResult();
-                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };
+                            return new ObjectResult(result);
+                        }
+                        if (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.EDITOR)
+                        {
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current collaborator." };
                             return new ObjectResult(result);
                         }
                     }
@@ -309,7 +315,7 @@ namespace Application.Services
                     if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
                     {
                         //return new ForbidResult();
-                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current staff." };
                         return new ObjectResult(result);
                     }
                 }
@@ -351,7 +357,7 @@ namespace Application.Services
                         if (existingCollaborator == null)
                         {
                             //return new ForbidResult();
-                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };
                             return new ObjectResult(result);
                         }
                     }

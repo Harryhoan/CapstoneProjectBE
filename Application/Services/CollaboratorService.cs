@@ -44,6 +44,12 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (existingUser.UserId == user.UserId)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator already exists";
+                    return response;
+                }
                 if (existingUser.IsDeleted)
                 {
                     response.Success = false;
@@ -63,15 +69,24 @@ namespace Application.Services
                     response.Message = "Project not found";
                     return response;
                 }
-                if (existingProject.CreatorId != user.UserId)
+                if (existingProject.CreatorId == user.UserId)
                 {
-                    var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
-                    if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
-                    {
-                        response.Success = false;
-                        response.Message = "This request is not permitted";
-                        return response;
-                    }
+                    response.Success = false;
+                    response.Message = "Creator cannot be added as a collaborator";
+                    return response;
+                }
+                var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
+                if (userCollaborator == null)
+                {
+                    response.Success = false;
+                    response.Message = "This request is forbidden to the customer";
+                    return response;
+                }
+                if (userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
+                {
+                    response.Success = false;
+                    response.Message = "This request is forbidden to the collaborator";
+                    return response;
                 }
                 var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(existingUser.UserId, existingProject.ProjectId);
                 if (existingCollaborator != null)
@@ -123,6 +138,12 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
+                if (existingUser.UserId == user.UserId)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator already exists";
+                    return response;
+                }
                 if (existingUser.IsDeleted)
                 {
                     response.Success = false;
@@ -142,15 +163,24 @@ namespace Application.Services
                     response.Message = "Project not found";
                     return response;
                 }
-                if (existingProject.CreatorId != user.UserId)
+                if (existingProject.CreatorId == user.UserId)
                 {
-                    var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
-                    if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
-                    {
-                        response.Success = false;
-                        response.Message = "This request is not permitted";
-                        return response;
-                    }
+                    response.Success = false;
+                    response.Message = "Creator cannot be added as a collaborator";
+                    return response;
+                }
+                var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
+                if (userCollaborator == null)
+                {
+                    response.Success = false;
+                    response.Message = "This request is forbidden to the customer";
+                    return response;
+                }
+                if (userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
+                {
+                    response.Success = false;
+                    response.Message = "This request is forbidden to the collaborator";
+                    return response;
                 }
                 var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(existingUser.UserId, existingProject.ProjectId);
                 if (existingCollaborator != null)

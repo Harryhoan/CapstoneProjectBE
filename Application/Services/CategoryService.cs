@@ -70,16 +70,9 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategory(int userId, int categoryId)
+        public async Task<ServiceResponse<int>> DeleteCategory(int categoryId)
         {
             var response = new ServiceResponse<int>();
-            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-            if (user == null)
-            {
-                response.Success = false;
-                response.Message = "User not found.";
-                return response;
-            }
             try
             {
                 var category = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
@@ -117,16 +110,9 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int userId, int projectId, int categoryId)
+        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int projectId, int categoryId)
         {
             var response = new ServiceResponse<int>();
-            var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
-            if (user == null)
-            {
-                response.Success = false;
-                response.Message = "User not found.";
-                return response;
-            }
             try
             {
                 var category = await _unitOfWork.ProjectCategoryRepo.FindEntityAsync(pc => pc.ProjectId == projectId && pc.CategoryId == categoryId);
