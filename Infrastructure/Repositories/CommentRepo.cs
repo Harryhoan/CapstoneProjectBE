@@ -33,6 +33,12 @@ namespace Infrastructure.Repositories
             return parentComments;
         }
 
+        public async Task<List<Comment>> GetCommentsByParentCommentId(int parentCommentId)
+        {
+            return await _dbContext.Comments.Where(c => c.ParentCommentId != null && c.ParentCommentId == parentCommentId).ToListAsync();
+        }
+
+
         private static void AssignChildComments(Comment parentComment, List<Comment> allComments)
         {
             var childComments = allComments.Where(c => c.ParentCommentId == parentComment.CommentId).ToList();

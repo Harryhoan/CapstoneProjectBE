@@ -7,5 +7,6 @@ namespace Application.IRepositories
         public Task<List<Comment>> GetCommentsWithCommentsByPostId(int postId);
         public Task<List<Comment>> GetCommentsWithCommentsByProjectId(int projectId);
         public Task<List<Comment>> GetCommentsByUserId(int userId);
+        public Task<List<Comment>> GetCommentsByParentCommentId(int parentCommentId);
     }
 }

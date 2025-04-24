@@ -10,6 +10,7 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
+using MailKit.Net.Imap;
 using Microsoft.AspNetCore.Http;
 using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.EntityFrameworkCore;
@@ -610,18 +611,19 @@ namespace Application.Services
                 var totalRecords = await query.CountAsync();
                 var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
                 var projects = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
-                var creator = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().CreatorId);
-                var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projects.First().MonitorId);
                 var projectDtos = new List<ProjectDto>();
 
                 foreach (var project in projects)
                 {
+                    var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
+                    var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                     var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
                     var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
                         Monitor = monitor?.Fullname ?? "unknown",
+                        CreatorId = creator?.UserId ?? 0,
                         Creator = creator?.Fullname ?? "unknown",
                         Thumbnail = project.Thumbnail ?? "Unknown",
                         Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId),
