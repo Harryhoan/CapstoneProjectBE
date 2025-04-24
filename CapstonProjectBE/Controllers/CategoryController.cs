@@ -99,9 +99,7 @@ namespace CapstonProjectBE.Controllers
         [HttpDelete("DeleteCategory")]
         public async Task<IActionResult> DeleteCategory(int categoryId)
         {
-            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null) return Unauthorized();
-            var result = await _categoryService.DeleteCategory(user.UserId, categoryId);
+            var result = await _categoryService.DeleteCategory(categoryId);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -114,16 +112,12 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> DeleteCategoryFromProject(int projectId, int categoryId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            //var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
-            //if (check != null)
-            //{
-            //    return check;
-            //}
-            if (user == null)
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
             {
-                return Unauthorized();
+                return check;
             }
-            var result = await _categoryService.DeleteCategoryFromProject(user.UserId, projectId, categoryId);
+            var result = await _categoryService.DeleteCategoryFromProject(projectId, categoryId);
             if (!result.Success)
             {
                 return BadRequest(result);
