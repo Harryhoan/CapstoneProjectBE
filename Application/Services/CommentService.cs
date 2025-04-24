@@ -513,6 +513,9 @@ namespace Application.Services
                     response.Message = "Comment not found";
                     return response;
                 }
+
+                await DeleteChildComments(existingComment);
+
                 var existingProjectComment = await _unitOfWork.ProjectCommentRepo.GetProjectCommentByCommentId(commentId);
                 if (existingProjectComment != null)
                 {
@@ -523,9 +526,9 @@ namespace Application.Services
                 {
                     await _unitOfWork.PostCommentRepo.RemoveAsync(existingPostComment);
                 }
+
                 await _unitOfWork.CommentRepo.RemoveAsync(existingComment);
-                //existingComment.Status = "Deleted";
-                //await _unitOfWork.CommentRepo.Update(existingComment);
+
                 response.Data = "Comment removed successfully";
                 response.Success = true;
             }
@@ -536,6 +539,32 @@ namespace Application.Services
             }
 
             return response;
+        }
+
+        private async Task DeleteChildComments(Domain.Entities.Comment parentComment)
+        {
+            var childComments = await _unitOfWork.CommentRepo.GetCommentsByParentCommentId(parentComment.CommentId);
+
+            if (childComments != null && childComments.Any())
+            {
+                foreach (var childComment in childComments)
+                {
+                    await DeleteChildComments(childComment);
+                }
+
+                var existingProjectComment = await _unitOfWork.ProjectCommentRepo.GetProjectCommentByCommentId(parentComment.CommentId);
+                if (existingProjectComment != null)
+                {
+                    await _unitOfWork.ProjectCommentRepo.RemoveAsync(existingProjectComment);
+                }
+                var existingPostComment = await _unitOfWork.PostCommentRepo.GetPostCommentByCommentId(parentComment.CommentId);
+                if (existingPostComment != null)
+                {
+                    await _unitOfWork.PostCommentRepo.RemoveAsync(existingPostComment);
+                }
+
+                await _unitOfWork.CommentRepo.RemoveAsync(parentComment);
+            }
         }
         public async Task<ServiceResponse<string>> SoftRemoveComment(int commentId)
         {
