@@ -87,7 +87,7 @@ namespace Application.Services
 
             try
             {
-                var result = await _unitOfWork.RewardRepo.GetAllAsync();
+                var result = await _unitOfWork.RewardRepo.GetAllAsNoTrackingAsync();
 
                 var responseData = new List<ViewReward>();
                 foreach (var reward in result)
@@ -130,7 +130,7 @@ namespace Application.Services
 
             try
             {
-                var result = await _unitOfWork.RewardRepo.GetByIdAsync(rewardId);
+                var result = await _unitOfWork.RewardRepo.GetByIdNoTrackingAsync("RewardId", rewardId);
 
                 if (result == null)
                 {
@@ -161,13 +161,13 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<IEnumerable<ViewReward>>> GetRewardByProjectId(int projectId)
+        public async Task<ServiceResponse<IEnumerable<ViewReward>>> GetRewardsByProjectId(int projectId)
         {
             var response = new ServiceResponse<IEnumerable<ViewReward>>();
 
             try
             {
-                var rewards = await _unitOfWork.RewardRepo.GetAllAsync();
+                var rewards = await _unitOfWork.RewardRepo.GetAllAsNoTrackingAsync();
 
                 var filteredRewards = rewards?.Where(r => r.ProjectId == projectId).ToList();
 

@@ -1,6 +1,7 @@
 ﻿using Application;
 using Application.IRepositories;
 using Domain;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Infrastructure
 {
@@ -26,14 +27,13 @@ namespace Infrastructure
         private readonly IPlatformRepo _platformRepo;
         private readonly IProjectPlatformRepo _projectPlatformRepo;
         private readonly IVerifyCodeRepo _verifyCodeRepo;
-        
+        private IDbContextTransaction? _currentTransaction = null;
         public UnitOfWork(ApiContext apiContext, IUserRepo userRepo, ITokenRepo tokenRepo, IProjectRepo projectRepo, IPostRepo postRepo, ICommentRepo commentRepo, IPostCommentRepo postCommentRepo, IProjectCommentRepo projectCommentRepo, IPledgeRepo pledgeRepo, IPledgeDetailRepo pledgeDetailRepo,
             ICategoryRepo categoryRepo, IRewardRepo rewardRepo, IReportRepo reportRepo, ICollaboratorRepo collaboratorRepo, IFAQRepo faqRepo, IFileRepo fileRepo, IProjectCategoryRepo projectCategoryRepo, IPlatformRepo platformRepo, IProjectPlatformRepo projectPlatformRepo, IVerifyCodeRepo verifyCodeRepo)
 
 
         {
-            _apiContext = apiContext;
-            _tokenRepo = tokenRepo;
+            _apiContext = apiContext ?? throw new ArgumentNullException(nameof(apiContext)); _tokenRepo = tokenRepo;
             _userRepo = userRepo;
             _projectRepo = projectRepo;
             _categoryRepo = categoryRepo;
@@ -95,6 +95,63 @@ namespace Infrastructure
             {
                 // Log exception details here
                 throw new ApplicationException("An error occurred while saving changes.", ex);
+            }
+        }
+
+        public async Task<IDbContextTransaction> BeginTransactionAsync()
+        {
+            if (_currentTransaction != null)
+            {
+                throw new InvalidOperationException("A transaction is already in progress");
+            }
+
+            _currentTransaction = await _apiContext.Database.BeginTransactionAsync();
+            return _currentTransaction;
+        }
+
+        public async Task CommitTransactionAsync()
+        {
+            try
+            {
+                if (_currentTransaction == null)
+                {
+                    throw new InvalidOperationException("No active transaction to commit");
+                }
+
+                await _apiContext.SaveChangesAsync();
+                await _currentTransaction.CommitAsync();
+            }
+            catch
+            {
+                await RollbackTransactionAsync();
+                throw;
+            }
+            finally
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
+            }
+        }
+
+        public async Task RollbackTransactionAsync()
+        {
+            try
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.RollbackAsync();
+                }
+            }
+            finally
+            {
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
             }
         }
     }

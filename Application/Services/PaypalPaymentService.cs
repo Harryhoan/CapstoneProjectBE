@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using PayPal;
 using PayPal.Api;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using Paragraph = iText.Layout.Element.Paragraph;
 
 namespace Application.Services
@@ -820,6 +821,7 @@ namespace Application.Services
 
             return payoutDetails;
         }
+
         //public async Task<ServiceResponse<string>> RefundAllPledgesForProjectAsync(int projectId)
         //{
         //    var response = new ServiceResponse<string>();
@@ -1185,18 +1187,26 @@ namespace Application.Services
             var response = new ServiceResponse<Payment>();
             try
             {
-                var apiContext = new PayPal.Api.APIContext(new PayPal.Api.OAuthTokenCredential(
-                    _configuration["PayPal:ClientId"],
-                    _configuration["PayPal:ClientSecret"]
-                ).GetAccessToken())
+                if (string.IsNullOrWhiteSpace(paymentId) || string.IsNullOrWhiteSpace(payerId))
+                {
+                    response.Success = false;
+                    response.Message = "Invalid payment or payer ID";
+                    return response;
+                }
+
+                var clientId = _configuration["PayPal:ClientId"] ?? throw new InvalidOperationException("PayPal ClientId not configured");
+                var clientSecret = _configuration["PayPal:ClientSecret"] ?? throw new InvalidOperationException("PayPal ClientSecret not configured");
+
+                var apiContext = new PayPal.Api.APIContext(
+                    new PayPal.Api.OAuthTokenCredential(clientId, clientSecret).GetAccessToken())
                 {
                     Config = new Dictionary<string, string>
-                    {
-                        { "mode", _configuration["PayPal:Mode"] ?? "sandbox" }
-                    }
+            {
+                { "mode", _configuration["PayPal:Mode"] ?? "sandbox" }
+            }
                 };
 
-                var payment = Payment.Get(apiContext, paymentId);
+                var payment = Payment.Get(apiContext, paymentId) ?? throw new InvalidOperationException("Payment not found");
 
                 if (payment == null || string.IsNullOrEmpty(payment.state) || payment.transactions.Count == 0)
                 {
@@ -1213,10 +1223,10 @@ namespace Application.Services
                     return response;
                 }
 
-                if (!int.TryParse(transaction.custom, out int userId) || userId <= 0 || !int.TryParse(transaction.note_to_payee, out int projectId))
+                if (!int.TryParse(transaction.custom, out int userId) || userId <= 0 || !int.TryParse(transaction.note_to_payee, out int projectId) || projectId <= 0)
                 {
                     response.Success = false;
-                    response.Message = "Invalid user or project ID.";
+                    response.Message = "Invalid user or project ID";
                     return response;
                 }
 
@@ -1224,6 +1234,13 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Payment is not approved yet.";
+                    return response;
+                }
+
+                if (!decimal.TryParse(transaction.amount.total, NumberStyles.Currency, CultureInfo.InvariantCulture, out decimal amount) || amount <= 0)
+                {
+                    response.Success = false;
+                    response.Message = "Invalid payment amount";
                     return response;
                 }
 
@@ -1238,15 +1255,11 @@ namespace Application.Services
 
                 project.TotalAmount += Convert.ToDecimal(transaction.amount.total);
 
-                decimal amount = decimal.TryParse(transaction.amount.total, out decimal parsedAmount) ? parsedAmount : 0m;
+                //decimal amount = decimal.TryParse(transaction.amount.total, out decimal parsedAmount) ? parsedAmount : 0m;
 
-                var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
-                // Prepare to execute the payment
-                await _unitOfWork.ProjectRepo.UpdateAsync(project);
                 var paymentExecution = new PaymentExecution() { payer_id = payerId };
-                var executedPayment = payment.Execute(apiContext, paymentExecution);
-
+                var executedPayment = payment.Execute(apiContext, paymentExecution) ?? throw new InvalidOperationException("Payment execution failed");
                 if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
                 {
                     response.Success = false;
@@ -1254,7 +1267,6 @@ namespace Application.Services
                     return response;
                 }
 
-                // Retrieve the invoice number from the transaction
                 var invoiceNumber = transaction.invoice_number;
 
                 if (string.IsNullOrEmpty(invoiceNumber))
@@ -1263,63 +1275,72 @@ namespace Application.Services
                     response.Message = "Invoice number not found.";
                     return response;
                 }
+                await using var dbTransaction = await _unitOfWork.BeginTransactionAsync();
 
-                if (existingPledge == null)
+                try
                 {
-                    Domain.Entities.Pledge newPledge = new Domain.Entities.Pledge
-                    {
-                        UserId = userId,
-                        TotalAmount = amount,
-                        ProjectId = projectId
-                    };
+                    var invoiceUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com" + $"/unifiedtransactions/?filter=0&query={invoiceNumber}";
+                    project.TotalAmount += amount;
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
-                    await _unitOfWork.PledgeRepo.AddAsync(newPledge);
-                    var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
-                    Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
-                    {
-                        PledgeId = newPledge.PledgeId,
-                        PaymentId = paymentId,
-                        Amount = amount,
-                        InvoiceId = invoiceNumber, // Store the invoice number in the transactionId field
-                        InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={invoiceNumber}",
-                        Status = PledgeDetailEnum.PLEDGED
-                    };
+                    var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
 
-                    await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-                }
-                else
-                {
-                    existingPledge.TotalAmount += amount;
-                    await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
-
-                    var getPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(userId, projectId);
-                    if (getPledge == null)
+                    if (existingPledge == null)
                     {
-                        response.Success = false;
-                        response.Message = "Pledge not found.";
-                        return response;
+                        var newPledge = new Domain.Entities.Pledge
+                        {
+                            UserId = userId,
+                            TotalAmount = amount,
+                            ProjectId = projectId
+                        };
+                        await _unitOfWork.PledgeRepo.AddAsync(newPledge);
+
+                        var pledgeDetail = new Domain.Entities.PledgeDetail
+                        {
+                            PledgeId = newPledge.PledgeId,
+                            PaymentId = paymentId,
+                            Amount = amount,
+                            InvoiceId = invoiceNumber,
+                            InvoiceUrl = invoiceUrl,
+                            Status = PledgeDetailEnum.PLEDGED
+                        };
+                        await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                    }
+                    else
+                    {
+                        existingPledge.TotalAmount += amount;
+                        await _unitOfWork.PledgeRepo.UpdateAsync(existingPledge);
+
+                        var pledgeDetail = new Domain.Entities.PledgeDetail
+                        {
+                            PledgeId = existingPledge.PledgeId,
+                            PaymentId = paymentId,
+                            Amount = amount,
+                            InvoiceId = invoiceNumber,
+                            InvoiceUrl = invoiceUrl,
+                            Status = PledgeDetailEnum.PLEDGED
+                        };
+                        await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
 
-                    Domain.Entities.PledgeDetail pledgeDetail = new Domain.Entities.PledgeDetail
+                    await dbTransaction.CommitAsync();
+                    response.Success = true;
+                    response.Message = "Payment successful";
+                    var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
+                    if (!string.IsNullOrEmpty(userEmail) && new EmailAddressAttribute().IsValid(userEmail))
                     {
-                        PledgeId = getPledge.PledgeId,
-                        PaymentId = paymentId,
-                        Amount = amount,
-                        InvoiceId = invoiceNumber, // Store the invoice number in the transactionId field
-                        Status = PledgeDetailEnum.PLEDGED
-                    };
+                        //    // Generate the invoice
+                        //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
 
-                    await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                        //    // Send the invoice via email
+                        await EmailSender.SendBillingEmail(userEmail, "Your Invoice", amount, "Please find your invoice attached.", invoiceUrl);
+                    }
                 }
-                var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
-                //if (!string.IsNullOrEmpty(userEmail))
-                //{
-                //    // Generate the invoice
-                //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
-
-                //    // Send the invoice via email
-                //    await EmailSender.SendBillingEmail(userEmail, "Your Invoice", amount, "Please find your invoice attached.", invoicePath);
-                //}
+                catch
+                {
+                    await dbTransaction.RollbackAsync();
+                    throw;
+                }
 
                 response.Success = true;
                 response.Message = "Payment successful.";

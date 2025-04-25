@@ -1,5 +1,7 @@
 ﻿using Application.IService;
 using Application.ViewModels.RewardDTO;
+using Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,48 +13,123 @@ namespace CapstonProjectBE.Controllers
     public class RewardController : ControllerBase
     {
         private readonly IRewardService _rewardService;
-        public RewardController(IRewardService rewardService)
+        private readonly IAuthenService _authenService;
+        public RewardController(IRewardService rewardService, IAuthenService authenService)
         {
             _rewardService = rewardService;
+            _authenService = authenService;
         }
 
+        [Authorize(Roles = "ADMIN")]
         [HttpGet("GetAllReward")]
         public async Task<IActionResult> GetAllReward()
         {
-            return Ok(await _rewardService.GetAllReward());
+            var result = await _rewardService.GetAllReward();
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
         [HttpGet("GetRewardById")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetRewardById(int rewardId)
         {
-            return Ok(await _rewardService.GetRewardById(rewardId));
+            var result = await _rewardService.GetRewardById(rewardId);
+            if (result.Success && result.Data != null)
+            {
+                var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+                var check = await _authenService.CheckIfUserCanGetByProjectId(result.Data.ProjectId, user);
+                if (check != null)
+                {
+                    return check;
+                }
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
         [HttpGet("GetRewardByProjectId")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetRewardByProjectId(int projectId)
         {
-            return Ok(await _rewardService.GetRewardByProjectId(projectId));
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _rewardService.GetRewardsByProjectId(projectId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPost("AddReward")]
         public async Task<IActionResult> AddReward(AddReward reward)
         {
-            var newReward = await _rewardService.AddReward(reward);
-            return Ok(newReward);
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(reward.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _rewardService.AddReward(reward);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
 
+        [Authorize(Roles = "CUSTOMER")]
         [HttpPut("UpdateReward")]
         public async Task<IActionResult> UpdateReward(int rewardId, [FromForm] UpdateReward updateReward)
         {
-            var updatedReward = await _rewardService.UpdateReward(rewardId, updateReward);
-            return Ok(updatedReward);
+            var reward = await _rewardService.GetRewardById(rewardId);
+            if (reward.Success && reward.Data != null)
+            {
+                var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+                var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(reward.Data.ProjectId, user);
+                if (check != null)
+                {
+                    return check;
+                }
+                var result = await _rewardService.UpdateReward(rewardId, updateReward);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                return BadRequest(result);
+            }
+            return BadRequest(reward);
         }
 
+        [Authorize]
         [HttpDelete("DeleteReward")]
         public async Task<IActionResult> DeleteReward(int rewardId)
         {
-            var response = await _rewardService.DeleteReward(rewardId);
-            return Ok(response);
+            var reward = await _rewardService.GetRewardById(rewardId);
+            if (reward.Success && reward.Data != null)
+            {
+                var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+                var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(reward.Data.ProjectId, user);
+                if (check != null)
+                {
+                    return check;
+                }
+                var result = await _rewardService.DeleteReward(rewardId);
+                if (result.Success)
+                {
+                    return Ok(result);
+                }
+                return BadRequest(result);
+            }
+            return BadRequest(reward);
         }
     }
 }
