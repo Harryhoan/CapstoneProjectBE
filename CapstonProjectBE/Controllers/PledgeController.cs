@@ -10,13 +10,13 @@ namespace CapstonProjectBE.Controllers
     public class PledgeController : ControllerBase
     {
         private readonly IPledgeService _pledgeService;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IProjectService _projectService;
         private readonly IAuthenService _authenService;
-        public PledgeController(IPledgeService pledgeService, IAuthenService authenService, IUnitOfWork unitOfWork)
+        public PledgeController(IPledgeService pledgeService, IProjectService projectService, IAuthenService authenService)
         {
             _pledgeService = pledgeService;
+            _projectService = projectService;
             _authenService = authenService;
-            _unitOfWork = unitOfWork;
         }
 
         [HttpGet("GetAllPledges")]
@@ -103,10 +103,10 @@ namespace CapstonProjectBE.Controllers
             }
             var result = await _pledgeService.ExportPledgeToExcelByProjectId(projectId);
             if (!result.Success || string.IsNullOrEmpty(result.Data)) return BadRequest(result.Message);
-            var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
-            if (project == null) return BadRequest("Project not found");
+            var project = await _projectService.GetProjectById(projectId);
+            if (project == null || !project.Success || project.Data == null) return BadRequest("Project not found");
             var fileBytes = Convert.FromBase64String(result.Data);
-            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Project_{project.Title}.xlsx");
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Project_{project.Data.Title}.xlsx");
         }
     }
 }
