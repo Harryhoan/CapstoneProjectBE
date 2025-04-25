@@ -336,7 +336,7 @@ namespace Application.Services
                 if (existingProject == null || ((user == null || user.Role == UserEnum.CUSTOMER) && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
                 {
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
-                    return new ObjectResult(result);
+                    return new NotFoundObjectResult(result);
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {

@@ -1,4 +1,5 @@
 ﻿using Application.IRepositories;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Application
 {
@@ -25,5 +26,8 @@ namespace Application
         public IVerifyCodeRepo VerifyCodeRepo { get; }
 
         public Task<int> SaveChangeAsync();
+        public Task<IDbContextTransaction> BeginTransactionAsync();
+        public Task CommitTransactionAsync();
+        public Task RollbackTransactionAsync();
     }
 }
