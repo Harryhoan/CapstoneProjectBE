@@ -27,9 +27,5 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.ProjectPlatforms.Where(pp => pp.PlatformId == platformId).Include(pp => pp.Project).OrderBy(pp => pp.Project.Title).ToListAsync();
         }
-        public async Task<List<ProjectPlatform>> GetAllPlatformByProjectId(int projectId)
-        {
-            return await _dbContext.ProjectPlatforms.Where(pp => pp.ProjectId == projectId).Include(pp => pp.Platform).OrderBy(pp => pp.Platform.Name).ToListAsync();
-        }
     }
 }

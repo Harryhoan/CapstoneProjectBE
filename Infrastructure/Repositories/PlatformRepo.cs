@@ -19,5 +19,11 @@ namespace Infrastructure.Repositories
             query = query.Trim().ToLower();
             return await _dbContext.Platforms.AsNoTracking().Where(p => p.Name.Trim().ToLower().Contains(query) || (!string.IsNullOrEmpty(p.Description) && p.Description.Trim().ToLower().Contains(query))).ToListAsync();
         }
+
+        public async Task<List<Platform>> GetPlatformsByProjectIdAsNoTracking(int projectId)
+        {
+            return await _dbContext.Platforms.AsNoTracking().Where(p => p.ProjectPlatforms.Any(pp => pp.ProjectId == projectId)).OrderBy(p => p.Name).ToListAsync();
+        }
+
     }
 }

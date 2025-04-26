@@ -8,6 +8,5 @@ namespace Application.IRepositories
         public Task<List<ProjectPlatform>> GetProjectPlatformsByPlatformId(int platformId);
         public Task<List<ProjectPlatform>> GetAllProjectByPlatformId(int platformId);
         public Task<ProjectPlatform?> GetProjectPlatformByProjectIdAndPlatformId(int projectId, int platformId);
-        public Task<List<ProjectPlatform>> GetAllPlatformByProjectId(int projectId);
     }
 }

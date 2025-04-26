@@ -35,7 +35,16 @@ namespace Application.Services
                 var platformDTOs = _mapper.Map<List<PlatformDTO>>(platforms);
                 response.Data = platformDTOs;
                 response.Success = true;
-            }catch (Exception ex)
+                if (!response.Data.Any())
+                {
+                    response.Message = "No platform found";
+                }
+                else
+                {
+                    response.Message = "Retrieve platform(s) successfully";
+                }
+            }
+            catch (Exception ex)
             {
                 response.Success = false;
                 response.Message = $"Failed to get platforms: {ex.Message}";
@@ -65,7 +74,14 @@ namespace Application.Services
 
                 response.Data = projectList;
                 response.Success = true;
-                response.Message = "Projects retrieved successfully.";
+                if (!response.Data.Any())
+                {
+                    response.Message = "No project found";
+                }
+                else
+                {
+                    response.Message = "Retrieve project(s) successfully";
+                }
             }
             catch (Exception ex)
             {
@@ -80,7 +96,7 @@ namespace Application.Services
             var response = new ServiceResponse<List<PlatformDTO>>();
             try
             {
-                var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(projectId);
+                var platforms = await _unitOfWork.PlatformRepo.GetPlatformsByProjectIdAsNoTracking(projectId);
                 if (platforms == null)
                 {
                     response.Success = false;
@@ -90,6 +106,14 @@ namespace Application.Services
                 var platformDTOs = _mapper.Map<List<PlatformDTO>>(platforms);
                 response.Data = platformDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No platform found";
+                }
+                else
+                {
+                    response.Message = "Retrieve platform(s) successfully";
+                }
             }
             catch (Exception ex)
             {
