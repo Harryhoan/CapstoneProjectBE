@@ -78,7 +78,7 @@ namespace Application.Services
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.MonitorId);
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(projectItem.CreatorId);
                     var category = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(projectItem.ProjectId);
-                    var platform = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(projectItem.ProjectId);
+                    var platform = await _unitOfWork.PlatformRepo.GetPlatformsByProjectIdAsNoTracking(projectItem.ProjectId);
 
                     var projectDto = new ProjectDto
                     {
@@ -106,8 +106,8 @@ namespace Application.Services
                         Platforms = platform.Select(p => new PlatformDTO
                         {
                             PlatformId = p.PlatformId,
-                            Name = p.Platform.Name,
-                            Description = p.Platform.Description ?? "Null"
+                            Name = p.Name,
+                            Description = p.Description ?? "Null"
                         }).ToList()
                     };
 
@@ -433,7 +433,7 @@ namespace Application.Services
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
                     var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
-                    var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
+                    var platforms = await _unitOfWork.PlatformRepo.GetPlatformsByProjectIdAsNoTracking(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -460,8 +460,8 @@ namespace Application.Services
                         Platforms = platforms.Select(p => new PlatformDTO
                         {
                             PlatformId = p.PlatformId,
-                            Name = p.Platform.Name,
-                            Description = p.Platform.Description ?? "Null"
+                            Name = p.Name,
+                            Description = p.Description ?? "Null"
                         }).ToList()
                     };
 
@@ -505,7 +505,7 @@ namespace Application.Services
                 var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                 var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
                 var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(id);
-                var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(id);
+                var platforms = await _unitOfWork.PlatformRepo.GetPlatformsByProjectIdAsNoTracking(id);
                 var responseData = new ProjectDetailDto
                 {
                     ProjectId = id,
@@ -533,8 +533,8 @@ namespace Application.Services
                     Platforms = platforms.Select(p => new PlatformDTO
                     {
                         PlatformId = p.PlatformId,
-                        Name = p.Platform.Name,
-                        Description = p.Platform.Description ?? "Null"
+                        Name = p.Name,
+                        Description = p.Description ?? "Null"
                     }).ToList()
                 };
 
@@ -618,7 +618,7 @@ namespace Application.Services
                     var creator = await _unitOfWork.UserRepo.GetByIdAsync(project.CreatorId);
                     var monitor = await _unitOfWork.UserRepo.GetByIdAsync(project.MonitorId);
                     var categories = await _unitOfWork.ProjectCategoryRepo.GetListByProjectIdAsync(project.ProjectId);
-                    var platforms = await _unitOfWork.ProjectPlatformRepo.GetAllPlatformByProjectId(project.ProjectId);
+                    var platforms = await _unitOfWork.PlatformRepo.GetPlatformsByProjectIdAsNoTracking(project.ProjectId);
                     var projectDto = new ProjectDto
                     {
                         ProjectId = project.ProjectId,
@@ -645,8 +645,8 @@ namespace Application.Services
                         Platforms = platforms.Select(p => new PlatformDTO
                         {
                             PlatformId = p.PlatformId,
-                            Name = p.Platform.Name,
-                            Description = p.Platform.Description ?? "Null"
+                            Name = p.Name,
+                            Description = p.Description ?? "Null"
                         }).ToList()
                     };
 
@@ -686,6 +686,24 @@ namespace Application.Services
 
             try
             {
+                var validationContext = new ValidationContext(updateProjectDto);
+                var validationResults = new List<ValidationResult>();
+
+                if (!Validator.TryValidateObject(updateProjectDto, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+                if (updateProjectDto.StartDatetime >= updateProjectDto.EndDatetime)
+                {
+                    response.Success = false;
+                    response.Message = "Start date must be earlier than end date.";
+                    return response;
+                }
+
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
 
                 if (existingProject == null)
@@ -695,31 +713,28 @@ namespace Application.Services
                     return response;
                 }
 
-                if (!string.IsNullOrWhiteSpace(updateProjectDto.Name))
-                    existingProject.Title = updateProjectDto.Name;
+                if (!string.IsNullOrWhiteSpace(updateProjectDto.Title))
+                {
+                    existingProject.Title = updateProjectDto.Title;
+                }
 
                 if (!string.IsNullOrWhiteSpace(updateProjectDto.Description))
+                {
                     existingProject.Description = updateProjectDto.Description;
-
-                if (updateProjectDto.MinimumAmount > 0)
-                {
-                    existingProject.MinimumAmount = updateProjectDto.MinimumAmount;
                 }
 
-                if (updateProjectDto.StartDatetime != default)
-                    existingProject.StartDatetime = updateProjectDto.StartDatetime;
-
-                if (updateProjectDto.EndDatetime != default)
-                    existingProject.EndDatetime = updateProjectDto.EndDatetime;
-
-                if (updateProjectDto.StartDatetime >= updateProjectDto.EndDatetime)
+                if (updateProjectDto.MinimumAmount.HasValue && updateProjectDto.MinimumAmount.Value > 0 && existingProject.Status == ProjectStatusEnum.INVISIBLE)
                 {
-                    response.Success = false;
-                    response.Message = "Start date must be earlier than end date.";
-                    return response;
+                    existingProject.MinimumAmount = updateProjectDto.MinimumAmount.Value;
                 }
 
-                _mapper.Map(updateProjectDto, existingProject);
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                    existingProject.StartDatetime = updateProjectDto.StartDatetime.Value;
+
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                    existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
+
+                //_mapper.Map(updateProjectDto, existingProject);
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 
