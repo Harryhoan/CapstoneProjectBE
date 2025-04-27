@@ -84,8 +84,8 @@ namespace Application.Services
                     CommentId = 0,
                     Status = "Created",
                     ParentCommentId = createPostCommentDTO.ParentCommentId,
-                    CreatedDatetime = DateTime.UtcNow,
-                    UpdatedDatetime = DateTime.UtcNow
+                    CreatedDatetime = DateTime.UtcNow.AddHours(7),
+                    UpdatedDatetime = DateTime.UtcNow.AddHours(7)
                 };
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
@@ -174,8 +174,8 @@ namespace Application.Services
                     CommentId = 0,
                     Status = "Created",
                     ParentCommentId = createProjectCommentDTO.ParentCommentId,
-                    CreatedDatetime = DateTime.UtcNow,
-                    UpdatedDatetime = DateTime.UtcNow
+                    CreatedDatetime = DateTime.UtcNow.AddHours(7),
+                    UpdatedDatetime = DateTime.UtcNow.AddHours(7)
                 };
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
@@ -485,7 +485,7 @@ namespace Application.Services
                 }
 
                 existingComment.Content = updateCommentDTO.Content;
-                existingComment.UpdatedDatetime = DateTime.UtcNow;
+                existingComment.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 existingComment.Status = "Updated";
                 await _unitOfWork.CommentRepo.UpdateAsync(existingComment);
                 response.Data = "Comment updated successfully";

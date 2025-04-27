@@ -210,7 +210,7 @@ namespace Application.Services
 
             try
             {
-                var platforms = string.IsNullOrEmpty(query) ? await _unitOfWork.PlatformRepo.GetAllAsNoTrackingAsync() : await _unitOfWork.PlatformRepo.GetPlatformsByNameOrDescriptionAsNoTracking(query);
+                var platforms = string.IsNullOrWhiteSpace(query) ? await _unitOfWork.PlatformRepo.GetAllAsNoTrackingAsync() : await _unitOfWork.PlatformRepo.GetPlatformsByNameOrDescriptionAsNoTracking(query);
                 if (platforms == null)
                 {
                     response.Success = false;
@@ -236,7 +236,7 @@ namespace Application.Services
 
             try
             {
-                var platforms = string.IsNullOrEmpty(query) ? await _unitOfWork.PlatformRepo.GetAllAsNoTrackingAsync() : await _unitOfWork.PlatformRepo.GetPlatformsByNameOrDescriptionAsNoTracking(query);
+                var platforms = string.IsNullOrWhiteSpace(query) ? await _unitOfWork.PlatformRepo.GetAllAsNoTrackingAsync() : await _unitOfWork.PlatformRepo.GetPlatformsByNameOrDescriptionAsNoTracking(query);
                 if (platforms == null)
                 {
                     response.Success = false;

@@ -147,7 +147,7 @@ namespace Application.Services
                 if (result != null && result.Any())
                 {
 
-                    var filteredResult = !string.IsNullOrEmpty(name)
+                    var filteredResult = !string.IsNullOrWhiteSpace(name)
                     ? result.Where(c => c.Name != null && c.Name.Contains(name, StringComparison.OrdinalIgnoreCase))
                     : result;
 

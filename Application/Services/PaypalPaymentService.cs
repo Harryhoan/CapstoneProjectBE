@@ -73,7 +73,7 @@ namespace Application.Services
                     response.Message = "You are not allowed to do this method.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.UtcNow)
+                if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -122,7 +122,7 @@ namespace Application.Services
                     response.Message = "Creator unverified.";
                     return response;
                 }
-                if (string.IsNullOrEmpty(creator.PaymentAccount) || !new EmailAddressAttribute().IsValid(creator.PaymentAccount))
+                if (string.IsNullOrWhiteSpace(creator.PaymentAccount) || !new EmailAddressAttribute().IsValid(creator.PaymentAccount))
                 {
                     response.Success = false;
                     response.Message = "Payment Account invalid.";
@@ -196,8 +196,8 @@ namespace Application.Services
                 // Fetch the payout details to retrieve the transaction ID
                 var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                 //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                var startTime = DateTime.UtcNow;
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
+                var startTime = DateTime.UtcNow.AddHours(7);
+                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -230,7 +230,7 @@ namespace Application.Services
                     if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                     {
                         var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
-                        if (string.IsNullOrEmpty(transactionId))
+                        if (string.IsNullOrWhiteSpace(transactionId))
                         {
                             response.Success = false;
                             response.Message = "Transaction ID not found for the payout item.";
@@ -289,7 +289,7 @@ namespace Application.Services
                             Status = PledgeDetailEnum.TRANSFERRING
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
-                        if (!string.IsNullOrEmpty(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
+                        if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
                         {
                             var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId);
                             if (!emailSend)
@@ -421,7 +421,7 @@ namespace Application.Services
                     response.Message = "User unverified.";
                     return response;
                 }
-                if (string.IsNullOrEmpty(refundUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(refundUser.PaymentAccount))
+                if (string.IsNullOrWhiteSpace(refundUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(refundUser.PaymentAccount))
                 {
                     response.Success = false;
                     response.Message = "Payment Account invalid.";
@@ -471,8 +471,8 @@ namespace Application.Services
                 var createdPayout = payout.Create(apiContext, false);
                 await Task.Delay(TimeSpan.FromSeconds(10));
                 var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                var startTime = DateTime.UtcNow;
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
+                var startTime = DateTime.UtcNow.AddHours(7);
+                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(10));
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -516,7 +516,7 @@ namespace Application.Services
                         };
                         await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-                        if (!string.IsNullOrEmpty(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
+                        if (!string.IsNullOrWhiteSpace(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
                         {
                             var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId);
                             if (!emailSend)
@@ -528,7 +528,7 @@ namespace Application.Services
                     else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                     {
                         var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
-                        if (string.IsNullOrEmpty(transactionId))
+                        if (string.IsNullOrWhiteSpace(transactionId))
                         {
                             response.Success = false;
                             response.Message = "Transaction ID not found for the payout item.";
@@ -593,7 +593,7 @@ namespace Application.Services
                     response.Message = "This request is invalid.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.UtcNow)
+                if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -672,7 +672,7 @@ namespace Application.Services
                 foreach (var pledge in refundablePledges)
                 {
                     var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
-                    if (user == null || user.IsDeleted || !user.IsVerified || string.IsNullOrEmpty(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount)) continue;
+                    if (user == null || user.IsDeleted || !user.IsVerified || string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount)) continue;
 
                     var finalAmount = pledge.TotalAmount * 0.95m; // 5% fee
                     if (finalAmount <= 0) continue;
@@ -773,8 +773,8 @@ namespace Application.Services
                         detail.Status = PledgeDetailEnum.REFUNDING;
                         await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
                         var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
-                        if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrEmpty(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrEmpty(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
-                        var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
+                        if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
+                        var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrWhiteSpace(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
                         if (!emailSend)
                         {
 
@@ -808,12 +808,12 @@ namespace Application.Services
 
         private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
         {
-            var startTime = DateTime.UtcNow;
+            var startTime = DateTime.UtcNow.AddHours(7);
             var payoutDetails = Payout.Get(apiContext, batchId);
 
             while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
                     payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) &&
-                   (DateTime.UtcNow - startTime).TotalMinutes <= 2)
+                   (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 2)
             {
                 await Task.Delay(TimeSpan.FromSeconds(10));
                 payoutDetails = Payout.Get(apiContext, batchId);
@@ -841,7 +841,7 @@ namespace Application.Services
         //            response.Message = "This request is invalid.";
         //            return response;
         //        }
-        //        if (project.EndDatetime > DateTime.UtcNow)
+        //        if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
         //        {
         //            response.Success = false;
         //            response.Message = "This project has not ended yet.";
@@ -906,8 +906,8 @@ namespace Application.Services
         //        var createdPayout = payout.Create(apiContext, false);
         //        await Task.Delay(TimeSpan.FromSeconds(10));
         //        var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-        //        var startTime = DateTime.UtcNow;
-        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow - startTime).TotalMinutes <= 1)
+        //        var startTime = DateTime.UtcNow.AddHours(7);
+        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
         //        {
         //            await Task.Delay(TimeSpan.FromSeconds(10));
         //            payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -945,7 +945,7 @@ namespace Application.Services
         //                        {
         //                            if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
         //                            {
-        //                                if (!string.IsNullOrEmpty(payoutItem.transaction_id))
+        //                                if (!string.IsNullOrWhiteSpace(payoutItem.transaction_id))
         //                                {
         //                                    var finalTotalAmount = pledge.TotalAmount - (pledge.TotalAmount * 5 / 100);
         //                                    var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
@@ -984,7 +984,7 @@ namespace Application.Services
         //                    }
         //                    else
         //                    {
-        //                        if (string.IsNullOrEmpty(existingPledgeDetail.PaymentId))
+        //                        if (string.IsNullOrWhiteSpace(existingPledgeDetail.PaymentId))
         //                        {
         //                            pledge.TotalAmount += existingPledgeDetail.Amount;
         //                            await _unitOfWork.PledgeDetailRepo.RemoveAsync(existingPledgeDetail);
@@ -1006,7 +1006,7 @@ namespace Application.Services
         //                                await _unitOfWork.PledgeDetailRepo.RemoveAsync(existingPledgeDetail);
         //                                await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
         //                            }
-        //                            else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS && !string.IsNullOrEmpty(payoutItem.transaction_id))
+        //                            else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS && !string.IsNullOrWhiteSpace(payoutItem.transaction_id))
         //                            {
         //                                var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
         //                                existingPledgeDetail.Status = PledgeDetailEnum.REFUNDED;
@@ -1098,7 +1098,7 @@ namespace Application.Services
                     response.Message = "This project is currently not accepting any pledge.";
                     return response;
                 }
-                if (project.EndDatetime <= DateTime.UtcNow)
+                if (project.EndDatetime <= DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has ended.";
@@ -1208,7 +1208,7 @@ namespace Application.Services
 
                 var payment = Payment.Get(apiContext, paymentId) ?? throw new InvalidOperationException("Payment not found");
 
-                if (payment == null || string.IsNullOrEmpty(payment.state) || payment.transactions.Count == 0)
+                if (payment == null || string.IsNullOrWhiteSpace(payment.state) || payment.transactions.Count == 0)
                 {
                     response.Success = false;
                     response.Message = "Payment not found or invalid.";
@@ -1216,7 +1216,7 @@ namespace Application.Services
                 }
 
                 var transaction = payment.transactions.FirstOrDefault();
-                if (transaction == null || string.IsNullOrEmpty(transaction.custom) || string.IsNullOrEmpty(transaction.note_to_payee))
+                if (transaction == null || string.IsNullOrWhiteSpace(transaction.custom) || string.IsNullOrWhiteSpace(transaction.note_to_payee))
                 {
                     response.Success = false;
                     response.Message = "Invalid transaction details.";
@@ -1260,7 +1260,7 @@ namespace Application.Services
 
                 var paymentExecution = new PaymentExecution() { payer_id = payerId };
                 var executedPayment = payment.Execute(apiContext, paymentExecution) ?? throw new InvalidOperationException("Payment execution failed");
-                if (executedPayment == null || string.IsNullOrEmpty(executedPayment.state) || executedPayment.state == "failed")
+                if (executedPayment == null || string.IsNullOrWhiteSpace(executedPayment.state) || executedPayment.state == "failed")
                 {
                     response.Success = false;
                     response.Message = "Payment executed unsuccessfully.";
@@ -1269,7 +1269,7 @@ namespace Application.Services
 
                 var invoiceNumber = transaction.invoice_number;
 
-                if (string.IsNullOrEmpty(invoiceNumber))
+                if (string.IsNullOrWhiteSpace(invoiceNumber))
                 {
                     response.Success = false;
                     response.Message = "Invoice number not found.";
@@ -1327,7 +1327,7 @@ namespace Application.Services
                     response.Success = true;
                     response.Message = "Payment successful";
                     var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
-                    if (!string.IsNullOrEmpty(userEmail) && new EmailAddressAttribute().IsValid(userEmail))
+                    if (!string.IsNullOrWhiteSpace(userEmail) && new EmailAddressAttribute().IsValid(userEmail))
                     {
                         //    // Generate the invoice
                         //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
@@ -1415,7 +1415,7 @@ namespace Application.Services
         //            document.Add(customerAddress);
 
         //            // Invoice Details
-        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}")
+        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow.AddHours(7):yyyy-MM-dd HH:mm:ss}")
         //                .SetTextAlignment(TextAlignment.LEFT)
         //                .SetBold();
         //            document.Add(invoiceDetails);
@@ -1476,7 +1476,7 @@ namespace Application.Services
                     var transactionId = payment.transactions.FirstOrDefault()?.related_resources
                         ?.FirstOrDefault()?.sale?.id;
 
-                    if (!string.IsNullOrEmpty(transactionId))
+                    if (!string.IsNullOrWhiteSpace(transactionId))
                     {
                         response.Success = true;
                         response.Data = transactionId;
@@ -1562,7 +1562,7 @@ namespace Application.Services
                 // Create the invoice
                 var createdInvoice = invoice.Create(apiContext);
 
-                if (createdInvoice != null && !string.IsNullOrEmpty(createdInvoice.id))
+                if (createdInvoice != null && !string.IsNullOrWhiteSpace(createdInvoice.id))
                 {
                     // Optionally send the invoice
                     createdInvoice.Send(apiContext);

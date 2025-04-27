@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ViewModels.FileDTO;
+using iText.Kernel.Crypto.Securityhandler;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +27,10 @@ namespace CapstonProjectBE.Controllers
             if (user == null)
             {
                 return Unauthorized();
+            }
+            if (user.IsDeleted || !user.IsVerified)
+            {
+                return Forbid();
             }
             var result = await _fileService.CreateFiles(user.UserId, formFiles);
             if (!result.Success)

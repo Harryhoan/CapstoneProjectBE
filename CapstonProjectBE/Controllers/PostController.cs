@@ -114,18 +114,15 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "CUSTOMER")]
         [HttpPut("Update")]
-        public async Task<IActionResult> UpdatePost(int postId, [FromForm] CreatePostDTO createPostDTO)
+        public async Task<IActionResult> UpdatePost(int postId, [FromForm] UpdatePostDTO updatePostDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null)
+            var check = await _postService.CheckIfUserCanUpdateOrRemoveByPostId(postId, user);
+            if (check != null)
             {
-                return Unauthorized();
+                return check;
             }
-            if (user.Role == UserEnum.CUSTOMER && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
-            {
-                return Forbid();
-            }
-            var result = await _postService.UpdatePost(postId, createPostDTO);
+            var result = await _postService.UpdatePost(postId, updatePostDTO);
             if (!result.Success)
             {
                 return BadRequest(result);
@@ -139,13 +136,10 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RemovePost(int postId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user == null)
+            var check = await _postService.CheckIfUserCanUpdateOrRemoveByPostId(postId, user);
+            if (check != null)
             {
-                return Unauthorized();
-            }
-            if (user.Role == UserEnum.CUSTOMER && !(await _postService.CheckIfPostHasUserId(postId, user.UserId)))
-            {
-                return Forbid();
+                return check;
             }
             var result = await _postService.RemovePost(postId);
             if (!result.Success)

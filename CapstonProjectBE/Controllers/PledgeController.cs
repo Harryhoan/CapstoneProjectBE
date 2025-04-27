@@ -102,7 +102,7 @@ namespace CapstonProjectBE.Controllers
                 return check;
             }
             var result = await _pledgeService.ExportPledgeToExcelByProjectId(projectId);
-            if (!result.Success || string.IsNullOrEmpty(result.Data)) return BadRequest(result.Message);
+            if (!result.Success || string.IsNullOrWhiteSpace(result.Data)) return BadRequest(result.Message);
             var project = await _projectService.GetProjectById(projectId);
             if (project == null || !project.Success || project.Data == null) return BadRequest("Project not found");
             var fileBytes = Convert.FromBase64String(result.Data);

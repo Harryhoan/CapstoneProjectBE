@@ -31,7 +31,7 @@ namespace Application.Services
                 {
                     Email = email,
                     Code = code,
-                    CreateAt = DateTime.UtcNow,
+                    CreateAt = DateTime.UtcNow.AddHours(7),
                 };
                 await _unitOfWork.VerifyCodeRepo.AddAsync(verifyCode);
                 response.Data = verifyCode;
@@ -119,7 +119,7 @@ namespace Application.Services
                 } 
 
                 var createAt = verifyCode.CreateAt;
-                DateTime now = DateTime.UtcNow;
+                DateTime now = DateTime.UtcNow.AddHours(7);
                 TimeSpan timeSpan = now - createAt;
                 if (timeSpan.TotalSeconds > 60)
                 {   

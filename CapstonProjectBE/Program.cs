@@ -99,7 +99,7 @@ namespace CapstonProjectBE
                 var secretKey = config["JWTSection:SecretKey"];
 
                 // Check if secretKey is null or empty
-                if (string.IsNullOrEmpty(secretKey))
+                if (string.IsNullOrWhiteSpace(secretKey))
                 {
                     throw new InvalidOperationException("JWT secret key is missing in the configuration.");
                 }

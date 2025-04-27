@@ -60,7 +60,7 @@ namespace Application.Services
                 post.Description = createPostDTO.Description;
                 post.Status = createPostDTO.Status;
                 //post.PostId = 0;
-                post.CreatedDatetime = DateTime.UtcNow;
+                post.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.PostRepo.AddAsync(post);
                 response.Data = post.PostId;
                 response.Success = true;
@@ -398,15 +398,15 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<string>> UpdatePost(int postId, CreatePostDTO createPostDTO)
+        public async Task<ServiceResponse<string>> UpdatePost(int postId, UpdatePostDTO updatePostDTO)
         {
             var response = new ServiceResponse<string>();
 
             try
             {
-                var validationContext = new ValidationContext(createPostDTO);
+                var validationContext = new ValidationContext(updatePostDTO);
                 var validationResults = new List<ValidationResult>();
-                if (!Validator.TryValidateObject(createPostDTO, validationContext, validationResults, true))
+                if (!Validator.TryValidateObject(updatePostDTO, validationContext, validationResults, true))
                 {
                     var errorMessages = validationResults.Select(r => r.ErrorMessage);
                     response.Success = false;
@@ -421,18 +421,18 @@ namespace Application.Services
                     response.Message = "Post not found";
                     return response;
                 }
-                var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createPostDTO.ProjectId);
-                if (existingProject == null)
-                {
-                    response.Success = false;
-                    response.Message = "Project not found";
-                    return response;
-                }
+                //var existingProject = await _unitOfWork.ProjectRepo.GetByIdAsync(createPostDTO.ProjectId);
+                //if (existingProject == null)
+                //{
+                //    response.Success = false;
+                //    response.Message = "Project not found";
+                //    return response;
+                //}
 
-                existingPost.ProjectId = createPostDTO.ProjectId;
-                existingPost.Title = createPostDTO.Title;
-                existingPost.Status = createPostDTO.Status;
-                existingPost.Description = createPostDTO.Description;
+                //existingPost.ProjectId = createPostDTO.ProjectId;
+                existingPost.Title = updatePostDTO.Title;
+                existingPost.Status = updatePostDTO.Status;
+                existingPost.Description = updatePostDTO.Description;
 
                 await _unitOfWork.PostRepo.UpdateAsync(existingPost);
                 response.Data = "Post updated successfully";
@@ -503,19 +503,53 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<bool> CheckIfPostHasUserId(int postId, int userId)
+        public async Task<IActionResult?> CheckIfUserCanUpdateOrRemoveByPostId(int postId, User? user = null)
         {
             try
             {
-                var existingPost = await _unitOfWork.PostRepo.GetByIdAsync(postId);
-                return existingPost != null && existingPost.UserId == userId;
+                if (user == null || !(user.UserId > 0))
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "Try logging in first." };
+                    return new UnauthorizedObjectResult(result);
+                }
+                var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", postId);
+                if (existingPost == null || (existingPost.Status == PostEnum.DELETED && user.Role == UserEnum.CUSTOMER))
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The post associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", existingPost.ProjectId);
+                if (existingProject == null || (existingPost.Status == PostEnum.DELETED && user.Role == UserEnum.CUSTOMER))
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+
+                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                    if (existingCollaborator == null || user.UserId != existingPost.UserId)
+                    {
+                        existingCollaborator = null;
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
+                        return new ObjectResult(result);
+                    }
+                }
+                else if (user.Role == UserEnum.STAFF)
+                {
+                    if (existingProject.MonitorId > 0 && existingProject.MonitorId != user.UserId)
+                    {
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the staff." };
+                        return new ObjectResult(result);
+                    }
+                }
+                return null;
             }
             catch
             {
             }
-
-            return false;
-
+            return new BadRequestResult();
         }
 
         public async Task<IActionResult?> CheckIfUserHasPermissionsByPostId(int postId, User? user = null)

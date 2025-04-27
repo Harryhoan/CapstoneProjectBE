@@ -50,7 +50,7 @@ namespace CapstonProjectBE.BackgroundServices
                                 var pledge = await dbContext.Pledges.SingleOrDefaultAsync(p => p.PledgeId == pledgeDetails[i].PledgeId);
                                 if (pledge != null)
                                 {
-                                    if (string.IsNullOrEmpty(pledgeDetails[i].PaymentId))
+                                    if (string.IsNullOrWhiteSpace(pledgeDetails[i].PaymentId))
                                     {
                                         pledge.TotalAmount += pledgeDetails[i].Amount;
                                         dbContext.PledgeDetails.Remove(pledgeDetails[i]);
@@ -80,7 +80,7 @@ namespace CapstonProjectBE.BackgroundServices
                                             pledgeDetails.RemoveAt(i);
                                             continue;
                                         }
-                                        else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS && !string.IsNullOrEmpty(payoutItem.transaction_id))
+                                        else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS && !string.IsNullOrWhiteSpace(payoutItem.transaction_id))
                                         {
                                             var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
                                             if (pledgeDetails[i].Status == PledgeDetailEnum.REFUNDING)

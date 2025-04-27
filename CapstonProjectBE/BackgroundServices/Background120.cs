@@ -4,7 +4,9 @@ using Application.IService;
 using Application.Utils;
 using Domain;
 using Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace CapstonProjectBE.BackgroundServices
 {
@@ -32,11 +34,11 @@ namespace CapstonProjectBE.BackgroundServices
                     try
                     {
                         var paypalPaymentService = scope.ServiceProvider.GetRequiredService<IPaypalPaymentService>();
-                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !string.IsNullOrEmpty(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
+                        var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !string.IsNullOrWhiteSpace(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
                         foreach (var project in projects)
                         {
                             //What about invisible projects? Can't the money from invisible projects be transferred as well?
-                            if (project.TransactionStatus == Domain.Enums.TransactionStatusEnum.RECEIVING && DateTime.UtcNow >= project.EndDatetime)
+                            if (project.TransactionStatus == Domain.Enums.TransactionStatusEnum.RECEIVING && DateTime.UtcNow.AddHours(7) >= project.EndDatetime)
                             {
                                 project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
                                 dbContext.Update(project);
@@ -54,7 +56,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         {
 
                                         }
-                                        if (project.Monitor != null && !string.IsNullOrEmpty(project.Monitor.Email))
+                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
                                         {
                                             emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
                                         }
@@ -67,7 +69,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         {
 
                                         }
-                                        if (project.Monitor != null && !string.IsNullOrEmpty(project.Monitor.Email))
+                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
                                         {
                                             emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
                                         }
