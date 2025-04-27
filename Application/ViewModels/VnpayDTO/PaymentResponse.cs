@@ -15,6 +15,6 @@ namespace Application.ViewModels.VnpayDTO
         /// <summary>
         /// Mô tả chi tiết về mã phản hồi, cung cấp thông tin bổ sung về trạng thái giao dịch.
         /// </summary>
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
     }
 }

@@ -78,7 +78,7 @@ namespace Application.Utils
             };
 
             // Attach the invoice PDF
-            if (!string.IsNullOrEmpty(invoicePath) && System.IO.File.Exists(invoicePath))
+            if (!string.IsNullOrWhiteSpace(invoicePath) && System.IO.File.Exists(invoicePath))
             {
                 bodyBuilder.Attachments.Add(invoicePath);
             }

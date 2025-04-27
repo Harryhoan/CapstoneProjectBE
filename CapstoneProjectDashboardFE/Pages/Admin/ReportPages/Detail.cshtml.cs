@@ -22,7 +22,7 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.ReportPages
                 }
 
                 var token = HttpContext.Session.GetString("Token");
-                if (string.IsNullOrEmpty(token))
+                if (string.IsNullOrWhiteSpace(token))
                 {
                     return RedirectToPage("/Index");
                 }

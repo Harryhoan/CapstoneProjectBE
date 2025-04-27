@@ -190,7 +190,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var existingUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null)
                 {
                     response.Success = false;

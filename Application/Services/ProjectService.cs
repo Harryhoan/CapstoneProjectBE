@@ -275,7 +275,7 @@ namespace Application.Services
                     return response;
                 }
                 project.Story = story;
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 response.Success = true;
@@ -307,7 +307,7 @@ namespace Application.Services
                         query = query.Where(p => p.CreatorId != queryProjectDto.CreatorId.Value).AsQueryable();
                     }
                 }
-                if (!string.IsNullOrEmpty(queryProjectDto.Title))
+                if (!string.IsNullOrWhiteSpace(queryProjectDto.Title))
                 {
                     query = query.Where(p => p.Title != null && p.Title.ToLower().Trim().Contains(queryProjectDto.Title.ToLower().Trim())).AsQueryable();
                 }
@@ -804,7 +804,7 @@ namespace Application.Services
 
                 // Update the thumbnail URL in the database
                 project.Thumbnail = uploadResult.Url.ToString();
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
 
@@ -926,7 +926,7 @@ namespace Application.Services
                     }
                 }
                 project.Status = projectStatus;
-                project.UpdateDatetime = DateTime.UtcNow;
+                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 

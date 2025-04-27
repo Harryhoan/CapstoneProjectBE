@@ -17,7 +17,7 @@ namespace CapstoneProjectDashboardFE.Pages.Admin.ProjectPages
             try
             {
                 var token = HttpContext.Session.GetString("Token");
-                if (string.IsNullOrEmpty(token))
+                if (string.IsNullOrWhiteSpace(token))
                 {
                     return RedirectToPage("/Index");
                 }

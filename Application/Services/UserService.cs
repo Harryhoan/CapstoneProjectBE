@@ -143,27 +143,27 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Fullname))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.Fullname))
                 {
                     userEntity.Fullname = UpdateUser.Fullname;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Email))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.Email))
                 {
                     userEntity.Email = UpdateUser.Email;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Password))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.Password))
                 {
                     userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.PaymentAccount))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.PaymentAccount))
                 {
                     userEntity.PaymentAccount = UpdateUser.PaymentAccount;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Phone))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.Phone))
                 {
                     userEntity.Phone = UpdateUser.Phone;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Bio))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.Bio))
                 {
                     userEntity.Bio = UpdateUser.Bio;
                 }
@@ -223,6 +223,12 @@ namespace Application.Services
             try
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "User not found.";
+                    return response;
+                }
                 if (user.Role != UserEnum.ADMIN)
                 {
                     response.Success = false;

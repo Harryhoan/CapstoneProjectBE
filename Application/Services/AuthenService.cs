@@ -43,7 +43,7 @@ namespace Application.Services
                 var userAccountRegister = _mapper.Map<User>(userObject);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 userAccountRegister.Role = UserEnum.CUSTOMER;
-                userAccountRegister.CreatedDatetime = DateTime.UtcNow;
+                userAccountRegister.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.UserRepo.AddAsync(userAccountRegister);
 
                 // Create Token
@@ -51,8 +51,8 @@ namespace Application.Services
                 {
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "confirmation",
-                    CreatedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                    CreatedAt = DateTime.UtcNow.AddHours(7),
+                    ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(10),
                     UserId = userAccountRegister.UserId
                 };
                 await _unitOfWork.TokenRepo.AddAsync(confirmationToken);
@@ -146,7 +146,7 @@ namespace Application.Services
                 return null;
             }
             var userId = claims.FindFirst("Id")?.Value;
-            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int id))
+            if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out int id))
             {
                 return null;
             }
@@ -179,15 +179,15 @@ namespace Application.Services
                     response.Message = "Your account has been confirmed.";
                     return response;
                 }
-                if (DateTime.UtcNow > token.ExpiresAt)
+                if (DateTime.UtcNow.AddHours(7) > token.ExpiresAt)
                 {
                     await _unitOfWork.TokenRepo.RemoveAsync(token);
                     var newToken = new Token
                     {
                         TokenValue = Guid.NewGuid().ToString(),
                         Type = "confirmation",
-                        CreatedAt = DateTime.UtcNow,
-                        ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                        CreatedAt = DateTime.UtcNow.AddHours(7),
+                        ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(10),
                         UserId = user.UserId
                     };
 
@@ -243,15 +243,15 @@ namespace Application.Services
                 var staffAccount = _mapper.Map<User>(register);
                 staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
-                staffAccount.CreatedDatetime = DateTime.UtcNow;
+                staffAccount.CreatedDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.UserRepo.AddAsync(staffAccount);
 
                 var token = new Token
                 {
                     TokenValue = "success",
-                    CreatedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow.AddHours(7),
+                    ExpiresAt = DateTime.UtcNow.AddHours(7),
                     Type = "confirmation",
                     UserId = staffAccount.UserId
                 };
@@ -389,8 +389,8 @@ namespace Application.Services
                 {
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "password_reset",
-                    CreatedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+                    CreatedAt = DateTime.UtcNow.AddHours(7),
+                    ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(15),
                     UserId = user.UserId
                 };
 
@@ -428,7 +428,7 @@ namespace Application.Services
             {
                 // Validate the token
                 var resetToken = await _unitOfWork.TokenRepo.GetTokenByValueAsync(token);
-                if (resetToken == null || resetToken.ExpiresAt < DateTime.UtcNow)
+                if (resetToken == null || resetToken.ExpiresAt < DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "Invalid or expired token.";
