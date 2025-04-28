@@ -69,7 +69,7 @@ namespace Application.Services
                     response.Message = "Project not found";
                     return response;
                 }
-                if (existingProject.CreatorId == user.UserId)
+                if (existingProject.CreatorId == existingUser.UserId)
                 {
                     response.Success = false;
                     response.Message = "Creator cannot be added as a collaborator";
@@ -91,7 +91,7 @@ namespace Application.Services
                     response.Message = "This request is forbidden to the collaborator";
                     return response;
                 }
-                var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(existingUser.UserId, existingProject.ProjectId);
+                var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(existingUser.UserId, existingProject.ProjectId);
                 if (existingCollaborator != null)
                 {
                     response.Success = false;
