@@ -57,6 +57,84 @@ namespace Application.Services
         //    return response;
         //}
 
+        public async Task<IActionResult> GetPaginatedFiles(int page = 1, int pageSize = 20, Domain.Entities.User? user = null)
+        {
+            var response = new ServiceResponse<PaginationModel<FileDTO>>();
+
+            try
+            {
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "Try logging in";
+                    return new UnauthorizedObjectResult(response);
+                }
+                var files = (await _unitOfWork.FileRepo.GetAllAsNoTrackingAsync()).OrderByDescending(f => f.CreatedDatetime).ToList();
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+                    files.RemoveAll(f => f.Status != "Deleted");
+                }
+                var fileDTOs = _mapper.Map<List<FileDTO>>(files);
+                response.Data = await Pagination.GetPagination(fileDTOs, page, pageSize);
+                response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No file found";
+                }
+                else
+                {
+                    response.Message = "Retrieve file(s) successfully";
+                }
+                return new OkObjectResult(response);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get files: {ex.Message}";
+                return new BadRequestObjectResult(response);
+            }
+
+        }
+
+        public async Task<IActionResult> GetFiles(Domain.Entities.User? user = null)
+        {
+            var response = new ServiceResponse<IList<FileDTO>>();
+
+            try
+            {
+                if (user == null)
+                {
+                    response.Success = false;
+                    response.Message = "Try logging in";
+                    return new UnauthorizedObjectResult(response);
+                }
+                var files = (await _unitOfWork.FileRepo.GetAllAsNoTrackingAsync()).OrderByDescending(f => f.CreatedDatetime).ToList();
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+                    files.RemoveAll(f => f.Status != "Deleted");
+                }
+                var fileDTOs = _mapper.Map<IList<FileDTO>>(files);
+                response.Data = fileDTOs;
+                response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No file found";
+                }
+                else
+                {
+                    response.Message = "Retrieve file(s) successfully";
+                }
+                return new OkObjectResult(response);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to get files: {ex.Message}";
+                return new BadRequestObjectResult(response);
+            }
+
+        }
+
         public async Task<IActionResult> GetPaginatedFilesByUserId(int userId, int page = 1, int pageSize = 20, Domain.Entities.User? user = null)
         {
             var response = new ServiceResponse<PaginationModel<FileDTO>>();
@@ -70,7 +148,7 @@ namespace Application.Services
                     return new UnauthorizedObjectResult(response);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
-                var files = await _unitOfWork.FileRepo.GetFilesByUserId(userId);
+                var files = (await _unitOfWork.FileRepo.GetFilesByUserId(userId)).OrderByDescending(f => f.CreatedDatetime).ToList();
                 if (existingUser == null)
                 {
                     await _unitOfWork.FileRepo.RemoveAll(files);
@@ -90,6 +168,14 @@ namespace Application.Services
                 var fileDTOs = _mapper.Map<List<FileDTO>>(files);
                 response.Data = await Pagination.GetPagination(fileDTOs, page, pageSize);
                 response.Success = true;
+                if (!response.Data.ListData.Any())
+                {
+                    response.Message = "No file found";
+                }
+                else
+                {
+                    response.Message = "Retrieve file(s) successfully";
+                }
                 return new OkObjectResult(response);
             }
             catch (Exception ex)
@@ -103,7 +189,7 @@ namespace Application.Services
 
         public async Task<IActionResult> GetFilesByUserId(int userId, Domain.Entities.User? user = null)
         {
-            var response = new ServiceResponse<List<FileDTO>>();
+            var response = new ServiceResponse<IList<FileDTO>>();
 
             try
             {
@@ -114,7 +200,7 @@ namespace Application.Services
                     return new UnauthorizedObjectResult(response);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
-                var files = await _unitOfWork.FileRepo.GetFilesByUserId(userId);
+                var files = (await _unitOfWork.FileRepo.GetFilesByUserId(userId)).OrderByDescending(f => f.CreatedDatetime).ToList();
                 if (existingUser == null)
                 {
                     await _unitOfWork.FileRepo.RemoveAll(files);
@@ -134,6 +220,14 @@ namespace Application.Services
                 var fileDTOs = _mapper.Map<List<FileDTO>>(files);
                 response.Data = fileDTOs;
                 response.Success = true;
+                if (!response.Data.Any())
+                {
+                    response.Message = "No file found";
+                }
+                else
+                {
+                    response.Message = "Retrieve file(s) successfully";
+                }
                 return new OkObjectResult(response);
             }
             catch (Exception ex)
@@ -245,13 +339,14 @@ namespace Application.Services
 
                             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
 
-                            if (uploadResult.Url != null)
+                            if (uploadResult.SecureUrl != null)
                             {
                                 var file = new Domain.Entities.File
                                 {
                                     Status = "Uploaded",
-                                    Source = uploadResult.Url.ToString(),
-                                    UserId = existingUser.UserId
+                                    Source = uploadResult.Url.ToString().Trim(),
+                                    UserId = existingUser.UserId,
+                                    CreatedDatetime = DateTime.UtcNow.AddHours(7)
                                 };
                                 await _unitOfWork.FileRepo.AddAsync(file);
 
@@ -362,7 +457,25 @@ namespace Application.Services
                     return response;
                 }
 
+                var publicId = ExtractPublicIdFromUrl(existingFile.Source);
+                if (string.IsNullOrWhiteSpace(publicId))
+                {
+                    response.Success = false;
+                    response.Message = "Failed to extract public ID from file URL";
+                    return response;
+                }
+
+                var deletionParams = new DeletionParams(publicId);
+                var deletionResult = await _cloudinary.DestroyAsync(deletionParams);
+                if (deletionResult.Error != null)
+                {
+                    response.Success = false;
+                    response.Message = $"Failed to delete file from Cloudinary: {deletionResult.Error.Message}";
+                    return response;
+                }
+
                 await _unitOfWork.FileRepo.RemoveAsync(existingFile);
+
                 response.Data = "File removed successfully";
                 response.Success = true;
             }
@@ -373,6 +486,20 @@ namespace Application.Services
             }
 
             return response;
+        }
+
+        private static string? ExtractPublicIdFromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
+
+            Uri uri = new Uri(url);
+            var path = uri.AbsolutePath;
+            var segments = path.Split('/');
+
+            return segments[segments.Length - 1].Split('.')[0];
         }
 
         public async Task<ServiceResponse<string>> SoftRemoveFile(int fileId)

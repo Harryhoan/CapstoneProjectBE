@@ -48,12 +48,28 @@ namespace CapstonProjectBE.Controllers
             return await _fileService.GetFileById(fileId, user);
         }
 
+        [Authorize(Roles = "STAFF, ADMIN")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetFiles()
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            return await _fileService.GetFiles(user);
+        }
+
+        [Authorize(Roles = "STAFF, ADMIN")]
+        [HttpGet("paging/all")]
+        public async Task<IActionResult> GetPaginatedFiles([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            return await _fileService.GetPaginatedFiles(page, pageSize, user);
+        }
+
         [Authorize]
         [HttpGet("files/user/{userId}")]
         public async Task<IActionResult> GetFilesByUserId([FromRoute] int userId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            return await _fileService.GetFilesByUserId(userId);
+            return await _fileService.GetFilesByUserId(userId, user);
         }
 
         [Authorize]

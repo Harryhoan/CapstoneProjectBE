@@ -6,5 +6,7 @@
         public string Status { get; set; } = string.Empty;
         public string Source { get; set; } = string.Empty;
         public int UserId { get; set; }
+        public DateTime CreatedDatetime { get; set; }
+
     }
 }
