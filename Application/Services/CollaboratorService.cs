@@ -3,6 +3,7 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.CollaboratorDTO;
 using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -44,12 +45,6 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (existingUser.UserId == user.UserId)
-                {
-                    response.Success = false;
-                    response.Message = "Collaborator already exists";
-                    return response;
-                }
                 if (existingUser.IsDeleted)
                 {
                     response.Success = false;
@@ -60,6 +55,12 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "User unverified";
+                    return response;
+                }
+                if (existingUser.Role != UserEnum.CUSTOMER)
+                {
+                    response.Success = false;
+                    response.Message = "This collaborator cannot be added";
                     return response;
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
@@ -73,6 +74,12 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Creator cannot be added as a collaborator";
+                    return response;
+                }
+                if (existingUser.UserId == user.UserId)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator cannot be self-added";
                     return response;
                 }
                 var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
@@ -141,12 +148,6 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (existingUser.UserId == user.UserId)
-                {
-                    response.Success = false;
-                    response.Message = "Collaborator already exists";
-                    return response;
-                }
                 if (existingUser.IsDeleted)
                 {
                     response.Success = false;
@@ -159,6 +160,12 @@ namespace Application.Services
                     response.Message = "User unverified";
                     return response;
                 }
+                if (existingUser.Role != UserEnum.CUSTOMER)
+                {
+                    response.Success = false;
+                    response.Message = "This collaborator cannot be added";
+                    return response;
+                }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createCollaboratorDTO.ProjectId);
                 if (existingProject == null)
                 {
@@ -166,10 +173,16 @@ namespace Application.Services
                     response.Message = "Project not found";
                     return response;
                 }
-                if (existingProject.CreatorId == user.UserId)
+                if (existingProject.CreatorId == existingUser.UserId)
                 {
                     response.Success = false;
                     response.Message = "Creator cannot be added as a collaborator";
+                    return response;
+                }
+                if (existingUser.UserId == user.UserId)
+                {
+                    response.Success = false;
+                    response.Message = "Collaborator cannot be self-added";
                     return response;
                 }
                 var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectIdAsNoTracking(user.UserId, existingProject.ProjectId);
@@ -532,13 +545,93 @@ namespace Application.Services
             return new BadRequestResult();
         }
 
+        public async Task<IActionResult?> CheckIfUserCanCreateByProjectId(int userId, int projectId, User? user = null)
+        {
+            try
+            {
+                if (user == null || !(user.UserId > 0))
+                {
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This user is not authorized. Try logging in." };
+                    return new UnauthorizedObjectResult(result);
+                }
+                if (user.IsDeleted || !user.IsVerified)
+                {
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
+                    return new ObjectResult(result);
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+                var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
+                if (existingUser == null || existingUser.IsDeleted)
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The user associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+                if (!existingUser.IsVerified)
+                {
+                    var result = new { StatusCode = StatusCodes.Status400BadRequest, Message = "An unverified user cannot be a collaborator." };
+                    return new BadRequestObjectResult(result);
+                }
+                if (existingUser.Role != UserEnum.CUSTOMER)
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "This collaborator cannot be added." };
+                    return new NotFoundObjectResult(result);
+                }
+                if (existingUser.UserId == existingProject.CreatorId)
+                {
+                    var result = new { StatusCode = StatusCodes.Status400BadRequest, Message = "The creator cannot be added as a collaborator." };
+                    return new BadRequestObjectResult(result);
+                }
+                if (existingUser.UserId == user.UserId)
+                {
+                    var result = new { StatusCode = StatusCodes.Status400BadRequest, Message = "A collaborator cannot be self-added." };
+                    return new BadRequestObjectResult(result);
+                }
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+                    if (user.UserId != existingProject.CreatorId)
+                    {
+                        var userCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
+                        {
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
+                            return new ObjectResult(result);
+                        }
+                    }
+                }
+                else
+                {
+                    if (user.Role == UserEnum.STAFF)
+                    {
+                        if (user.UserId != existingProject.MonitorId)
+                        {
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
+                            return new ObjectResult(result);
+                        }
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+            }
+            var badRequest = new { StatusCode = StatusCodes.Status400BadRequest, Message = "The validation process failed." };
+            return new BadRequestObjectResult(badRequest);
+        }
+
+
         public async Task<IActionResult?> CheckIfUserCanRemoveByProjectId(int userId, int projectId, User? user = null)
         {
             try
             {
                 if (user == null || !(user.UserId > 0))
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This user is not authorized. Try logging in." };
+                    return new UnauthorizedObjectResult(result);
                 }
                 if (user.IsDeleted || !user.IsVerified)
                 {
@@ -556,7 +649,6 @@ namespace Application.Services
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (existingUser == null || existingUser.IsDeleted)
                 {
-                    //return new NotFoundResult();
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The user associated with the request cannot be found." };
                     return new NotFoundObjectResult(result);
                 }
@@ -596,7 +688,8 @@ namespace Application.Services
             {
                 if (user == null || !(user.UserId > 0))
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This user is not authorized. Try logging in." };
+                    return new UnauthorizedObjectResult(result);
                 }
                 if (user.IsDeleted || !user.IsVerified)
                 {

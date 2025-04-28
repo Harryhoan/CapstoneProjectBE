@@ -24,6 +24,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> CreateCollaborator([FromForm] CreateCollaboratorDTO createCollaboratorDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _collaboratorService.CheckIfUserCanCreateByProjectId(createCollaboratorDTO.UserId, createCollaboratorDTO.ProjectId, user);
+            if (check != null)
+            {
+                return check;
+            }
             if (user == null)
             {
                 return Unauthorized();
