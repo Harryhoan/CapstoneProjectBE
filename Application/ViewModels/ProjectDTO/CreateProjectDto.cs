@@ -4,7 +4,7 @@ namespace Application.ViewModels.ProjectDTO
 {
     public class CreateProjectDto
     {
-        [Required(ErrorMessage = "Title cannot be empty")]
+        //[Required(ErrorMessage = "Title cannot be empty")]
         public string? Title { get; set; }
         public string? Description { get; set; }
         [Required(ErrorMessage = "Minimum Amount cannot be empty")]

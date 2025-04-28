@@ -65,7 +65,9 @@ namespace Application.Services
             {
                 if (user == null)
                 {
-                    return new UnauthorizedResult();
+                    response.Success = false;
+                    response.Message = "Try logging in";
+                    return new UnauthorizedObjectResult(response);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 var files = await _unitOfWork.FileRepo.GetFilesByUserId(userId);
@@ -107,7 +109,9 @@ namespace Application.Services
             {
                 if (user == null)
                 {
-                    return new UnauthorizedResult();
+                    response.Success = false;
+                    response.Message = "Try logging in";
+                    return new UnauthorizedObjectResult(response);
                 }
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 var files = await _unitOfWork.FileRepo.GetFilesByUserId(userId);
@@ -148,7 +152,9 @@ namespace Application.Services
 
                 if (user == null)
                 {
-                    return new UnauthorizedResult();
+                    response.Success = false;
+                    response.Message = "Try logging in";
+                    return new UnauthorizedObjectResult(response);
                 }
 
                 var existingFile = await _unitOfWork.FileRepo.GetByIdNoTrackingAsync("FileId", fileId);
