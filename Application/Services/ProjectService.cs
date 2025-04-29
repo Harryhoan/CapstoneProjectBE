@@ -942,7 +942,38 @@ namespace Application.Services
 
             return response;
         }
-
+        public async Task<ServiceResponse<string>> ChangeProjectMonitorAsync(int projectId, int staffId)
+        {
+            var response = new ServiceResponse<string>();
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+                var staff = await _unitOfWork.UserRepo.GetByIdAsync(staffId);
+                if (staff == null)
+                {
+                    response.Success = false;
+                    response.Message = "Staff not found.";
+                    return response;
+                }
+                project.MonitorId = staff.UserId;
+                await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+                response.Success = true;
+                response.Message = "Project monitor changed successfully.";
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+            return response;
+        }
         public async Task<ServiceResponse<ProjectCategoryDto>> AddCategoryToProject(AddCategoryToProject addCategory)
         {
             var response = new ServiceResponse<ProjectCategoryDto>();

@@ -237,5 +237,22 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+
+        [HttpPut("ChangeProjectMonitor")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<IActionResult> ChangeProjectMonitor(int projectId, int staffId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            var result = await _projectService.ChangeProjectMonitorAsync(projectId, staffId);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+        }
     }
 }
