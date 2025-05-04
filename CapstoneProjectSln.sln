@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Application\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstoneProjectDashboardFE", "CapstoneProjectDashboardFE\CapstoneProjectDashboardFE.csproj", "{311120C7-69C4-4EB7-BA99-AC175D29DB16}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CapstonProjectBE.Tests.Unit", "UnitTest\CapstonProjectBE.Tests.Unit.csproj", "{8F447AEC-5CAD-417A-9FB2-F097BF5626A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{311120C7-69C4-4EB7-BA99-AC175D29DB16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F447AEC-5CAD-417A-9FB2-F097BF5626A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F447AEC-5CAD-417A-9FB2-F097BF5626A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F447AEC-5CAD-417A-9FB2-F097BF5626A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F447AEC-5CAD-417A-9FB2-F097BF5626A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

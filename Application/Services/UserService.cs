@@ -206,7 +206,7 @@ namespace Application.Services
                     }
                 }
 
-                userEntity.Avatar = uploadResult.Url.ToString();
+                userEntity.Avatar = uploadResult.SecureUrl.ToString();
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
                 response.Data = _mapper.Map<string>(userEntity);
             }
