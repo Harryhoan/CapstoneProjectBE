@@ -74,11 +74,11 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> GetProjectById(int id)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            //var check = await _authenService.CheckIfUserCanGetByProjectId(id, user);
-            //if (check != null)
-            //{
-            //    return check;
-            //}
+            var check = await _authenService.CheckIfUserCanGetByProjectId(id, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _projectService.GetProjectById(id);
             if (!result.Success)
             {

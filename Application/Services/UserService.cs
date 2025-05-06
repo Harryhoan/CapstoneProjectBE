@@ -145,7 +145,7 @@ namespace Application.Services
                 }
                 if (!string.IsNullOrWhiteSpace(UpdateUser.Fullname))
                 {
-                    userEntity.Fullname = UpdateUser.Fullname;
+                    userEntity.Fullname = FormatUtils.TrimSpacesPreserveSingle(userEntity.Fullname);
                 }
                 if (!string.IsNullOrWhiteSpace(UpdateUser.Email))
                 {

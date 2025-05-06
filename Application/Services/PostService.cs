@@ -492,9 +492,25 @@ namespace Application.Services
                     response.Message = "Post not found";
                     return response;
                 }
+                var existingPostComments = await _unitOfWork.PostCommentRepo.GetPostCommentsByPostId(existingPost.PostId);
+                if (existingPostComments.Any())
+                {
+                    List<Comment> existingComments = new();
+                    foreach(var postComment in existingPostComments)
+                    {
+                        var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(postComment.CommentId);
+                        if (existingComment != null)
+                        {
+                            existingComments.Add(existingComment);
+                        }
+                    }
+                    if (existingComments.Any())
+                    {
+                        await _unitOfWork.CommentRepo.RemoveAll(existingComments);
+                    }
+                    await _unitOfWork.PostCommentRepo.RemoveAll(existingPostComments);
+                }
                 await _unitOfWork.PostRepo.RemoveAsync(existingPost);
-                //existingPost.Status = PostEnum.DELETED;
-                //await _unitOfWork.PostRepo.Update(existingPost);
                 response.Data = "Post removed successfully";
                 response.Success = true;
             }

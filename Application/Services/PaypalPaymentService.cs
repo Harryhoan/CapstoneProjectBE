@@ -280,7 +280,7 @@ namespace Application.Services
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
                             if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
                             {
-                                var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId);
+                                var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId, project.ProjectId);
                                 if (!emailSend)
                                 {
 
@@ -517,7 +517,7 @@ namespace Application.Services
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                             if (!string.IsNullOrWhiteSpace(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
                             {
-                                var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId);
+                                var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId, project.ProjectId);
                                 if (!emailSend)
                                 {
 
@@ -548,6 +548,14 @@ namespace Application.Services
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                            if (!string.IsNullOrWhiteSpace(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email) && !string.IsNullOrWhiteSpace(invoiceUrl))
+                            {
+                                //    // Generate the invoice
+                                //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
+
+                                //    // Send the invoice via email
+                                await EmailSender.SendRefundInvoiceEmail(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, finalTotalAmount, invoiceUrl, project.ProjectId);
+                            }
                         }
                         else
                         {
@@ -754,6 +762,7 @@ namespace Application.Services
                     decimal totalRefunded = 0;
                     foreach (var (pledge, detail) in refundDetails)
                     {
+                        var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
                         var payoutItem = payoutDetails.items
                             .FirstOrDefault(i => i.payout_item.sender_item_id == pledge.PledgeId.ToString());
 
@@ -761,6 +770,7 @@ namespace Application.Services
 
                         if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                         {
+                            var tempAmount = pledge.TotalAmount;
                             totalRefunded += pledge.TotalAmount;
                             pledge.TotalAmount = 0;
                             var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
@@ -772,6 +782,14 @@ namespace Application.Services
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                            if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
+
+                            var emailSend = await EmailSender.SendRefundInvoiceEmail(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledge.TotalAmount, detail.InvoiceUrl, project.ProjectId);
+                            if (!emailSend)
+                            {
+
+                            }
+
                         }
                         else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING ||
                                  payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.NEW || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD)
@@ -779,12 +797,10 @@ namespace Application.Services
                             detail.PaymentId = createdPayout.batch_header.payout_batch_id;
                             detail.Status = PledgeDetailEnum.REFUNDING;
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
-                            var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
                             if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
-                            var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrWhiteSpace(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
+                            var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId, project.ProjectId);
                             if (!emailSend)
                             {
-
                             }
                         }
                     }
@@ -1142,7 +1158,7 @@ namespace Application.Services
                         {
                             description = $"Pledge to project {projectId} by user {userId} - Payment",
                             invoice_number = uniqueInvoiceNumber,
-                            amount = new Amount
+                            amount = new PayPal.Api.Amount
                             {
                                 currency = "USD",
                                 total = totalAmount
@@ -1346,7 +1362,7 @@ namespace Application.Services
                         //    var invoicePath = GenerateInvoice(userEmail, project.Title ?? "Null", amount, invoiceNumber);
 
                         //    // Send the invoice via email
-                        await EmailSender.SendBillingEmail(userEmail, "Your Invoice", amount, "Please find your invoice attached.", invoiceUrl);
+                        await EmailSender.SendBillingEmail(userEmail, string.IsNullOrWhiteSpace(project.Title) ? "[No Title]" : project.Title, amount, invoiceUrl, project.ProjectId);
                     }
                 }
                 catch
