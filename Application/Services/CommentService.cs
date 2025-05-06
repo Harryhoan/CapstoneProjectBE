@@ -46,7 +46,7 @@ namespace Application.Services
                 //    return response;
                 //}
                 var existingPost = await _unitOfWork.PostRepo.GetByIdNoTrackingAsync("PostId", createPostCommentDTO.PostId);
-                if (existingPost == null)
+                if (existingPost == null || existingPost.Status == PostEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "Post not found";
@@ -137,10 +137,10 @@ namespace Application.Services
                 //    return response;
                 //}
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createProjectCommentDTO.ProjectId);
-                if (existingProject == null)
+                if (existingProject == null || existingProject.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
-                    response.Message = "Post not found";
+                    response.Message = "Project not found";
                     return response;
                 }
                 if (createProjectCommentDTO.ParentCommentId != null)
