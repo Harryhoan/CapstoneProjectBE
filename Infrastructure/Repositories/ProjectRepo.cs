@@ -36,7 +36,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<List<Project>> GetProjectByUserIdAsync(int userId)
         {
-            return await _dbContext.Projects.Where(p => p.CreatorId == userId).ToListAsync();
+            return await _dbContext.Projects.Where(p => p.CreatorId == userId || p.Collaborators.Any(c => c.UserId == userId)).ToListAsync();
         }
         public async Task<Project?> GetProjectById(int id) => await _dbContext.Projects.FindAsync(id);
 

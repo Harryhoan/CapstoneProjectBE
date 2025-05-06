@@ -8,6 +8,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using System.Security.Claims;
 
@@ -40,6 +41,8 @@ namespace Application.Services
                 }
 
                 var userAccountRegister = _mapper.Map<User>(userObject);
+                userAccountRegister.Email = userAccountRegister.Email.Trim();
+                userAccountRegister.Fullname = FormatUtils.TrimSpacesPreserveSingle(userAccountRegister.Fullname);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 userAccountRegister.Role = UserEnum.CUSTOMER;
                 userAccountRegister.CreatedDatetime = DateTime.UtcNow.AddHours(7);
@@ -94,6 +97,16 @@ namespace Application.Services
             var response = new TokenResponse<string>();
             try
             {
+                var validationContext = new ValidationContext(userObject);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(userObject, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r =>  !string.IsNullOrWhiteSpace(r.ErrorMessage) ? (string) r.ErrorMessage : string.Empty).ToList();
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    response.ErrorMessages = errorMessages;
+                    return response;
+                }
                 var passHash = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 var userLogin = await _unitOfWork.UserRepo.GetUserByEmailAddressAndPasswordHash(userObject.Username, passHash);
                 if (userLogin == null)

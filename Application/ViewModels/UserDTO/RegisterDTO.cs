@@ -14,7 +14,7 @@ namespace Application.ViewModels.UserDTO
         [Compare("Password", ErrorMessage = "Password and Confirm Password do not match")]
         public string ConfirmPassword { get; set; } = string.Empty;
         [Required(ErrorMessage = "Full Name is required")]
-        [StringLength(50, ErrorMessage = "Title can't be longer than 50 characters")]
+        [StringLength(50, ErrorMessage = "Full name can't be longer than 50 characters")]
         public string Fullname { get; set; } = string.Empty;
     }
 }

@@ -1,10 +1,12 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.Utils;
 using Application.ViewModels.CategoryDTO;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
+using System.Xml;
 
 
 namespace Application.Services
@@ -54,6 +56,11 @@ namespace Application.Services
                     }
                 }
                 var newCategory = _mapper.Map<Category>(category);
+                newCategory.Name = FormatUtils.TrimSpacesPreserveSingle(newCategory.Name);
+                if (!string.IsNullOrWhiteSpace(newCategory.Description))
+                {
+                    newCategory.Description = FormatUtils.TrimSpacesPreserveSingle(newCategory.Description);
+                }
                 await _unitOfWork.CategoryRepo.AddAsync(newCategory);
 
                 response.Data = category;

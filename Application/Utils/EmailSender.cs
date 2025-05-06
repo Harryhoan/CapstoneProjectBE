@@ -11,7 +11,98 @@ namespace Application.Utils
         {
             return ("GameMkt", "thongsieusao3@gmail.com", "dfni ihvq panf lyjc");
         }
-        public static async Task<bool> SendBillingEmail(string toEmail, string projectTitle, decimal amount, string invoiceNumber, string invoicePath)
+
+        public static async Task<bool> SendRefundInvoiceEmail(string toEmail, string projectTitle, decimal amount, string invoiceUrl, int projectId)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = "Billing Receipt for Your Pledge";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = $@"
+<html>
+    <head>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 0;
+            }}
+            .content {{
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .header {{
+                text-align: center;
+                margin-bottom: 20px;
+            }}
+            .details {{
+                margin-top: 20px;
+            }}
+            .footer {{
+                margin-top: 30px;
+                text-align: center;
+                font-size: 12px;
+                color: #888;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='content'>
+            <div class='header'>
+                <h2>Here's Your Refund Invoice</h2>
+            </div>
+            <p>Dear Supporter,</p>
+            <p>Your pledges to the project <strong>{projectTitle}</strong> have been refunded.</p>
+            <div class='details'>
+                <p><strong>Project Title:</strong> {projectTitle}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
+                <p><strong>Invoice URL:</strong> {invoiceUrl}</p>
+                <p><strong>Refunded Amount:</strong> ${amount:F2}</p>
+            </div>
+            <p>To see the details of this refund, you can navigate to https://game-mkt.vercel.app/pledges.</p>
+            <p>Your support is greatly appreciated. If you have any questions, feel free to contact us.</p>
+            <div class='footer'>
+                <p>GameMkt Team</p>
+            </div>
+        </div>
+    </body>
+</html>"
+            };
+
+
+            message.Body = bodyBuilder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+
+        public static async Task<bool> SendBillingEmail(string toEmail, string projectTitle, decimal amount, string invoiceUrl, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -63,9 +154,12 @@ namespace Application.Utils
             <p>Dear Supporter,</p>
             <p>We are pleased to confirm your pledge for the project <strong>{projectTitle}</strong>.</p>
             <div class='details'>
-                <p><strong>Invoice Number:</strong> {invoiceNumber}</p>
+                <p><strong>Project Title:</strong> {projectTitle}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
+                <p><strong>Invoice URL:</strong> {invoiceUrl}</p>
                 <p><strong>Amount:</strong> ${amount:F2}</p>
             </div>
+            <p>To see your pledges, you can navigate to https://game-mkt.vercel.app/pledges.</p>
             <p>Your support is greatly appreciated. If you have any questions, feel free to contact us.</p>
             <div class='footer'>
                 <p>GameMkt Team</p>
@@ -74,12 +168,6 @@ namespace Application.Utils
     </body>
 </html>"
             };
-
-            // Attach the invoice PDF
-            if (!string.IsNullOrWhiteSpace(invoicePath) && System.IO.File.Exists(invoicePath))
-            {
-                bodyBuilder.Attachments.Add(invoicePath);
-            }
 
             message.Body = bodyBuilder.ToMessageBody();
 
@@ -102,7 +190,7 @@ namespace Application.Utils
             }
         }
 
-        public static async Task<bool> SendPayPalLoginEmailToBacker(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId)
+        public static async Task<bool> SendPayPalLoginEmailToBacker(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -154,6 +242,8 @@ namespace Application.Utils
             <p>Dear User,</p>
             <p>An attempt has been made to send an amount of money to your existing Paypal account <strong>{"\"" + paymentAccount + "\""}</strong> from the platform GameMkt as compensation for your apparent pledge to the project <strong>{"\"" + projectTitle + "\""}</strong>.</p>
             <div class='details'>
+                <p><strong>Project Title:</strong> {projectTitle}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
                 <p><strong>Payout ID:</strong> {payoutBatchId}</p>
                 <p><strong>Amount:</strong> ${amount:F2}</p>
             </div>
@@ -187,7 +277,7 @@ namespace Application.Utils
             }
         }
 
-        public static async Task<bool> SendPayPalLoginEmailToCreator(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId)
+        public static async Task<bool> SendPayPalLoginEmailToCreator(string toEmail, string projectTitle, decimal amount, string paymentAccount, string payoutBatchId, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -239,6 +329,8 @@ namespace Application.Utils
             <p>Dear Campaingner and Creator,</p>
             <p>An attempt has been made to send an amount of money to your existing Paypal account <strong>{"\"" + paymentAccount + "\""}</strong> from the platform GameMkt as your project <strong>{"\"" + projectTitle + "\""}</strong> has reached its goal.</p>
             <div class='details'>
+                <p><strong>Project Title:</strong> {projectTitle}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
                 <p><strong>Payout ID:</strong> {payoutBatchId}</p>
                 <p><strong>Amount:</strong> ${amount:F2}</p>
             </div>

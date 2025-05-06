@@ -18,5 +18,11 @@ namespace Infrastructure.Repositories
         {
             return await _dbContext.PostComments.SingleOrDefaultAsync(pc => pc.CommentId == commentId);
         }
+
+        public async Task<List<PostComment>> GetPostCommentsByPostId(int postId)
+        {
+            return await _dbContext.PostComments.Where(pc => pc.PostId == postId).ToListAsync();
+        }
+
     }
 }
