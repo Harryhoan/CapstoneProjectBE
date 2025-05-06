@@ -23,7 +23,7 @@ namespace CapstonProjectBE.Controllers
 
         [HttpGet("GetAllCategory")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAllCategory([FromQuery]string? name)
+        public async Task<IActionResult> GetAllCategory([FromQuery] string? name)
         {
             var result = await _categoryService.GetAllCategory(name);
             if (!result.Success)

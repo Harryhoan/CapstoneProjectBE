@@ -1,5 +1,4 @@
 ﻿using Application.ViewModels.CategoryDTO;
-using Application.ViewModels.PlatformDTO;
 using Domain.Enums;
 
 namespace Application.ViewModels.ProjectDTO

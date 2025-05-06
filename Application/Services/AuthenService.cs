@@ -4,7 +4,6 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
-using DocumentFormat.OpenXml.Drawing.Charts;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +17,7 @@ namespace Application.Services
     {
         private readonly AppConfiguration _config;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;   
+        private readonly IMapper _mapper;
 
         public AuthenService(AppConfiguration config, IUnitOfWork unitOfWork, IMapper mapper)
         {
@@ -88,7 +87,7 @@ namespace Application.Services
             }
 
             return response;
-        }   
+        }
 
         public async Task<TokenResponse<string>> LoginAsync(LoginUserDTO userObject)
         {

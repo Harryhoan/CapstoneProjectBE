@@ -10,12 +10,9 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
-using MailKit.Net.Imap;
 using Microsoft.AspNetCore.Http;
-using Microsoft.DotNet.PlatformAbstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Org.BouncyCastle.Asn1.Esf;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
 
@@ -914,7 +911,7 @@ namespace Application.Services
                     response.Message = "Creator not found.";
                     return response;
                 }
-                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERRED) 
+                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERRED)
                 {
                     if (projectStatus == ProjectStatusEnum.VISIBLE)
                     {

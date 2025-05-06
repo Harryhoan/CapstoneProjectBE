@@ -5,7 +5,6 @@ using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
 using Domain.Enums;
-using System.Threading.Tasks;
 
 
 namespace Application.Services

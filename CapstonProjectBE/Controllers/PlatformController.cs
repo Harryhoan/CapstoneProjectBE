@@ -1,5 +1,4 @@
 ﻿using Application.IService;
-using Application.ServiceResponse;
 using Application.ViewModels.PlatformDTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -86,7 +85,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "STAFF, ADMIN")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreatePlatform([FromForm]CreatePlatformDTO createPlatformDTO)
+        public async Task<IActionResult> CreatePlatform([FromForm] CreatePlatformDTO createPlatformDTO)
         {
             var result = await _platformService.CreatePlatform(createPlatformDTO);
             if (!result.Success)
@@ -108,7 +107,7 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
-        
+
         [Authorize(Roles = "STAFF, ADMIN")]
         [HttpDelete]
         public async Task<IActionResult> RemovePlatform(int platformId)
@@ -124,7 +123,7 @@ namespace CapstonProjectBE.Controllers
 
         [Authorize(Roles = "STAFF, CUSTOMER")]
         [HttpPost("project/add")]
-        public async Task<IActionResult> CreateProjectPlatform([FromForm]ProjectPlatformDTO projectPlatformDTO)
+        public async Task<IActionResult> CreateProjectPlatform([FromForm] ProjectPlatformDTO projectPlatformDTO)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectPlatformDTO.ProjectId, user);

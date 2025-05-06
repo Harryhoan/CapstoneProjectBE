@@ -3,7 +3,6 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.PostDTO;
 using AutoMapper;
-using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
@@ -46,7 +45,7 @@ namespace Application.Services
                     return response;
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", createPostDTO.ProjectId);
-                if (existingProject == null)
+                if (existingProject == null || existingProject.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
                     response.Message = "Project not found";
@@ -172,19 +171,28 @@ namespace Application.Services
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if (existingCollaborator == null && existingProject.CreatorId != user.UserId)
                     {
-                        posts.RemoveAll(p => (p.Status == PostEnum.PRIVATE || p.Status == PostEnum.EXCLUSIVE) && p.UserId != userId);
+                        if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                        {
+                            return null;
+                        }
+                        posts.RemoveAll(p => p.Status == PostEnum.PRIVATE && p.UserId != userId);
+                        var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
+                        if ((existingPledge == null || existingPledge.TotalAmount <= 0))
+                        {
+                            posts.RemoveAll(p => p.Status == PostEnum.EXCLUSIVE && p.UserId != userId);
+                        }
                     }
-                    var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
-                    if ((existingPledge == null || existingPledge.TotalAmount <= 0) && existingCollaborator == null)
-                    {
-                        posts.RemoveAll(p => p.Status == PostEnum.EXCLUSIVE);
-                    }
+
                     posts.RemoveAll(p => p.Status == PostEnum.DELETED);
                 }
             }
+            else if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+            {
+                return null;
+            }
             else
             {
-                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE);
+                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE || p.Project.Status == ProjectStatusEnum.INVISIBLE);
             }
             return posts;
         }
@@ -221,6 +229,11 @@ namespace Application.Services
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(currentUser.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null && existingProject.CreatorId != currentUser.UserId)
                         {
+                            if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                            {
+                                posts.RemoveAll(p => p.UserId != currentUser.UserId && p.ProjectId == existingProject.ProjectId);
+                                continue;
+                            }
                             if ((posts[i].Status == PostEnum.PRIVATE || posts[i].Status == PostEnum.EXCLUSIVE) && posts[i].UserId != currentUser.UserId)
                             {
                                 posts.RemoveAt(i);
@@ -244,6 +257,25 @@ namespace Application.Services
             else
             {
                 posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE);
+                int k = 0;
+                while (k < posts.Count)
+                {
+                    var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", posts[k].ProjectId);
+                    if (existingProject == null)
+                    {
+                        var temp = posts.Where(p => p.ProjectId == posts[k].ProjectId);
+                        posts.RemoveAll(p => p.ProjectId == posts[k].ProjectId);
+                        await _unitOfWork.PostRepo.RemoveAll(temp);
+                        continue;
+                    }
+
+                    if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                    {
+                        posts.RemoveAll(p => p.ProjectId == existingProject.ProjectId);
+                        continue;
+                    }
+                    k++;
+                }
             }
 
             return posts;
@@ -531,10 +563,11 @@ namespace Application.Services
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if (existingCollaborator == null || user.UserId != existingPost.UserId)
                     {
-                        existingCollaborator = null;
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
                         return new ObjectResult(result);
                     }
+                    existingCollaborator = null;
+
                 }
                 else if (user.Role == UserEnum.STAFF)
                 {

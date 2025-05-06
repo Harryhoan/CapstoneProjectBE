@@ -1,15 +1,8 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
-using Application.Utils;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
 using Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Application.Services
 {
@@ -114,15 +107,15 @@ namespace Application.Services
                 if (verifyCode == null)
                 {
                     response.Success = false;
-                    response.Message ="Verify code incorrect";
+                    response.Message = "Verify code incorrect";
                     return response;
-                } 
+                }
 
                 var createAt = verifyCode.CreateAt;
                 DateTime now = DateTime.UtcNow.AddHours(7);
                 TimeSpan timeSpan = now - createAt;
                 if (timeSpan.TotalSeconds > 60)
-                {   
+                {
                     response.Success = false;
                     response.Message = "Verify code expired";
                     return response;

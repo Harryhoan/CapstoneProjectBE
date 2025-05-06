@@ -5,8 +5,6 @@ using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
-using Domain.Enums;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services

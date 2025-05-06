@@ -2,28 +2,13 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using AutoMapper;
-using CloudinaryDotNet.Actions;
-using DocumentFormat.OpenXml.Drawing;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Domain.Entities;
 using Domain.Enums;
-using iText.IO.Font;
-using iText.Kernel.Font;
-using iText.Kernel.Pdf;
-using iText.Kernel.Pdf.Canvas.Draw;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.Layout.Properties;
-using iText.Pdfa;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.Configuration;
 using PayPal;
 using PayPal.Api;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using Paragraph = iText.Layout.Element.Paragraph;
 
 namespace Application.Services
 {
@@ -190,122 +175,132 @@ namespace Application.Services
                 }
             }
                 };
+                var dbTransaction = await _unitOfWork.BeginTransactionAsync();
 
-                var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                // Fetch the payout details to retrieve the transaction ID
-                var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                var startTime = DateTime.UtcNow.AddHours(7);
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                try
                 {
+
+                    var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
                     await Task.Delay(TimeSpan.FromSeconds(10));
-                    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                }
-                if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
-                {
-                    response.Success = false;
-                    response.Message = "The payouts file that was uploaded through the PayPal portal was cancelled by the sender.";
-                    return response;
-                }
-                else if (payoutDetails.batch_header.batch_status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
-                {
-                    response.Success = false;
-                    response.Message = $"The relevant payout requests were denied, so they were not processed.";
-                    response.ErrorMessages = payoutDetails.items
-                                                   .Select(i => i.error.message)
-                                                   .ToList();
-                    return response;
-                }
-                else if (payoutDetails.batch_header.batch_status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase))
-                {
-                    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    var payoutItem = payoutDetails.items.FirstOrDefault();
-                    if (payoutItem == null)
+                    // Fetch the payout details to retrieve the transaction ID
+                    var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
+                    var startTime = DateTime.UtcNow.AddHours(7);
+                    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(10));
+                        payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    }
+                    if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
                     {
                         response.Success = false;
-                        response.Message = "Payout item not found.";
+                        response.Message = "The payouts file that was uploaded through the PayPal portal was cancelled by the sender.";
                         return response;
                     }
-                    if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
+                    else if (payoutDetails.batch_header.batch_status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
                     {
-                        var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
-                        if (string.IsNullOrWhiteSpace(transactionId))
+                        response.Success = false;
+                        response.Message = $"The relevant payout requests were denied, so they were not processed.";
+                        response.ErrorMessages = payoutDetails.items
+                                                       .Select(i => i.error.message)
+                                                       .ToList();
+                        return response;
+                    }
+                    else if (payoutDetails.batch_header.batch_status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase))
+                    {
+                        payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                        var payoutItem = payoutDetails.items.FirstOrDefault();
+                        if (payoutItem == null)
                         {
                             response.Success = false;
-                            response.Message = "Transaction ID not found for the payout item.";
+                            response.Message = "Payout item not found.";
                             return response;
                         }
-                        var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
-                        var invoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={transactionId}";
-
-                        var transferPledge = new Pledge
+                        if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                         {
-                            UserId = creator.UserId,
-                            ProjectId = projectId,
-                            TotalAmount = finalTotalPledgeForCreator,
-                        };
-
-                        await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
-
-                        // Create a new PledgeDetail with the updated properties
-                        var transferPledgeDetail = new PledgeDetail
-                        {
-                            PledgeId = transferPledge.PledgeId,
-                            PaymentId = createdPayout.batch_header.payout_batch_id,
-                            InvoiceId = transactionId,
-                            Amount = finalTotalPledgeForCreator,
-                            InvoiceUrl = invoiceUrl ?? string.Empty,
-                            Status = PledgeDetailEnum.TRANSFERRED
-                        };
-
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
-                        project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
-                        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-
-                        //foreach (var pledgeDetail in pledgeDetails)
-                        //{
-                        //    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
-                        //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
-                        //    pledgeDetail.TransactionId = transactionId;
-                        //}
-                    }
-                    else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW)
-                    {
-                        var transferPledge = new Pledge
-                        {
-                            UserId = creator.UserId,
-                            ProjectId = projectId,
-                            TotalAmount = finalTotalPledgeForCreator,
-                        };
-                        await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
-                        var transferPledgeDetail = new PledgeDetail
-                        {
-                            PledgeId = transferPledge.PledgeId,
-                            PaymentId = createdPayout.batch_header.payout_batch_id,
-                            InvoiceId = string.Empty,
-                            Amount = finalTotalPledgeForCreator,
-                            InvoiceUrl = string.Empty,
-                            Status = PledgeDetailEnum.TRANSFERRING
-                        };
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
-                        if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
-                        {
-                            var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId);
-                            if (!emailSend)
+                            var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
+                            if (string.IsNullOrWhiteSpace(transactionId))
                             {
+                                response.Success = false;
+                                response.Message = "Transaction ID not found for the payout item.";
+                                return response;
+                            }
+                            var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
+                            var invoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={transactionId}";
 
+                            var transferPledge = new Pledge
+                            {
+                                UserId = creator.UserId,
+                                ProjectId = projectId,
+                                TotalAmount = finalTotalPledgeForCreator,
+                            };
+
+                            await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
+
+                            // Create a new PledgeDetail with the updated properties
+                            var transferPledgeDetail = new PledgeDetail
+                            {
+                                PledgeId = transferPledge.PledgeId,
+                                PaymentId = createdPayout.batch_header.payout_batch_id,
+                                InvoiceId = transactionId,
+                                Amount = finalTotalPledgeForCreator,
+                                InvoiceUrl = invoiceUrl ?? string.Empty,
+                                Status = PledgeDetailEnum.TRANSFERRED
+                            };
+
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
+                            project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
+                            await _unitOfWork.ProjectRepo.UpdateAsync(project);
+
+                            //foreach (var pledgeDetail in pledgeDetails)
+                            //{
+                            //    pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
+                            //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
+                            //    pledgeDetail.TransactionId = transactionId;
+                            //}
+                        }
+                        else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW)
+                        {
+                            var transferPledge = new Pledge
+                            {
+                                UserId = creator.UserId,
+                                ProjectId = projectId,
+                                TotalAmount = finalTotalPledgeForCreator,
+                            };
+                            await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
+                            var transferPledgeDetail = new PledgeDetail
+                            {
+                                PledgeId = transferPledge.PledgeId,
+                                PaymentId = createdPayout.batch_header.payout_batch_id,
+                                InvoiceId = string.Empty,
+                                Amount = finalTotalPledgeForCreator,
+                                InvoiceUrl = string.Empty,
+                                Status = PledgeDetailEnum.TRANSFERRING
+                            };
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
+                            if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
+                            {
+                                var emailSend = await EmailSender.SendPayPalLoginEmailToCreator(creator.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.Amount, creator.PaymentAccount, transferPledgeDetail.PaymentId);
+                                if (!emailSend)
+                                {
+
+                                }
                             }
                         }
+                        else
+                        {
+                            response.Success = false;
+                            response.Message = "Transference failed with the transaction status of the relevant item being " + payoutItem.transaction_status;
+                            return response;
+                        }
                     }
-                    else
-                    {
-                        response.Success = false;
-                        response.Message = "Transference failed with the transaction status of the relevant item being " + payoutItem.transaction_status;
-                        return response;
-                    }
+                    await _unitOfWork.CommitTransactionAsync();
                 }
-                await _unitOfWork.SaveChangeAsync();
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
 
                 response.Success = true;
                 response.Message = "Pledge transfer completed successfully.";
@@ -366,7 +361,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (project.StartDatetime < project.EndDatetime)
+                if (DateTime.UtcNow.AddHours(7) < project.EndDatetime)
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -466,98 +461,108 @@ namespace Application.Services
                         }
                     }
                 };
-                await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                var dbTransaction = await _unitOfWork.BeginTransactionAsync();
 
-                var createdPayout = payout.Create(apiContext, false);
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                var startTime = DateTime.UtcNow.AddHours(7);
-                while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                try
                 {
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+
+                    var createdPayout = payout.Create(apiContext, false);
                     await Task.Delay(TimeSpan.FromSeconds(10));
+                    var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    var startTime = DateTime.UtcNow.AddHours(7);
+                    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(10));
+                        payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    }
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                }
-                payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
-                {
-                    response.Success = false;
-                    response.Message = "The payouts file that was uploaded through the PayPal portal was cancelled by the sender.";
-                    return response;
-                }
-                else if (payoutDetails.batch_header.batch_status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
-                {
-                    response.Success = false;
-                    response.Message = $"The relevant payout requests were denied, so they were not processed.";
-                    response.ErrorMessages = payoutDetails.items
-                                                   .Select(i => i.error.message)
-                                                   .ToList();
-                    return response;
-                }
-                else if (payoutDetails.batch_header.batch_status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase))
-                {
-                    var payoutItem = payoutDetails.items.FirstOrDefault();
-                    if (payoutItem == null)
+                    if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
                     {
                         response.Success = false;
-                        response.Message = "Payout item not found.";
+                        response.Message = "The payouts file that was uploaded through the PayPal portal was cancelled by the sender.";
                         return response;
                     }
-                    if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW)
+                    else if (payoutDetails.batch_header.batch_status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
                     {
-                        pledge.TotalAmount = 0;
-                        PledgeDetail pledgeDetail = new()
-                        {
-                            PledgeId = pledge.PledgeId,
-                            Status = PledgeDetailEnum.REFUNDING,
-                            PaymentId = createdPayout.batch_header.payout_batch_id,
-                            InvoiceId = string.Empty,
-                            Amount = finalTotalAmount,
-                            InvoiceUrl = string.Empty
-                        };
-                        await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-                        if (!string.IsNullOrWhiteSpace(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
-                        {
-                            var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId);
-                            if (!emailSend)
-                            {
-
-                            }
-                        }
+                        response.Success = false;
+                        response.Message = $"The relevant payout requests were denied, so they were not processed.";
+                        response.ErrorMessages = payoutDetails.items
+                                                       .Select(i => i.error.message)
+                                                       .ToList();
+                        return response;
                     }
-                    else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
+                    else if (payoutDetails.batch_header.batch_status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase))
                     {
-                        var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
-                        if (string.IsNullOrWhiteSpace(transactionId))
+                        var payoutItem = payoutDetails.items.FirstOrDefault();
+                        if (payoutItem == null)
                         {
                             response.Success = false;
-                            response.Message = "Transaction ID not found for the payout item.";
+                            response.Message = "Payout item not found.";
                             return response;
                         }
-                        var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
-                        var invoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={transactionId}";
-
-                        pledge.TotalAmount = 0;
-                        PledgeDetail pledgeDetail = new()
+                        if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW)
                         {
-                            PledgeId = pledge.PledgeId,
-                            Status = PledgeDetailEnum.REFUNDED,
-                            PaymentId = createdPayout.batch_header.payout_batch_id,
-                            InvoiceId = transactionId,
-                            Amount = finalTotalAmount,
-                            InvoiceUrl = invoiceUrl ?? string.Empty
-                        };
-                        await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
-                    }
-                    else
-                    {
-                        response.Success = false;
-                        response.Message = "Refunding failed with the transaction status of the relevant item being " + payoutItem.transaction_status;
-                        return response;
-                    }
-                }
+                            pledge.TotalAmount = 0;
+                            PledgeDetail pledgeDetail = new()
+                            {
+                                PledgeId = pledge.PledgeId,
+                                Status = PledgeDetailEnum.REFUNDING,
+                                PaymentId = createdPayout.batch_header.payout_batch_id,
+                                InvoiceId = string.Empty,
+                                Amount = finalTotalAmount,
+                                InvoiceUrl = string.Empty
+                            };
+                            await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                            if (!string.IsNullOrWhiteSpace(refundUser.Email) && new EmailAddressAttribute().IsValid(refundUser.Email))
+                            {
+                                var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(refundUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetail.Amount, refundUser.PaymentAccount, pledgeDetail.PaymentId);
+                                if (!emailSend)
+                                {
 
+                                }
+                            }
+                        }
+                        else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
+                        {
+                            var transactionId = payoutDetails.items.FirstOrDefault()?.transaction_id;
+                            if (string.IsNullOrWhiteSpace(transactionId))
+                            {
+                                response.Success = false;
+                                response.Message = "Transaction ID not found for the payout item.";
+                                return response;
+                            }
+                            var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
+                            var invoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={transactionId}";
+
+                            pledge.TotalAmount = 0;
+                            PledgeDetail pledgeDetail = new()
+                            {
+                                PledgeId = pledge.PledgeId,
+                                Status = PledgeDetailEnum.REFUNDED,
+                                PaymentId = createdPayout.batch_header.payout_batch_id,
+                                InvoiceId = transactionId,
+                                Amount = finalTotalAmount,
+                                InvoiceUrl = invoiceUrl ?? string.Empty
+                            };
+                            await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
+                        }
+                        else
+                        {
+                            response.Success = false;
+                            response.Message = "Refunding failed with the transaction status of the relevant item being " + payoutItem.transaction_status;
+                            return response;
+                        }
+                    }
+                    await _unitOfWork.CommitTransactionAsync();
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
                 response.Success = true;
                 response.Message = "Payout created successfully.";
             }
@@ -743,54 +748,62 @@ namespace Application.Services
                     return response;
                 }
 
-                decimal totalRefunded = 0;
-
-                foreach (var (pledge, detail) in refundDetails)
+                var dbTransaction = await _unitOfWork.BeginTransactionAsync();
+                try
                 {
-                    var payoutItem = payoutDetails.items
-                        .FirstOrDefault(i => i.payout_item.sender_item_id == pledge.PledgeId.ToString());
-
-                    if (payoutItem == null) continue;
-
-                    if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
+                    decimal totalRefunded = 0;
+                    foreach (var (pledge, detail) in refundDetails)
                     {
-                        totalRefunded += pledge.TotalAmount;
-                        pledge.TotalAmount = 0;
-                        var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
+                        var payoutItem = payoutDetails.items
+                            .FirstOrDefault(i => i.payout_item.sender_item_id == pledge.PledgeId.ToString());
 
-                        detail.Status = PledgeDetailEnum.REFUNDED;
-                        detail.PaymentId = createdPayout.batch_header.payout_batch_id;
-                        detail.InvoiceId = payoutItem.transaction_id;
-                        detail.InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
+                        if (payoutItem == null) continue;
 
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
-                        await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-                    }
-                    else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING ||
-                             payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.NEW || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD)
-                    {
-                        detail.PaymentId = createdPayout.batch_header.payout_batch_id;
-                        detail.Status = PledgeDetailEnum.REFUNDING;
-                        await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
-                        var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
-                        if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
-                        var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrWhiteSpace(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
-                        if (!emailSend)
+                        if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                         {
+                            totalRefunded += pledge.TotalAmount;
+                            pledge.TotalAmount = 0;
+                            var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
 
+                            detail.Status = PledgeDetailEnum.REFUNDED;
+                            detail.PaymentId = createdPayout.batch_header.payout_batch_id;
+                            detail.InvoiceId = payoutItem.transaction_id;
+                            detail.InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
+
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
+                            await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
+                        }
+                        else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING ||
+                                 payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.NEW || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD)
+                        {
+                            detail.PaymentId = createdPayout.batch_header.payout_batch_id;
+                            detail.Status = PledgeDetailEnum.REFUNDING;
+                            await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
+                            var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                            if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
+                            var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrWhiteSpace(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId);
+                            if (!emailSend)
+                            {
+
+                            }
                         }
                     }
+
+                    // Update project totals
+                    project.TotalAmount -= totalRefunded;
+                    project.TransactionStatus = TransactionStatusEnum.REFUNDED;
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+
+                    response.Success = true;
+                    response.Message = "Refund process initiated successfully.";
+                    await _unitOfWork.CommitTransactionAsync();
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
                 }
 
-                // Update project totals
-                project.TotalAmount -= totalRefunded;
-                project.TransactionStatus = TransactionStatusEnum.REFUNDED;
-                await _unitOfWork.ProjectRepo.UpdateAsync(project);
-
-                await _unitOfWork.SaveChangeAsync();
-
-                response.Success = true;
-                response.Message = "Refund process initiated successfully.";
             }
             catch (PayPalException payPalEx)
             {
@@ -1253,7 +1266,7 @@ namespace Application.Services
                     return response;
                 }
 
-                project.TotalAmount += Convert.ToDecimal(transaction.amount.total);
+                //project.TotalAmount += Convert.ToDecimal(transaction.amount.total);
 
                 //decimal amount = decimal.TryParse(transaction.amount.total, out decimal parsedAmount) ? parsedAmount : 0m;
 
@@ -1275,7 +1288,7 @@ namespace Application.Services
                     response.Message = "Invoice number not found.";
                     return response;
                 }
-                await using var dbTransaction = await _unitOfWork.BeginTransactionAsync();
+                var dbTransaction = await _unitOfWork.BeginTransactionAsync();
 
                 try
                 {
@@ -1323,10 +1336,10 @@ namespace Application.Services
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
 
-                    await dbTransaction.CommitAsync();
                     response.Success = true;
                     response.Message = "Payment successful";
                     var userEmail = (await _unitOfWork.UserRepo.GetByIdAsync(userId))?.Email;
+                    await _unitOfWork.CommitTransactionAsync();
                     if (!string.IsNullOrWhiteSpace(userEmail) && new EmailAddressAttribute().IsValid(userEmail))
                     {
                         //    // Generate the invoice
@@ -1338,12 +1351,9 @@ namespace Application.Services
                 }
                 catch
                 {
-                    await dbTransaction.RollbackAsync();
+                    await _unitOfWork.RollbackTransactionAsync();
                     throw;
                 }
-
-                response.Success = true;
-                response.Message = "Payment successful.";
             }
             catch (Exception ex)
             {

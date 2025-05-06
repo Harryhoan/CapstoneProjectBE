@@ -2,9 +2,7 @@
 using Application.Commons;
 using Application.IService;
 using Application.Utils;
-using Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection.Emit;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -28,7 +26,7 @@ namespace CapstonProjectBE.Controllers
             _unitOfWork = unitOfWork;
         }
         [HttpGet("Verify-Code")]
-        public async Task<IActionResult> VerifyCode([FromQuery] string code,[FromQuery] string email)
+        public async Task<IActionResult> VerifyCode([FromQuery] string code, [FromQuery] string email)
         {
             var user = await _forgotPasswordService.VerifyCode(code, email);
             return Ok(user);
@@ -47,7 +45,7 @@ namespace CapstonProjectBE.Controllers
                 }
                 string code = CodeGenerator.GenerateRandomVerifyCode();
                 await _forgotPasswordService.AddCode(code, email);
-                
+
                 var emailSent = await EmailSender.SendCode(email, code);
                 if (!emailSent)
                 {

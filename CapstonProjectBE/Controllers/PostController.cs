@@ -1,6 +1,5 @@
 ﻿using Application.IService;
 using Application.ViewModels.PostDTO;
-using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
