@@ -139,7 +139,7 @@ namespace CapstonProjectBE.Controllers
                 return BadRequest("Could not upload image");
 
             // Update the image URL in the database
-            AuthorizeUser.Avatar = uploadResult.Url.ToString();
+            AuthorizeUser.Avatar = uploadResult.SecureUrl.ToString();
             await _context.SaveChangesAsync();
 
             return Ok(new { imageUrl = AuthorizeUser.Avatar });

@@ -20,5 +20,6 @@ namespace Application.IService
         public Task<ServiceResponse<List<UserProjectsDto>>> GetProjectByUserIdAsync(int userId);
         public Task<ServiceResponse<List<ProjectDto>>> GetAllProjectByAdminAsync(int userId);
         public Task<ServiceResponse<ProjectCategoryDto>> AddCategoryToProject(AddCategoryToProject addCategory);
+        public Task<ServiceResponse<string>> ChangeProjectMonitorAsync(int projectId, int staffId);
     }
 }

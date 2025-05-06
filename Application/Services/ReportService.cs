@@ -110,8 +110,15 @@ namespace Application.Services
                     response.Message = "Report not found.";
                     return response;
                 }
+                var reportUser = await _unitOfWork.UserRepo.GetByIdAsync(report.UserId);
+                if (reportUser == null)
+                {
+                    response.Success = false;
+                    response.Message = "Report user not found.";
+                    return response;
+                }
                 var reportDto = _mapper.Map<ReportDto>(report);
-                reportDto.UserName = user.Fullname;
+                reportDto.UserName = reportUser.Fullname;
                 response.Data = reportDto;
                 response.Success = true;
                 response.Message = "Get report by id successfully.";
