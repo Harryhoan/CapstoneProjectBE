@@ -3,7 +3,6 @@ using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.PostDTO;
 using AutoMapper;
-using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;

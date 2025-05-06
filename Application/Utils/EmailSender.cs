@@ -1,6 +1,4 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Domain.Entities;
-using Domain.Enums;
+﻿using Domain.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;

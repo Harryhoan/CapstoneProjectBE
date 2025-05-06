@@ -1,8 +1,6 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.ProjectDTO;
-using Domain.Entities;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Application.IService
 {

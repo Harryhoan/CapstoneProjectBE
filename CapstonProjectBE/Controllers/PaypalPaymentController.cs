@@ -1,5 +1,4 @@
 ﻿using Application.IService;
-using DocumentFormat.OpenXml.VariantTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -100,7 +99,7 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> RefundAllPledgesForProjectAsync(int projectId)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
-            if (user  == null)
+            if (user == null)
             {
                 return Unauthorized();
             }

@@ -1,5 +1,4 @@
-﻿using Application.ViewModels.UserDTO;
-using Domain.Enums;
+﻿using Domain.Enums;
 
 namespace CapstoneProjectDashboardFE.ModelDTO.FeProjectDTO
 {

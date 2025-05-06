@@ -1,6 +1,5 @@
 ﻿using Application.IService;
 using Application.ViewModels.FileDTO;
-using iText.Kernel.Crypto.Securityhandler;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

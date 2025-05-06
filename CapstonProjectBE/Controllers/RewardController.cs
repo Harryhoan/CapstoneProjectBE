@@ -1,6 +1,5 @@
 ﻿using Application.IService;
 using Application.ViewModels.RewardDTO;
-using Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
