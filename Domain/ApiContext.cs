@@ -29,9 +29,6 @@ namespace Domain
         public DbSet<VerifyCode> VerifyCodes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-
-            // Configure relationships and constraints here if needed
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.UserId)
                 .IsUnique();
@@ -41,6 +38,69 @@ namespace Domain
 
             modelBuilder.Entity<PledgeDetail>()
                 .HasKey(c => new { c.PledgeId, c.PaymentId });
+
+            modelBuilder.Entity<FAQ>()
+                .HasKey(g => new { g.ProjectId, g.Question });
+
+            modelBuilder.Entity<ProjectCategory>()
+                .HasKey(pc => new { pc.CategoryId, pc.ProjectId });
+
+            modelBuilder.Entity<ProjectPlatform>()
+                .HasKey(pc => new { pc.PlatformId, pc.ProjectId });
+
+            modelBuilder.Entity<PostComment>()
+                .HasKey(pc => new { pc.CommentId, pc.PostId });
+
+            modelBuilder.Entity<ProjectComment>()
+                .HasKey(pc => new { pc.CommentId, pc.ProjectId });
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Projects)
+                .WithOne(p => p.User)
+                .HasForeignKey(p => p.CreatorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.MonitoredProjects)
+                .WithOne(p => p.Monitor)
+                .HasForeignKey(p => p.MonitorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Pledges)
+                .WithOne(p => p.User)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Pledges)
+                .WithOne(p => p.Project)
+                .HasForeignKey(p => p.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Project>()
+                .HasMany(p => p.Rewards)
+                .WithOne(r => r.Project)
+                .HasForeignKey(r => r.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Token>()
+                .HasOne(t => t.User)
+                .WithMany(u => u.Tokens)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Report>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reports)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Category>()
+                .HasOne(c => c.ParentCategory)
+                .WithMany(c => c.Categories)
+                .HasForeignKey(c => c.ParentCategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.User)
@@ -52,18 +112,84 @@ namespace Domain
                 .HasOne(c => c.ParentComment)
                 .WithMany(c => c.Comments)
                 .HasForeignKey(c => c.ParentCommentId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<Domain.Entities.File>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.Files)
-                .HasForeignKey(f => f.UserId)
+            modelBuilder.Entity<Collaborator>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Collaborators)
+                .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Pledge>()
-                .HasMany(p => p.PledgeDetails)
-                .WithOne(pd => pd.Pledge)
+            modelBuilder.Entity<Collaborator>()
+                .HasOne(c => c.Project)
+                .WithMany(p => p.Collaborators)
+                .HasForeignKey(c => c.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PledgeDetail>()
+                .HasOne(pd => pd.Pledge)
+                .WithMany(p => p.PledgeDetails)
                 .HasForeignKey(pd => pd.PledgeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectCategory>()
+                .HasOne(pc => pc.Category)
+                .WithMany(c => c.ProjectCategories)
+                .HasForeignKey(pc => pc.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectCategory>()
+                .HasOne(pc => pc.Project)
+                .WithMany(p => p.ProjectCategories)
+                .HasForeignKey(pc => pc.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectPlatform>()
+                .HasOne(pp => pp.Platform)
+                .WithMany(p => p.ProjectPlatforms)
+                .HasForeignKey(pp => pp.PlatformId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectPlatform>()
+                .HasOne(pp => pp.Project)
+                .WithMany(p => p.ProjectPlatforms)
+                .HasForeignKey(pp => pp.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PostComment>()
+                .HasOne(pc => pc.Comment)
+                .WithOne(c => c.PostComment)
+                .HasForeignKey<PostComment>(pc => pc.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Post>()
+                .HasMany(p => p.PostComments)
+                .WithOne(pc => pc.Post)
+                .HasForeignKey(p => p.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectComment>()
+                .HasOne(pc => pc.Comment)
+                .WithOne(c => c.ProjectComment)
+                .HasForeignKey<ProjectComment>(pc => pc.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProjectComment>()
+                .HasOne(pc => pc.Project)
+                .WithMany(p => p.ProjectComments)
+                .HasForeignKey(pc => pc.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FAQ>()
+                .HasOne(f => f.Project)
+                .WithMany(p => p.Questions)
+                .HasForeignKey(f => f.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.Project)
+                .WithMany(pr => pr.Posts)
+                .HasForeignKey(p => p.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Post>()
@@ -71,113 +197,13 @@ namespace Domain
                 .WithMany(u => u.Posts)
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Post>()
-                .HasOne(p => p.Project)
-                .WithMany(u => u.Posts)
-                .HasForeignKey(p => p.ProjectId)
+
+            modelBuilder.Entity<Domain.Entities.File>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.Files)
+                .HasForeignKey(f => f.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Report>()
-                .HasOne(r => r.User)
-                .WithMany(u => u.Reports)
-                .HasForeignKey(r => r.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Token>()
-                .HasOne(t => t.User)
-                .WithMany(u => u.Tokens)
-                .HasForeignKey(t => t.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Project>()
-                .HasOne(p => p.User)
-                .WithMany(u => u.Projects)
-                .HasForeignKey(p => p.CreatorId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Project>()
-                .HasOne(p => p.Monitor)
-                .WithMany(u => u.MonitoredProjects)
-                .HasForeignKey(p => p.MonitorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<Category>()
-                .HasOne(c => c.ParentCategory)
-                .WithMany(c => c.Categories)
-                .HasForeignKey(c => c.ParentCategoryId)
-                .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<Category>()
-                .ToTable(t => t.HasCheckConstraint("CK_Category_NoCircularDependency", "CategoryId != ParentCategoryId"));
-
-            modelBuilder.Entity<FAQ>()
-                .HasOne(g => g.Project)
-                .WithMany(p => p.Questions)
-                .HasForeignKey(g => g.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<FAQ>()
-                .HasKey(g => new { g.ProjectId, g.Question });
-
-            modelBuilder.Entity<ProjectCategory>()
-                .HasKey(pc => new { pc.CategoryId, pc.ProjectId });
-            modelBuilder.Entity<ProjectCategory>()
-                .HasOne(pc => pc.Category)
-                .WithMany(c => c.ProjectCategories)
-                .HasForeignKey(pc => pc.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<ProjectCategory>()
-                .HasOne(pc => pc.Project)
-                .WithMany(p => p.ProjectCategories)
-                .HasForeignKey(pc => pc.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ProjectComment>()
-                .HasKey(pc => new { pc.CommentId, pc.ProjectId });
-            modelBuilder.Entity<ProjectComment>()
-                .HasOne(pc => pc.Comment)
-                .WithOne(c => c.ProjectComment)
-                .HasForeignKey<ProjectComment>(pc => pc.CommentId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<ProjectComment>()
-                .HasOne(pc => pc.Project)
-                .WithMany(p => p.ProjectComments)
-                .HasForeignKey(pc => pc.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            modelBuilder.Entity<ProjectPlatform>()
-                .HasKey(pp => new { pp.PlatformId, pp.ProjectId });
-            modelBuilder.Entity<ProjectPlatform>()
-                .HasOne(pp => pp.Platform)
-                .WithMany(p => p.ProjectPlatforms)
-                .HasForeignKey(pp => pp.PlatformId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<ProjectPlatform>()
-                .HasOne(pp => pp.Project)
-                .WithMany(p => p.ProjectPlatforms)
-                .HasForeignKey(pp => pp.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            modelBuilder.Entity<Reward>()
-                .HasOne(r => r.Project)
-                .WithMany(p => p.Rewards)
-                .HasForeignKey(r => r.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<PostComment>()
-                .HasKey(pc => new { pc.CommentId, pc.PostId });
-            modelBuilder.Entity<PostComment>()
-                .HasOne(pc => pc.Comment)
-                .WithOne(p => p.PostComment)
-                .HasForeignKey<PostComment>(pc => pc.PostId)
-                .OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<PostComment>()
-                .HasOne(pc => pc.Post)
-                .WithMany(p => p.PostComments)
-                .HasForeignKey(pc => pc.PostId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
-
     }
 }

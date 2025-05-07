@@ -36,8 +36,19 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _faqService.GetFaqByProjectId(user.UserId, projectId));
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _faqService.GetFaqByProjectId(user.UserId, projectId);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
+
         [HttpPost("AddFaq")]
         [Authorize(Roles = "CUSTOMER")]
         public async Task<IActionResult> AddFaq(int projectId, [FromForm] FaqDto createFaq)
@@ -47,7 +58,17 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _faqService.AddFaq(user.UserId, projectId, createFaq));
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _faqService.AddFaq(user.UserId, projectId, createFaq);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
         [HttpPut("UpdateFaq")]
         [Authorize(Roles = "CUSTOMER")]
@@ -58,10 +79,20 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _faqService.UpdateFaq(user.UserId, projectId, oldQuestion, updateFaq));
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _faqService.UpdateFaq(user.UserId, projectId, oldQuestion, updateFaq);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
         [HttpDelete("DeleteFaq")]
-        [Authorize(Roles = "CUSTOMER")]
+        [Authorize(Roles = "CUSTOMER, STAFF")]
         public async Task<IActionResult> DeleteFaq(int projectId, string question)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
@@ -69,7 +100,17 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
-            return Ok(await _faqService.DeleteFAQ(user.UserId, projectId, question));
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _faqService.DeleteFAQ(user.UserId, projectId, question);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
         }
     }
 }

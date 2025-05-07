@@ -9,7 +9,7 @@ namespace Application.IService
         public Task<ServiceResponse<string>> DeleteFAQ(int userId, int projectId, string question);
         public Task<ServiceResponse<List<FaqDto>>> GetFaqByProjectId(int userId, int projectId);
         public Task<ServiceResponse<FAQ>> AddFaq(int userId, int projectId, FaqDto createFaq);
-        public Task<ServiceResponse<FaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto UpdateFaq);
+        public Task<ServiceResponse<FaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto updateFaq);
         public Task<ServiceResponse<List<FaqDto>>> GetAllFaqByProjectIdAsync(int projectId);
     }
 }
