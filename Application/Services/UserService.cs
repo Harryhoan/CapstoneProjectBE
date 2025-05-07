@@ -62,6 +62,8 @@ namespace Application.Services
                     response.Message = "User has been deleted.";
                     return response;
                 }
+                response.Message = "Get user successfully";
+                response.Success = true;
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
@@ -89,6 +91,8 @@ namespace Application.Services
                     response.Message = "User has been deleted.";
                     return response;
                 }
+                response.Message = "Get user successfully";
+                response.Success = true;
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
@@ -209,6 +213,8 @@ namespace Application.Services
                 userEntity.Avatar = uploadResult.SecureUrl.ToString();
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
                 response.Data = _mapper.Map<string>(userEntity);
+                response.Message = "Get user successfully";
+                response.Success = true;
             }
             catch (Exception ex)
             {
@@ -277,6 +283,8 @@ namespace Application.Services
                     response.Message = "User has been deleted.";
                     return response;
                 }
+                response.Message = "Get user successfully";
+                response.Success = true;
                 response.Data = _mapper.Map<UserDTO>(user);
             }
             catch (Exception ex)
