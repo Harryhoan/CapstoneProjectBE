@@ -145,7 +145,7 @@ namespace Application.Services
                 }
                 if (!string.IsNullOrWhiteSpace(UpdateUser.Fullname))
                 {
-                    userEntity.Fullname = UpdateUser.Fullname;
+                    userEntity.Fullname = FormatUtils.TrimSpacesPreserveSingle(userEntity.Fullname);
                 }
                 if (!string.IsNullOrWhiteSpace(UpdateUser.Email))
                 {
@@ -206,7 +206,7 @@ namespace Application.Services
                     }
                 }
 
-                userEntity.Avatar = uploadResult.Url.ToString();
+                userEntity.Avatar = uploadResult.SecureUrl.ToString();
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
                 response.Data = _mapper.Map<string>(userEntity);
             }
@@ -295,7 +295,7 @@ namespace Application.Services
                 var hashedPassword = HashPassWithSHA256.HashWithSHA256(password);
                 var checkCode = await _unitOfWork.VerifyCodeRepo.FindEntityAsync(c => c.Email.Equals(email));
                 var user = await _unitOfWork.UserRepo.FindEntityAsync(u => u.Email.Equals(email) && u.UserId.Equals(id));
-      
+
                 if (user == null)
                 {
                     response.Success = false;

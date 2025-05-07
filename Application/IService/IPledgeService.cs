@@ -1,7 +1,6 @@
 ﻿using Application.ServiceResponse;
 using Application.ViewModels.PledgeDTO;
 using Application.ViewModels.ProjectDTO;
-using Domain.Entities;
 
 namespace Application.IService
 {

@@ -1,5 +1,4 @@
-﻿using Application.ViewModels.ProjectDTO;
-using Domain.Entities;
+﻿using Domain.Entities;
 
 namespace Application.IRepositories
 {

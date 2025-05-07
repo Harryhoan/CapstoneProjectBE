@@ -1,5 +1,4 @@
-﻿using Application;
-using Application.IService;
+﻿using Application.IService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

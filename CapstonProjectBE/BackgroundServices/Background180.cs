@@ -1,12 +1,9 @@
-﻿using Application.IService;
-using Application.Utils;
-using Application;
-using Domain.Entities;
+﻿using Application;
+using Application.IService;
 using Domain;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using PayPal.Api;
 using Domain.Enums;
+using Microsoft.EntityFrameworkCore;
+using PayPal.Api;
 
 namespace CapstonProjectBE.BackgroundServices
 {

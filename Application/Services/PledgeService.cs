@@ -5,9 +5,6 @@ using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using ClosedXML.Excel;
 using Domain.Entities;
-using Domain.Enums;
-using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Crypto;
 
 namespace Application.Services
 {

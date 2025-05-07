@@ -5,8 +5,6 @@ using Application.ViewModels.PlatformDTO;
 using Application.ViewModels.ProjectDTO;
 using AutoMapper;
 using Domain.Entities;
-using Domain.Enums;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
@@ -163,8 +161,8 @@ namespace Application.Services
                 }
 
                 Platform platform = new Platform();
-                platform.Name = createPlatformDTO.Name;
-                platform.Description = createPlatformDTO.Description;
+                platform.Name = FormatUtils.TrimSpacesPreserveSingle(createPlatformDTO.Name);
+                platform.Description = FormatUtils.TrimSpacesPreserveSingle(createPlatformDTO.Description);
                 await _unitOfWork.PlatformRepo.AddAsync(platform);
                 response.Data = platform.PlatformId;
                 response.Success = true;
