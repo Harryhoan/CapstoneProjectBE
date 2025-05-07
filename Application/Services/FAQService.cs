@@ -201,6 +201,7 @@ namespace Application.Services
                     response.Message = "User not found.";
                     return response;
                 }
+
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
                 if (project == null)
                 {
@@ -208,6 +209,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
+
                 var faq = await _unitOfWork.FAQRepo.GetQuestionByQuestionAndProjectId(projectId, Question);
                 if (faq == null)
                 {
@@ -216,18 +218,12 @@ namespace Application.Services
                     return response;
                 }
 
-                // Delete the existing FAQ
-                await _unitOfWork.FAQRepo.RemoveAsync(faq);
+                // Update the existing FAQ instead of deleting and recreating
+                faq.Question = UpdateFaq.Question;
+                faq.Answer = UpdateFaq.Answer;
+                faq.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
 
-                // Create a new FAQ with the updated Question
-                var newFaq = new FAQ
-                {
-                    ProjectId = projectId,
-                    Question = UpdateFaq.Question,
-                    Answer = UpdateFaq.Answer,
-                    UpdatedDatetime = DateTime.UtcNow.AddHours(7)
-                };
-                await _unitOfWork.FAQRepo.AddAsync(newFaq);
+                await _unitOfWork.FAQRepo.UpdateAsync(faq);
 
                 response.Success = true;
                 response.Message = "Faq updated successfully.";
@@ -241,6 +237,7 @@ namespace Application.Services
                 return response;
             }
         }
+
 
     }
 }
