@@ -60,6 +60,7 @@ namespace CapstonProjectBE
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    //options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                 });
             builder.Services.AddHostedService<Background120>();
             builder.Services.AddHostedService<Background180>();

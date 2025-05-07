@@ -1,8 +1,11 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.Utils;
 using Application.ViewModels.FaqDTO;
+using Application.ViewModels.PostDTO;
 using AutoMapper;
 using Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace Application.Services
 {
@@ -21,6 +24,16 @@ namespace Application.Services
 
             try
             {
+                var validationContext = new ValidationContext(createFAQ);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(createFAQ, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
                 var userExists = await _unitOfWork.UserRepo.Find(u => u.UserId == userId);
                 if (!userExists)
                 {
@@ -189,11 +202,21 @@ namespace Application.Services
         //    return response;
         //}
 
-        public async Task<ServiceResponse<FaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto UpdateFaq)
+        public async Task<ServiceResponse<FaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto updateFaq)
         {
             var response = new ServiceResponse<FaqDto>();
             try
             {
+                var validationContext = new ValidationContext(updateFaq);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(updateFaq, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 if (user == null)
                 {
@@ -219,8 +242,8 @@ namespace Application.Services
                 }
 
                 // Update the existing FAQ instead of deleting and recreating
-                faq.Question = UpdateFaq.Question;
-                faq.Answer = UpdateFaq.Answer;
+                faq.Question = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question);
+                faq.Answer = updateFaq.Answer;
                 faq.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.FAQRepo.UpdateAsync(faq);

@@ -368,8 +368,7 @@ namespace Application.Services
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null)
                         {
-                            //return new ForbidResult();
-                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This project is invisible." };
                             return new ObjectResult(result);
                         }
                     }
