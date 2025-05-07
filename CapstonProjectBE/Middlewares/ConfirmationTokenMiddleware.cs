@@ -34,7 +34,7 @@ namespace CapstonProjectBE.Middlewares
                         token.TokenValue = "success";
 
                         await unitOfWork.SaveChangeAsync();
-                        context.Response.Redirect("http://https://game-mkt.vercel.app/login");
+                        context.Response.Redirect("http://game-mkt.vercel.app/login");
                         return;
                     }
                 }
