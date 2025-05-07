@@ -143,7 +143,7 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.Fullname))
+                if (!string.IsNullOrEmpty(UpdateUser.Fullname))
                 {
                     userEntity.Fullname = FormatUtils.TrimSpacesPreserveSingle(userEntity.Fullname);
                 }
@@ -155,15 +155,15 @@ namespace Application.Services
                 {
                     userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.PaymentAccount))
+                if (!string.IsNullOrEmpty(UpdateUser.PaymentAccount))
                 {
                     userEntity.PaymentAccount = UpdateUser.PaymentAccount;
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.Phone))
+                if (!string.IsNullOrEmpty(UpdateUser.Phone))
                 {
                     userEntity.Phone = UpdateUser.Phone;
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.Bio))
+                if (!string.IsNullOrEmpty(UpdateUser.Bio))
                 {
                     userEntity.Bio = UpdateUser.Bio;
                 }
