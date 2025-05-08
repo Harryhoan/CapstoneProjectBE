@@ -961,18 +961,24 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (project == null)
                 {
                     response.Success = false;
                     response.Message = "Project not found.";
                     return response;
                 }
-                var staff = await _unitOfWork.UserRepo.GetByIdAsync(staffId);
+                var staff = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", staffId);
                 if (staff == null)
                 {
                     response.Success = false;
                     response.Message = "Staff not found.";
+                    return response;
+                }
+                if (staff.IsDeleted || !staff.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "Staff unfit for monitoring.";
                     return response;
                 }
                 project.MonitorId = staff.UserId;
