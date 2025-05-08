@@ -4,6 +4,7 @@ using Application.IService;
 using Application.Utils;
 using Domain;
 using Domain.Entities;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
@@ -55,7 +56,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         {
 
                                         }
-                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
+                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && new EmailAddressAttribute().IsValid(project.Monitor.Email))
                                         {
                                             emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
                                         }
@@ -73,6 +74,21 @@ namespace CapstonProjectBE.BackgroundServices
                                             emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
                                         }
                                     }
+                                }
+                            }
+                            if (project.Monitor == null || string.IsNullOrWhiteSpace(project.Monitor.Email) || !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
+                            {
+                                if (await dbContext.Users.AnyAsync(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)))
+                                {
+                                    project.MonitorId = await dbContext.Users.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).OrderBy(u => u.MonitoredProjects.Count()).Select(u => u.UserId).FirstAsync();
+                                }
+                                else if (await dbContext.Users.AnyAsync(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.ADMIN && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)))
+                                {
+                                    project.MonitorId = await dbContext.Users.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.ADMIN && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).OrderBy(u => u.MonitoredProjects.Count()).Select(u => u.UserId).FirstAsync();
+                                }
+                                else
+                                {
+                                    project.MonitorId = project.CreatorId;
                                 }
                             }
                             var projectCategories = await dbContext.ProjectCategories.Include(pc => pc.Category).Where(pc => pc.Category != null && pc.Category.ParentCategoryId.HasValue).ToListAsync();

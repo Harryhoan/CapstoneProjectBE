@@ -11,6 +11,7 @@ using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
@@ -150,6 +151,20 @@ namespace Application.Services
                     response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
+                if (specificUser.IsDeleted == true)
+                {
+                    response.Success = false;
+                    response.Message = "Your account is deactivated.";
+                    return response;
+                }
+
+                if (string.IsNullOrWhiteSpace(specificUser.Email) || !new EmailAddressAttribute().IsValid(specificUser.Email))
+                {
+                    response.Success = false;
+                    response.Message = "Your account's email is invalid.";
+                    return response;
+                }
+
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
                 if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
                 {
@@ -168,7 +183,7 @@ namespace Application.Services
                 var project = _mapper.Map<Project>(createProjectDto);
 
 
-                var staffUsers = user.Where(u => u.Role == UserEnum.STAFF).ToList();
+                var staffUsers = user.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).ToList();
                 if (!staffUsers.Any())
                 {
                     response.Success = false;
@@ -214,6 +229,13 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Error when sending email notification.";
+                    return response;
+                }
+                var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!assignMonitorEmailSend)
+                {
+                    response.Success = false;
+                    response.Message = "Error when sending email notification to staff.";
                     return response;
                 }
                 response.Data = responseData;
@@ -981,8 +1003,31 @@ namespace Application.Services
                     response.Message = "Staff unfit for monitoring.";
                     return response;
                 }
+                if (string.IsNullOrWhiteSpace(staff.Email) || !new EmailAddressAttribute().IsValid(staff.Email))
+                {
+                    response.Success = false;
+                    response.Message = "Email of staff is invalid.";
+                    return response;
+                }
+                var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
+                if (creator == null)
+                {
+                    response.Success = false;
+                    response.Message = "Creator not found.";
+                    return response;
+                }
                 project.MonitorId = staff.UserId;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+                var emailSend = await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!emailSend)
+                {
+                    await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                }
+                emailSend = await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!emailSend)
+                {
+                    await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                }
                 response.Success = true;
                 response.Message = "Project monitor changed successfully.";
             }
