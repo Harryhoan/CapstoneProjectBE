@@ -1010,7 +1010,6 @@ namespace Application.Services
                     return response;
                 }
 
-
                 var project = await _unitOfWork.ProjectRepo.GetByIdAsync(addCategory.ProjectId);
                 if (project == null)
                 {
@@ -1024,6 +1023,16 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Error = "Category not found!";
+                    return response;
+                }
+
+                // Check if the ProjectCategory already exists
+                var existingProjectCategory = await _unitOfWork.ProjectCategoryRepo.Find(pc => pc.ProjectId == addCategory.ProjectId && pc.CategoryId == addCategory.CategoryId);
+
+                if (existingProjectCategory == true)
+                {
+                    response.Success = false;
+                    response.Error = "The category is already associated with the project.";
                     return response;
                 }
 
@@ -1068,5 +1077,6 @@ namespace Application.Services
 
             return response;
         }
+
     }
 }
