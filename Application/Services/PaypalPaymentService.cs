@@ -180,17 +180,16 @@ namespace Application.Services
                 try
                 {
 
-                    var createdPayout = payout.Create(apiContext, false); // Execute PayPal payout request
-                    await Task.Delay(TimeSpan.FromSeconds(10));
-                    // Fetch the payout details to retrieve the transaction ID
+                    var createdPayout = payout.Create(apiContext, false);
+                    await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                    var startTime = DateTime.UtcNow.AddHours(7);
-                    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    }
+                    //var startTime = DateTime.UtcNow.AddHours(7);
+                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                    //{
+                    //    await Task.Delay(TimeSpan.FromSeconds(10));
+                    //    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    //}
                     if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
                     {
                         response.Success = false;
@@ -237,7 +236,6 @@ namespace Application.Services
 
                             await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
 
-                            // Create a new PledgeDetail with the updated properties
                             var transferPledgeDetail = new PledgeDetail
                             {
                                 PledgeId = transferPledge.PledgeId,
@@ -468,14 +466,14 @@ namespace Application.Services
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                     var createdPayout = payout.Create(apiContext, false);
-                    await Task.Delay(TimeSpan.FromSeconds(10));
+                    await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    var startTime = DateTime.UtcNow.AddHours(7);
-                    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    }
+                    //var startTime = DateTime.UtcNow.AddHours(7);
+                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
+                    //{
+                    //    await Task.Delay(TimeSpan.FromSeconds(10));
+                    //    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
+                    //}
                     payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     if (payoutDetails.batch_header.batch_status.Equals("CANCELLED", StringComparison.OrdinalIgnoreCase))
                     {
@@ -734,10 +732,10 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
-                await Task.Delay(TimeSpan.FromSeconds(10));
+                await Task.Delay(TimeSpan.FromSeconds(20));
 
-                // Verify payout status
-                var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
+                //var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
+                var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
 
                 if (payoutDetails.batch_header.batch_status.Equals("DENIED", StringComparison.OrdinalIgnoreCase))
                 {
@@ -770,7 +768,6 @@ namespace Application.Services
 
                         if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS)
                         {
-                            var tempAmount = pledge.TotalAmount;
                             totalRefunded += pledge.TotalAmount;
                             pledge.TotalAmount = 0;
                             var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
@@ -784,7 +781,7 @@ namespace Application.Services
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
 
-                            var emailSend = await EmailSender.SendRefundInvoiceEmail(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledge.TotalAmount, detail.InvoiceUrl, project.ProjectId);
+                            var emailSend = await EmailSender.SendRefundInvoiceEmail(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, detail.InvoiceUrl, project.ProjectId);
                             if (!emailSend)
                             {
 
@@ -835,21 +832,21 @@ namespace Application.Services
             return response;
         }
 
-        private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
-        {
-            var startTime = DateTime.UtcNow.AddHours(7);
-            var payoutDetails = Payout.Get(apiContext, batchId);
+        //private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
+        //{
+        //    var startTime = DateTime.UtcNow.AddHours(7);
+        //    var payoutDetails = Payout.Get(apiContext, batchId);
 
-            while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
-                    payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) &&
-                   (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 2)
-            {
-                await Task.Delay(TimeSpan.FromSeconds(10));
-                payoutDetails = Payout.Get(apiContext, batchId);
-            }
+        //    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
+        //            payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) &&
+        //           (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 2)
+        //    {
+        //        await Task.Delay(TimeSpan.FromSeconds(10));
+        //        payoutDetails = Payout.Get(apiContext, batchId);
+        //    }
 
-            return payoutDetails;
-        }
+        //    return payoutDetails;
+        //}
 
         //public async Task<ServiceResponse<string>> RefundAllPledgesForProjectAsync(int projectId)
         //{

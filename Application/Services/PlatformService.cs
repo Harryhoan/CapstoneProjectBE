@@ -160,9 +160,11 @@ namespace Application.Services
                     return response;
                 }
 
-                Platform platform = new Platform();
-                platform.Name = FormatUtils.TrimSpacesPreserveSingle(createPlatformDTO.Name);
-                platform.Description = FormatUtils.TrimSpacesPreserveSingle(createPlatformDTO.Description);
+                Platform platform = new()
+                {
+                    Name = FormatUtils.CapitalizeWords(FormatUtils.TrimSpacesPreserveSingle(createPlatformDTO.Name)),
+                    Description = FormatUtils.FormatText(createPlatformDTO.Description)
+                };
                 await _unitOfWork.PlatformRepo.AddAsync(platform);
                 response.Data = platform.PlatformId;
                 response.Success = true;

@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace Application.Services
 {
@@ -150,11 +151,37 @@ namespace Application.Services
                     response.Message = "Your account is not verified. Missing Phone Number or Payment Account.";
                     return response;
                 }
-                string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
-                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                if (specificUser.IsDeleted == true)
                 {
                     response.Success = false;
-                    response.Message = "Description contains invalid content.";
+                    response.Message = "Your account is deactivated.";
+                    return response;
+                }
+
+                if (string.IsNullOrWhiteSpace(specificUser.Email) || !new EmailAddressAttribute().IsValid(specificUser.Email))
+                {
+                    response.Success = false;
+                    response.Message = "Your account's email is invalid.";
+                    return response;
+                }
+
+                string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
+                {
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse.Trim(), "Có.\n\n", ""));
+                    response.Success = false;
+                    response.Message = "Description contains invalid content: " + apiResponse;
+
+                    return response;
+                }
+
+                apiResponse = await CheckDescriptionAsync(createProjectDto.Title);
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
+                {
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    response.Success = false;
+                    response.Message = "Title contains invalid content: " + apiResponse;
+
                     return response;
                 }
 
@@ -168,7 +195,7 @@ namespace Application.Services
                 var project = _mapper.Map<Project>(createProjectDto);
 
 
-                var staffUsers = user.Where(u => u.Role == UserEnum.STAFF).ToList();
+                var staffUsers = user.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).ToList();
                 if (!staffUsers.Any())
                 {
                     response.Success = false;
@@ -216,6 +243,13 @@ namespace Application.Services
                     response.Message = "Error when sending email notification.";
                     return response;
                 }
+                var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!assignMonitorEmailSend)
+                {
+                    response.Success = false;
+                    response.Message = "Error when sending email notification to staff.";
+                    return response;
+                }
                 response.Data = responseData;
                 response.Success = true;
                 response.Message = "Project created successfully.";
@@ -229,24 +263,91 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteProject(int id)
+        public async Task<ServiceResponse<int>> DeleteProject(int projectId)
         {
             var response = new ServiceResponse<int>();
 
             try
             {
-                int result = await _unitOfWork.ProjectRepo.DeleteProject(id);
-
-                if (result > 0)
-                {
-                    response.Data = result;
-                    response.Success = true;
-                    response.Message = "Project deleted successfully.";
-                }
-                else
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (project == null || project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
-                    response.Message = "Project not found or could not be deleted.";
+                    response.Message = "The project cannot be found and may have already been deleted";
+                    return response;
+                }
+                //if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                //{
+                //    var pledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(project.CreatorId, project.ProjectId);
+                //    if (pledge == null)
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project cannot be deleted in its current state";
+                //        return response;
+                //    }
+                //    else if (!(await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId)))
+                //    {
+                //        await _unitOfWork.PledgeRepo.RemoveAsync(pledge);
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project cannot be deleted in its current state";
+                //        return response;
+                //    }
+                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRING))
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The creator needs to receive the funds first";
+                //        return response;
+                //    }
+                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRED))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //}
+                //else if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                //{
+                //    if (await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDED) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDING)))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //    else
+                //    {
+                //        response.Success = false;
+                //        response.Message = "The project needs to be fully refunded first";
+                //        return response;
+                //    }
+                //}
+                //else
+                //{
+                //    if (project.TotalAmount == 0 && !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //}
+                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED || project.TransactionStatus == TransactionStatusEnum.REFUNDED || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                {
+                    project.Status = ProjectStatusEnum.DELETED;
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                    response.Success = false;
+                    response.Message = "The project has been successfully deleted";
+                    return response;
                 }
             }
             catch (Exception ex)
@@ -271,7 +372,17 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                project.Story = story;
+                string apiResponse = await CheckDescriptionAsync(story);
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    response.Success = false;
+                    response.Message = "Story contains invalid content: " + apiResponse;
+
+                    return response;
+                }
+
+                project.Story = story.Trim();
                 project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
@@ -756,7 +867,7 @@ namespace Application.Services
             var request = new { prompt = description };
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("https://gemini-ai-production.up.railway.app/GeminiAI/check-text", request);
+                var response = await _httpClient.PostAsJsonAsync("https://geminiai-production.up.railway.app/GeminiAI/find-text-error", request);
                 var result = await response.Content.ReadAsStringAsync();
                 return result;
             }
@@ -792,7 +903,7 @@ namespace Application.Services
                     uploadResult = await _cloudinary.UploadAsync(uploadParams);
                 }
 
-                if (uploadResult.Url == null)
+                if (uploadResult.SecureUrl == null)
                 {
                     response.Success = false;
                     response.Message = "Could not upload image";
@@ -800,7 +911,7 @@ namespace Application.Services
                 }
 
                 // Update the thumbnail URL in the database
-                project.Thumbnail = uploadResult.Url.ToString();
+                project.Thumbnail = uploadResult.SecureUrl.ToString();
                 project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
@@ -961,22 +1072,51 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (project == null)
                 {
                     response.Success = false;
                     response.Message = "Project not found.";
                     return response;
                 }
-                var staff = await _unitOfWork.UserRepo.GetByIdAsync(staffId);
+                var staff = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", staffId);
                 if (staff == null)
                 {
                     response.Success = false;
                     response.Message = "Staff not found.";
                     return response;
                 }
+                if (staff.IsDeleted || !staff.IsVerified)
+                {
+                    response.Success = false;
+                    response.Message = "Staff unfit for monitoring.";
+                    return response;
+                }
+                if (string.IsNullOrWhiteSpace(staff.Email) || !new EmailAddressAttribute().IsValid(staff.Email))
+                {
+                    response.Success = false;
+                    response.Message = "Email of staff is invalid.";
+                    return response;
+                }
+                var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
+                if (creator == null)
+                {
+                    response.Success = false;
+                    response.Message = "Creator not found.";
+                    return response;
+                }
                 project.MonitorId = staff.UserId;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
+                var emailSend = await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!emailSend)
+                {
+                    await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                }
+                emailSend = await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                if (!emailSend)
+                {
+                    await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                }
                 response.Success = true;
                 response.Message = "Project monitor changed successfully.";
             }
