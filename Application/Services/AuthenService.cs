@@ -256,6 +256,8 @@ namespace Application.Services
                 staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
                 staffAccount.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                staffAccount.IsVerified = true;
+                staffAccount.IsDeleted = false;
 
                 await _unitOfWork.UserRepo.AddAsync(staffAccount);
 

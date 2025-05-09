@@ -1,5 +1,7 @@
 ﻿using Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Domain.Entities
 {
@@ -49,7 +51,7 @@ namespace Domain.Entities
         public virtual ICollection<Project> MonitoredProjects { get; set; } = new List<Project>(); // New relationship
         private void VerifyUser()
         {
-            if (!string.IsNullOrEmpty(_phone) && !string.IsNullOrEmpty(_paymentAccount))
+            if (!string.IsNullOrWhiteSpace(_phone) && !string.IsNullOrWhiteSpace(_paymentAccount) && Regex.IsMatch(_phone, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$") && new EmailAddressAttribute().IsValid(_paymentAccount))
             {
                 IsVerified = true;
             }

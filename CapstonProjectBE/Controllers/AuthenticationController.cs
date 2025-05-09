@@ -138,5 +138,33 @@ namespace CapstonProjectBE.Controllers
                 return Ok(result);
             }
         }
+
+        [HttpGet("CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            return Ok();
+        }
+
+        [HttpGet("CheckIfUserCanGetByProjectId")]
+        [AllowAnonymous]
+        public async Task<IActionResult> CheckIfUserCanGetByProjectId(int projectId)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserCanGetByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            return Ok();
+        }
+
+
     }
 }
