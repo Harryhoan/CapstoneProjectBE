@@ -496,7 +496,7 @@ namespace Application.Services
                 if (existingPostComments.Any())
                 {
                     List<Comment> existingComments = new();
-                    foreach(var postComment in existingPostComments)
+                    foreach (var postComment in existingPostComments)
                     {
                         var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(postComment.CommentId);
                         if (existingComment != null)
@@ -575,14 +575,22 @@ namespace Application.Services
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
-
-                    var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
-                    if (existingCollaborator == null || user.UserId != existingPost.UserId)
+                    if (user.UserId != existingProject.CreatorId)
                     {
-                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
-                        return new ObjectResult(result);
+                        var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
+                        if (existingCollaborator == null)
+                        {
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
+                            return new ObjectResult(result);
+                        }
+                        else if (existingCollaborator.Role >= CollaboratorEnum.VIEWER || existingPost.UserId != user.UserId)
+                        {
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the collaborator." };
+                            return new ObjectResult(result);
+
+                        }
+                        existingCollaborator = null;
                     }
-                    existingCollaborator = null;
 
                 }
                 else if (user.Role == UserEnum.STAFF)
