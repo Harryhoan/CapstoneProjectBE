@@ -67,6 +67,10 @@ namespace CapstonProjectBE.Controllers
         public async Task<IActionResult> ResetPassword(string email, string newPassword)
         {
             var check = await _userService.GetUserByEmailAsync(email);
+            if (check.Data == null)
+            {
+                return BadRequest("User not found");
+            }
             var user = await _userService.UpdatePasswordUser(email, newPassword, check.Data.UserId);
             if (user != null)
             {
