@@ -357,7 +357,7 @@ namespace Application.Services
                 {
                     project.Status = ProjectStatusEnum.DELETED;
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "The project has been successfully deleted";
                     return response;
                 }
