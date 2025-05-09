@@ -581,12 +581,12 @@ namespace Application.Services
                         if (existingCollaborator == null)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                         else if (existingCollaborator.Role >= CollaboratorEnum.VIEWER || existingPost.UserId != user.UserId)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the collaborator." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
 
                         }
                         existingCollaborator = null;
@@ -598,7 +598,7 @@ namespace Application.Services
                     if (existingProject.MonitorId > 0 && existingProject.MonitorId != user.UserId)
                     {
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the staff." };
-                        return new ObjectResult(result);
+                        return new BadRequestObjectResult(result);
                     }
                 }
                 return null;
@@ -647,7 +647,7 @@ namespace Application.Services
                             existingCollaborator = null;
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The request is forbidden to the customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
 
                         else if (existingPost.Status == PostEnum.EXCLUSIVE)
@@ -658,7 +658,7 @@ namespace Application.Services
                                 existingPledge = null;
                                 //return new ForbidResult();
                                 var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The post is exclusive to backers only." };
-                                return new ObjectResult(result);
+                                return new BadRequestObjectResult(result);
                             }
                         }
                     }

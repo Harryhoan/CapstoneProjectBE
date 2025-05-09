@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace Application.ServiceResponse
+﻿namespace Application.ServiceResponse
 {
     public class ServiceResponse<T>
     {

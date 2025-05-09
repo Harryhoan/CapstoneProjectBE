@@ -2,7 +2,6 @@
 using Application.ServiceResponse;
 using Application.Utils;
 using Application.ViewModels.FaqDTO;
-using Application.ViewModels.PostDTO;
 using AutoMapper;
 using Domain.Entities;
 using System.ComponentModel.DataAnnotations;

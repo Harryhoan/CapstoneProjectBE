@@ -384,7 +384,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                string apiResponse = await CheckDescriptionAsync(story);
+                string apiResponse = await CheckDescriptionAsync(FormatUtils.SafeUrlDecode(story.Trim()));
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using static iText.Kernel.Pdf.Colorspace.PdfSpecialCs;
+using System.Web;
 
 namespace Application.Utils
 {
@@ -128,6 +124,69 @@ namespace Application.Utils
             });
 
             return finalResult;
+        }
+        public static string SafeUrlDecode(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // Check if the string contains any valid URL-encoded sequences
+            bool isEncoded = false;
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == '%' && i + 2 < input.Length)
+                {
+                    if (IsHexDigit(input[i + 1]) && IsHexDigit(input[i + 2]))
+                    {
+                        isEncoded = true;
+                        break;
+                    }
+                }
+                else if (input[i] == '+' && !isEncoded)
+                {
+                    // Only consider + as encoding if we find no % sequences
+                    isEncoded = true;
+                }
+            }
+
+            if (!isEncoded)
+                return input;
+
+            try
+            {
+                string decoded = HttpUtility.UrlDecode(input);
+
+                // Verify decoding didn't create new % sequences (which would indicate double encoding)
+                if (decoded.Contains("%") && decoded != input)
+                {
+                    bool hasNewEncoding = false;
+                    for (int i = 0; i < decoded.Length; i++)
+                    {
+                        if (decoded[i] == '%' && i + 2 < decoded.Length &&
+                            IsHexDigit(decoded[i + 1]) && IsHexDigit(decoded[i + 2]))
+                        {
+                            hasNewEncoding = true;
+                            break;
+                        }
+                    }
+
+                    if (hasNewEncoding)
+                        return input; // Probably double-encoded, return original
+                }
+
+                return decoded;
+            }
+            catch
+            {
+                return input; // If decoding fails, return original
+            }
+        }
+
+        private static bool IsHexDigit(char c)
+        {
+            return (c >= '0' && c <= '9') ||
+                   (c >= 'a' && c <= 'f') ||
+                   (c >= 'A' && c <= 'F');
         }
     }
 }
