@@ -44,6 +44,7 @@ namespace Infrastructure.Mappers
             CreateMap<PledgeDetail, PledgeDetailDto>().ReverseMap();
             CreateMap<Category, AddCategory>().ReverseMap();
             CreateMap<Reward, AddReward>().ReverseMap();
+            CreateMap<Reward, ViewReward>().ReverseMap();
             CreateMap<FAQ, FaqDto>().ReverseMap();
             CreateMap<Domain.Entities.File, FileDTO>().ReverseMap();
             CreateMap<User, PostUserDTO>()

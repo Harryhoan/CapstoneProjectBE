@@ -1,5 +1,6 @@
 ﻿using Application.IService;
 using Application.ServiceResponse;
+using Application.Utils;
 using Application.ViewModels.RewardDTO;
 using AutoMapper;
 using Domain.Entities;
@@ -17,9 +18,9 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ServiceResponse<AddReward>> AddReward(AddReward reward)
+        public async Task<ServiceResponse<ViewReward>> AddReward(AddReward reward)
         {
-            var response = new ServiceResponse<AddReward>();
+            var response = new ServiceResponse<ViewReward>();
 
             try
             {
@@ -32,12 +33,25 @@ namespace Application.Services
                     response.Message = string.Join("; ", errorMessages);
                     return response;
                 }
-
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", reward.ProjectId);
+                if (project == null || project.Status == Domain.Enums.ProjectStatusEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "The project cannot be found and may have already been deleted";
+                    return response;
+                }
+                if (await _unitOfWork.RewardRepo.Any(r => r.ProjectId == reward.ProjectId && r.Amount == reward.Amount))
+                {
+                    response.Success = false;
+                    response.Message = "There's already a reward with that amount for this project";
+                    return response;
+                }
+                reward.Details = FormatUtils.FormatText(reward.Details);
                 var newReward = _mapper.Map<Reward>(reward);
                 newReward.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.RewardRepo.AddAsync(newReward);
 
-                response.Data = reward;
+                response.Data = _mapper.Map<ViewReward>(newReward);
                 response.Success = true;
                 response.Message = "Reward created successfully.";
             }
@@ -225,18 +239,19 @@ namespace Application.Services
                     return response;
                 }
 
+                if (await _unitOfWork.RewardRepo.Any(r => r.ProjectId == existingReward.ProjectId && r.Amount == updateReward.Amount))
+                {
+                    response.Success = false;
+                    response.Message = "There's already a reward with that amount for this project";
+                    return response;
+                }
+
                 existingReward.Amount = updateReward.Amount;
-                existingReward.Details = updateReward.Details;
+                existingReward.Details = FormatUtils.FormatText(updateReward.Details);
 
                 await _unitOfWork.RewardRepo.UpdateAsync(existingReward);
 
-                var viewReward = new ViewReward
-                {
-                    RewardId = existingReward.RewardId,
-                    Amount = updateReward.Amount,
-                    Details = updateReward.Details,
-                    ProjectId = existingReward.ProjectId,
-                };
+                var viewReward = _mapper.Map<ViewReward>(existingReward);
 
                 response.Data = viewReward;
                 response.Success = true;

@@ -683,7 +683,10 @@ namespace Application.Services
                 foreach (var pledge in refundablePledges)
                 {
                     var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
-                    if (user == null || user.IsDeleted || !user.IsVerified || string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount)) continue;
+                    if (user == null || user.IsDeleted || !user.IsVerified || string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount))
+                    {
+                        continue;
+                    }
 
                     var finalAmount = pledge.TotalAmount * 0.95m; // 5% fee
                     if (finalAmount <= 0) continue;

@@ -17,7 +17,7 @@ namespace Infrastructure.Repositories
 
         public async Task<bool> CheckEmailAddressExisted(string sEmail)
         {
-            return await _dbContext.Users.AnyAsync(e => e.Email == sEmail);
+            return await _dbContext.Users.AnyAsync(e => e.Email.Trim().ToLower() == sEmail.Trim().ToLower());
         }
 
         public async Task<User?> GetByEmailAsync(string email) => await _dbSet.FirstOrDefaultAsync(u => u.Email.Trim().ToLower() == email.Trim().ToLower() && !u.IsDeleted);

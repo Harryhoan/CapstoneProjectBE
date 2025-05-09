@@ -159,17 +159,24 @@ namespace Application.Services
                 {
                     userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.PaymentAccount))
+                if (!string.IsNullOrWhiteSpace(UpdateUser.PaymentAccount))
                 {
-                    userEntity.PaymentAccount = UpdateUser.PaymentAccount;
+                    if (string.IsNullOrWhiteSpace(userEntity.PaymentAccount))
+                    {
+                        userEntity.PaymentAccount = UpdateUser.PaymentAccount.Trim();
+                    }
+                    else if (!userEntity.PaymentAccount.Trim().ToLower().Equals(UpdateUser.PaymentAccount.Trim().ToLower(), StringComparison.OrdinalIgnoreCase) && !(await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == userEntity.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))))
+                    {
+                        userEntity.PaymentAccount = UpdateUser.PaymentAccount.Trim();
+                    }
                 }
                 if (!string.IsNullOrEmpty(UpdateUser.Phone))
                 {
                     userEntity.Phone = UpdateUser.Phone;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Bio))
+                if (UpdateUser.Bio != null)
                 {
-                    userEntity.Bio = UpdateUser.Bio;
+                    userEntity.Bio = FormatUtils.FormatText(UpdateUser.Bio.Trim());
                 }
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
 
