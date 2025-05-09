@@ -650,7 +650,7 @@ namespace Application.Services
                             existingPledge = null;
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "The customer cannot comment without becoming a backer or a collaborator." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
 
                     }

@@ -295,7 +295,7 @@ namespace Application.Services
                 {
                     //return new ForbidResult();
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                    return new ObjectResult(result);
+                    return new BadRequestObjectResult(result);
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null)
@@ -313,12 +313,12 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                         if (existingCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR && existingCollaborator.Role != Domain.Enums.CollaboratorEnum.EDITOR)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current collaborator." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -328,7 +328,7 @@ namespace Application.Services
                     {
                         //return new ForbidResult();
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current staff." };
-                        return new ObjectResult(result);
+                        return new BadRequestObjectResult(result);
                     }
                 }
 
@@ -361,7 +361,7 @@ namespace Application.Services
                     {
                         //return new ForbidResult();
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                        return new ObjectResult(result);
+                        return new BadRequestObjectResult(result);
                     }
                     else if (user.UserId != existingProject.CreatorId)
                     {
@@ -369,7 +369,7 @@ namespace Application.Services
                         if (existingCollaborator == null)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This project is invisible." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }

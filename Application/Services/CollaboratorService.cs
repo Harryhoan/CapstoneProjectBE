@@ -515,7 +515,7 @@ namespace Application.Services
                 {
                     //return new NotFoundResult();
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
-                    return new ObjectResult(result);
+                    return new NotFoundObjectResult(result);
                 }
                 if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
                 {
@@ -527,7 +527,7 @@ namespace Application.Services
                     {
                         //return new ForbidResult();
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                        return new ObjectResult(result);
+                        return new BadRequestObjectResult(result);
                     }
                     else if (user.UserId != existingProject.CreatorId)
                     {
@@ -536,7 +536,7 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -560,7 +560,7 @@ namespace Application.Services
                 if (user.IsDeleted || !user.IsVerified)
                 {
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                    return new ObjectResult(result);
+                    return new BadRequestObjectResult(result);
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
@@ -602,7 +602,7 @@ namespace Application.Services
                         if (userCollaborator == null || userCollaborator.Role != Domain.Enums.CollaboratorEnum.ADMINISTRATOR)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -613,7 +613,7 @@ namespace Application.Services
                         if (user.UserId != existingProject.MonitorId)
                         {
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -640,7 +640,7 @@ namespace Application.Services
                 {
                     //return new ForbidResult();
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                    return new ObjectResult(result);
+                    return new BadRequestObjectResult(result);
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
@@ -662,7 +662,7 @@ namespace Application.Services
                     {
                         //return new ForbidResult();
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
-                        return new ObjectResult(result);
+                        return new BadRequestObjectResult(result);
                     }
                 }
                 else
@@ -673,7 +673,7 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -698,7 +698,7 @@ namespace Application.Services
                 {
                     //return new ForbidResult();
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                    return new ObjectResult(result);
+                    return new BadRequestObjectResult(result);
                 }
                 var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (existingProject == null || (user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.DELETED))
@@ -727,7 +727,7 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the customer." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                     else if (user.UserId != existingProject.CreatorId)
@@ -738,7 +738,7 @@ namespace Application.Services
                             {
                                 //return new ForbidResult();
                                 var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the collaborator." };
-                                return new ObjectResult(result);
+                                return new BadRequestObjectResult(result);
 
                             }
                         }
@@ -746,7 +746,7 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "A collaborator can only demote oneself, not promote." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }
@@ -758,7 +758,7 @@ namespace Application.Services
                         {
                             //return new ForbidResult();
                             var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the staff." };
-                            return new ObjectResult(result);
+                            return new BadRequestObjectResult(result);
                         }
                     }
                 }

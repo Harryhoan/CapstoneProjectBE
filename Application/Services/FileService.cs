@@ -392,7 +392,7 @@ namespace Application.Services
             {
                 //return new ForbidResult();
                 var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is either deleted or unverified." };
-                return new ObjectResult(result);
+                return new BadRequestObjectResult(result);
             }
             var existingFile = await _unitOfWork.FileRepo.GetByIdNoTrackingAsync("FileId", fileId);
             if (existingFile == null || (user.Role == UserEnum.CUSTOMER && existingFile.Status == "Deleted"))
