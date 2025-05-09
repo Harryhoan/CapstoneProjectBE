@@ -166,9 +166,9 @@ namespace Application.Services
                 }
 
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
-                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
-                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse.Trim(), "Có.\n\n", ""));
                     response.Success = false;
                     response.Message = "Description contains invalid content: " + apiResponse;
 
@@ -176,7 +176,7 @@ namespace Application.Services
                 }
 
                 apiResponse = await CheckDescriptionAsync(createProjectDto.Title);
-                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
                     response.Success = false;
@@ -373,7 +373,7 @@ namespace Application.Services
                     return response;
                 }
                 string apiResponse = await CheckDescriptionAsync(story);
-                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase))
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
                     response.Success = false;
@@ -903,7 +903,7 @@ namespace Application.Services
                     uploadResult = await _cloudinary.UploadAsync(uploadParams);
                 }
 
-                if (uploadResult.Url == null)
+                if (uploadResult.SecureUrl == null)
                 {
                     response.Success = false;
                     response.Message = "Could not upload image";
@@ -911,7 +911,7 @@ namespace Application.Services
                 }
 
                 // Update the thumbnail URL in the database
-                project.Thumbnail = uploadResult.Url.ToString();
+                project.Thumbnail = uploadResult.SecureUrl.ToString();
                 project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
