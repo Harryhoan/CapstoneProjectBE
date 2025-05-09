@@ -191,6 +191,18 @@ namespace Application.Services
                     response.Message = "Start date must be earlier than end date.";
                     return response;
                 }
+                if (createProjectDto.StartDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                {
+                    response.Success = false;
+                    response.Message = "Start date must be later than today.";
+                }
+
+                if (createProjectDto.EndDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                {
+                    response.Success = false;
+                    response.Message = "End date must be later than today.";
+                    return response;
+                }
 
                 var project = _mapper.Map<Project>(createProjectDto);
 
@@ -809,6 +821,19 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Start date must be earlier than end date.";
+                    return response;
+                }
+
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime.Value.Date <= DateTime.UtcNow.AddHours(7).Date)
+                {
+                    response.Success = false;
+                    response.Message = "Start date must be later than today.";
+                }
+
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime.Value.Date <= DateTime.UtcNow.AddHours(7).Date)
+                {
+                    response.Success = false;
+                    response.Message = "End date must be later than today.";
                     return response;
                 }
 
