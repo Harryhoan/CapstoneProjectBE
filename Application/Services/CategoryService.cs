@@ -20,9 +20,9 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        public async Task<ServiceResponse<AddCategory>> AddCategory(int userId, AddCategory category)
+        public async Task<ServiceResponse<ViewCategory>> AddCategory(int userId, AddCategory category)
         {
-            var response = new ServiceResponse<AddCategory>();
+            var response = new ServiceResponse<ViewCategory>();
             var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
             if (user == null)
             {
@@ -56,14 +56,14 @@ namespace Application.Services
                     }
                 }
                 var newCategory = _mapper.Map<Category>(category);
-                newCategory.Name = FormatUtils.TrimSpacesPreserveSingle(newCategory.Name);
+                newCategory.Name = FormatUtils.CapitalizeWords(FormatUtils.TrimSpacesPreserveSingle(newCategory.Name));
                 if (!string.IsNullOrWhiteSpace(newCategory.Description))
                 {
-                    newCategory.Description = FormatUtils.TrimSpacesPreserveSingle(newCategory.Description);
+                    newCategory.Description = FormatUtils.FormatText(FormatUtils.TrimSpacesPreserveSingle(newCategory.Description));
                 }
                 await _unitOfWork.CategoryRepo.AddAsync(newCategory);
 
-                response.Data = category;
+                response.Data = _mapper.Map<ViewCategory>(newCategory);
                 response.Success = true;
                 response.Message = "Category created successfully.";
             }
@@ -76,9 +76,9 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategory(int categoryId)
+        public async Task<ServiceResponse<string>> DeleteCategory(int categoryId)
         {
-            var response = new ServiceResponse<int>();
+            var response = new ServiceResponse<string>();
             try
             {
                 var category = await _unitOfWork.CategoryRepo.GetByIdAsync(categoryId);
@@ -104,7 +104,7 @@ namespace Application.Services
 
                 response.Success = true;
                 response.Message = "Category deleted successfully.";
-                response.Data = categoryId;
+                response.Data = "Category deleted successfully.";
             }
             catch (Exception ex)
             {
@@ -116,9 +116,9 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteCategoryFromProject(int projectId, int categoryId)
+        public async Task<ServiceResponse<string>> DeleteCategoryFromProject(int projectId, int categoryId)
         {
-            var response = new ServiceResponse<int>();
+            var response = new ServiceResponse<string>();
             try
             {
                 var category = await _unitOfWork.ProjectCategoryRepo.FindEntityAsync(pc => pc.ProjectId == projectId && pc.CategoryId == categoryId);
@@ -133,6 +133,7 @@ namespace Application.Services
 
                 response.Success = true;
                 response.Message = "Category removed from the project successfully.";
+                response.Data = "Category removed from the project successfully.";
             }
             catch (Exception ex)
             {

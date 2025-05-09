@@ -64,6 +64,7 @@ namespace Infrastructure.Mappers
                 .ForMember(dest => dest.Monitor, opt => opt.MapFrom(src => src.Monitor.Fullname))
                 .ForMember(dest => dest.Creator, opt => opt.MapFrom(src => src.User.Fullname));
             CreateMap<Category, UpdateCategory>().ReverseMap();
+            CreateMap<Category, ViewCategory>().ReverseMap();
             CreateMap<ProjectCategory, AddCategoryToProject>().ReverseMap();
             CreateMap<Collaborator, CollaboratorDTO>()
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))

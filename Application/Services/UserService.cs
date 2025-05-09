@@ -248,7 +248,12 @@ namespace Application.Services
                     response.Message = "User not found.";
                     return response;
                 }
-
+                if (await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING && p.CreatorId == user.UserId))
+                {
+                    response.Success = false;
+                    response.Message = "Campaginers whose projects are ongoing cannot be deleted.";
+                    return response;
+                }
                 DeleteUser.IsDeleted = true;
                 await _unitOfWork.UserRepo.UpdateAsync(DeleteUser);
 

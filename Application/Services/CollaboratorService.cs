@@ -225,7 +225,7 @@ namespace Application.Services
             return response;
         }
 
-        private async Task<List<Collaborator>?> FilterCollaboratorsByProjectId(int projectId)
+        private async Task<List<Collaborator>?> FilterCollaboratorsByProjectId(int projectId, User? user = null)
         {
             var collaborators = await _unitOfWork.CollaboratorRepo.GetCollaboratorsByProjectId(projectId);
             var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
@@ -238,9 +238,13 @@ namespace Application.Services
             while (i < collaborators.Count)
             {
                 var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", collaborators[i].UserId);
-                if (existingUser == null /*|| existingUser.IsDeleted*/)
+                if (existingUser == null)
                 {
                     await _unitOfWork.CollaboratorRepo.RemoveAsync(collaborators[i]);
+                    collaborators.RemoveAt(i);
+                }
+                else if (existingUser.IsDeleted && (user == null || user.Role == UserEnum.CUSTOMER))
+                {
                     collaborators.RemoveAt(i);
                 }
                 else
@@ -363,13 +367,13 @@ namespace Application.Services
         }
 
 
-        public async Task<ServiceResponse<PaginationModel<UserCollaboratorDTO>>> GetPaginatedCollaboratorsByProjectId(int projectId, int page = 1, int pageSize = 20)
+        public async Task<ServiceResponse<PaginationModel<UserCollaboratorDTO>>> GetPaginatedCollaboratorsByProjectId(int projectId, int page = 1, int pageSize = 20, User? user = null)
         {
             var response = new ServiceResponse<PaginationModel<UserCollaboratorDTO>>();
 
             try
             {
-                var collaborators = await FilterCollaboratorsByProjectId(projectId);
+                var collaborators = await FilterCollaboratorsByProjectId(projectId, user);
                 if (collaborators == null)
                 {
                     response.Success = false;
@@ -396,13 +400,13 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<List<UserCollaboratorDTO>>> GetCollaboratorsByProjectId(int projectId)
+        public async Task<ServiceResponse<List<UserCollaboratorDTO>>> GetCollaboratorsByProjectId(int projectId, User? user = null)
         {
             var response = new ServiceResponse<List<UserCollaboratorDTO>>();
 
             try
             {
-                var collaborators = await FilterCollaboratorsByProjectId(projectId);
+                var collaborators = await FilterCollaboratorsByProjectId(projectId, user);
                 if (collaborators == null)
                 {
                     response.Success = false;
