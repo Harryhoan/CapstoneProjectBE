@@ -11,11 +11,11 @@ using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace Application.Services
 {
@@ -168,8 +168,20 @@ namespace Application.Services
                 string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
                 if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
                 {
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
                     response.Success = false;
-                    response.Message = "Description contains invalid content.";
+                    response.Message = "Description contains invalid content: " + apiResponse;
+
+                    return response;
+                }
+
+                apiResponse = await CheckDescriptionAsync(createProjectDto.Title);
+                if (apiResponse.Trim().Equals("Có", StringComparison.OrdinalIgnoreCase))
+                {
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    response.Success = false;
+                    response.Message = "Title contains invalid content: " + apiResponse;
+
                     return response;
                 }
 
@@ -251,24 +263,91 @@ namespace Application.Services
             return response;
         }
 
-        public async Task<ServiceResponse<int>> DeleteProject(int id)
+        public async Task<ServiceResponse<int>> DeleteProject(int projectId)
         {
             var response = new ServiceResponse<int>();
 
             try
             {
-                int result = await _unitOfWork.ProjectRepo.DeleteProject(id);
-
-                if (result > 0)
-                {
-                    response.Data = result;
-                    response.Success = true;
-                    response.Message = "Project deleted successfully.";
-                }
-                else
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (project == null || project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
-                    response.Message = "Project not found or could not be deleted.";
+                    response.Message = "The project cannot be found and may have already been deleted";
+                    return response;
+                }
+                //if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                //{
+                //    var pledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(project.CreatorId, project.ProjectId);
+                //    if (pledge == null)
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project cannot be deleted in its current state";
+                //        return response;
+                //    }
+                //    else if (!(await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId)))
+                //    {
+                //        await _unitOfWork.PledgeRepo.RemoveAsync(pledge);
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project cannot be deleted in its current state";
+                //        return response;
+                //    }
+                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRING))
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The creator needs to receive the funds first";
+                //        return response;
+                //    }
+                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRED))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //}
+                //else if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                //{
+                //    if (await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDED) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDING)))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //    else
+                //    {
+                //        response.Success = false;
+                //        response.Message = "The project needs to be fully refunded first";
+                //        return response;
+                //    }
+                //}
+                //else
+                //{
+                //    if (project.TotalAmount == 0 && !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                //    {
+                //        project.Status = ProjectStatusEnum.DELETED;
+                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                //        response.Success = false;
+                //        response.Message = "The project has been successfully deleted";
+                //        return response;
+                //    }
+                //}
+                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED || project.TransactionStatus == TransactionStatusEnum.REFUNDED || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                {
+                    project.Status = ProjectStatusEnum.DELETED;
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                    response.Success = false;
+                    response.Message = "The project has been successfully deleted";
+                    return response;
                 }
             }
             catch (Exception ex)
@@ -293,7 +372,17 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                project.Story = story;
+                string apiResponse = await CheckDescriptionAsync(story);
+                if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase))
+                {
+                    apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    response.Success = false;
+                    response.Message = "Story contains invalid content: " + apiResponse;
+
+                    return response;
+                }
+
+                project.Story = story.Trim();
                 project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
@@ -778,7 +867,7 @@ namespace Application.Services
             var request = new { prompt = description };
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("https://gemini-ai-production.up.railway.app/GeminiAI/check-text", request);
+                var response = await _httpClient.PostAsJsonAsync("https://geminiai-production.up.railway.app/GeminiAI/find-text-error", request);
                 var result = await response.Content.ReadAsStringAsync();
                 return result;
             }
