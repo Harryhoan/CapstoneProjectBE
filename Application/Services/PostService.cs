@@ -496,7 +496,7 @@ namespace Application.Services
                 if (existingPostComments.Any())
                 {
                     List<Comment> existingComments = new();
-                    foreach(var postComment in existingPostComments)
+                    foreach (var postComment in existingPostComments)
                     {
                         var existingComment = await _unitOfWork.CommentRepo.GetByIdAsync(postComment.CommentId);
                         if (existingComment != null)

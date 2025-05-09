@@ -4,7 +4,6 @@ using Application.IService;
 using Application.Utils;
 using Domain;
 using Domain.Entities;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
@@ -76,7 +75,7 @@ namespace CapstonProjectBE.BackgroundServices
                                     }
                                 }
                             }
-                            if (project.Monitor == null || string.IsNullOrWhiteSpace(project.Monitor.Email) || !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
+                            if (project.Monitor == null || string.IsNullOrWhiteSpace(project.Monitor.Email) || !(new EmailAddressAttribute().IsValid(project.Monitor.Email)) || project.Monitor.IsDeleted)
                             {
                                 if (await dbContext.Users.AnyAsync(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)))
                                 {

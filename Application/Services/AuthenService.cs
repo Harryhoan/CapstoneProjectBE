@@ -101,7 +101,7 @@ namespace Application.Services
                 var validationResults = new List<ValidationResult>();
                 if (!Validator.TryValidateObject(userObject, validationContext, validationResults, true))
                 {
-                    var errorMessages = validationResults.Select(r =>  !string.IsNullOrWhiteSpace(r.ErrorMessage) ? (string) r.ErrorMessage : string.Empty).ToList();
+                    var errorMessages = validationResults.Select(r => !string.IsNullOrWhiteSpace(r.ErrorMessage) ? (string)r.ErrorMessage : string.Empty).ToList();
                     response.Success = false;
                     response.Message = string.Join("; ", errorMessages);
                     response.ErrorMessages = errorMessages;
