@@ -72,7 +72,7 @@ namespace CapstonProjectBE.BackgroundServices
                                     }
                                     else
                                     {
-                                        var payoutItem = payoutDetails.items.FirstOrDefault(i => i.payout_item.sender_item_id.Equals(pledge.PledgeId.ToString()));
+                                       var payoutItem = payoutDetails.items.FirstOrDefault(/*i => i.payout_item.sender_item_id.Equals(pledge.PledgeId.ToString())*/);
                                         if (payoutItem == null || !(payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS || payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW))
                                         {
                                             pledge.TotalAmount += pledgeDetails[i].Amount * 100 / 95;
@@ -83,28 +83,29 @@ namespace CapstonProjectBE.BackgroundServices
                                         }
                                         else if (payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS && !string.IsNullOrWhiteSpace(payoutItem.transaction_id))
                                         {
+                                            var pledgeDetail = pledgeDetails[i];
                                             var baseUrl = _configuration["PayPal:Mode"] == "live" ? "https://www.paypal.com" : "https://sandbox.paypal.com";
                                             if (pledgeDetails[i].Status == PledgeDetailEnum.REFUNDING)
                                             {
-                                                pledgeDetails[i].Status = PledgeDetailEnum.REFUNDED;
+                                                pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
                                             }
                                             if (pledgeDetails[i].Status == PledgeDetailEnum.TRANSFERRING)
                                             {
-                                                pledgeDetails[i].Status = PledgeDetailEnum.TRANSFERRED;
+                                                pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
                                             }
-                                            pledgeDetails[i].InvoiceId = payoutItem.transaction_id;
-                                            pledgeDetails[i].InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
-                                            dbContext.PledgeDetails.Update(pledgeDetails[i]);
+                                            pledgeDetail.InvoiceId = payoutItem.transaction_id;
+                                            pledgeDetail.InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
+                                            dbContext.PledgeDetails.Update(pledgeDetail);
                                             var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == pledge.UserId);
                                             var project = await dbContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.ProjectId == pledge.ProjectId);
 
                                             if (project != null && user != null && !string.IsNullOrWhiteSpace(user.Email) && new EmailAddressAttribute().IsValid(user.Email))
                                             {
-                                                if (pledgeDetails[i].Status == PledgeDetailEnum.REFUNDED)
+                                                if (pledgeDetail.Status == PledgeDetailEnum.REFUNDED)
                                                 {
                                                     await EmailSender.SendRefundInvoiceEmail(user.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetails[i].Amount, pledgeDetails[i].InvoiceUrl, project.ProjectId);
                                                 }
-                                                else if (pledgeDetails[i].Status == PledgeDetailEnum.TRANSFERRED)
+                                                else if (pledgeDetail.Status == PledgeDetailEnum.TRANSFERRED)
                                                 {
                                                     if (!string.IsNullOrWhiteSpace(user.Email) && new EmailAddressAttribute().IsValid(user.Email))
                                                     {
@@ -122,6 +123,7 @@ namespace CapstonProjectBE.BackgroundServices
                                 }
                             }
                         }
+                        await dbContext.SaveChangesAsync();
                         await transaction.CommitAsync();
                     }
                     catch
