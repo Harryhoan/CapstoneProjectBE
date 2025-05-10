@@ -20,6 +20,7 @@ namespace CapstonProjectBE.Controllers
             _authenService = authenService;
         }
         [HttpGet("Platform/GetAll")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllPlatformAsync()
         {
             var result = await _platformService.GetAllPlatformAsync();
@@ -60,6 +61,7 @@ namespace CapstonProjectBE.Controllers
             return Ok(result);
         }
         [HttpGet("Platform/{search}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetPlatforms(string? query = null)
         {
             var result = await _platformService.GetPlatforms(query);
