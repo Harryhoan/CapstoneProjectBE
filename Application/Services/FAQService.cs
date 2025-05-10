@@ -17,9 +17,9 @@ namespace Application.Services
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-        public async Task<ServiceResponse<FAQ>> AddFaq(int userId, int projectId, FaqDto createFAQ)
+        public async Task<ServiceResponse<ViewFaqDto>> AddFaq(int userId, int projectId, FaqDto createFAQ)
         {
-            var response = new ServiceResponse<FAQ>();
+            var response = new ServiceResponse<ViewFaqDto>();
 
             try
             {
@@ -48,16 +48,18 @@ namespace Application.Services
                     return response;
                 }
                 var existFaq = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                var createQuestion = FormatUtils.TrimSpacesPreserveSingle(createFAQ.Question.Trim().ToLower());
                 foreach (var item in existFaq)
                 {
-                    if (item.Question == createFAQ.Question)
+                    var itemQuestion = FormatUtils.TrimSpacesPreserveSingle(item.Question.Trim().ToLower());
+                    if (createQuestion.Equals(itemQuestion, StringComparison.OrdinalIgnoreCase) /*|| createQuestion.Contains(itemQuestion, StringComparison.OrdinalIgnoreCase) || itemQuestion.Contains(createQuestion, StringComparison.OrdinalIgnoreCase)*/)
                     {
                         response.Success = false;
-                        response.Message = "This question existed.";
+                        response.Message = "This question has already existed and been answered.";
                         return response;
                     }
                 }
-
+                createFAQ.Question = FormatUtils.TrimSpacesPreserveSingle(createFAQ.Question);
                 var newFAQ = _mapper.Map<FAQ>(createFAQ);
 
                 newFAQ.ProjectId = projectId;
@@ -65,7 +67,7 @@ namespace Application.Services
                 newFAQ.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.FAQRepo.AddAsync(newFAQ);
 
-                response.Data = newFAQ;
+                response.Data = _mapper.Map<ViewFaqDto>(newFAQ);
                 response.Success = true;
                 response.Message = "FAQ created successfully.";
             }
@@ -83,7 +85,7 @@ namespace Application.Services
             var response = new ServiceResponse<string>();
             try
             {
-                var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (user == null)
                 {
                     response.Success = false;
@@ -112,9 +114,9 @@ namespace Application.Services
             }
         }
 
-        public async Task<ServiceResponse<List<FaqDto>>> GetFaqByProjectId(int userId, int projectId)
+        public async Task<ServiceResponse<List<ViewFaqDto>>> GetFaqByProjectId(int userId, int projectId)
         {
-            var response = new ServiceResponse<List<FaqDto>>();
+            var response = new ServiceResponse<List<ViewFaqDto>>();
             try
             {
                 var user = await _unitOfWork.UserRepo.GetByIdAsync(userId);
@@ -132,7 +134,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var FaqData = _mapper.Map<List<FaqDto>>(faq);
+                var FaqData = _mapper.Map<List<ViewFaqDto>>(faq);
                 response.Success = true;
                 response.Message = "Get Faq by ProjectId successfully.";
                 response.Data = FaqData;
@@ -145,9 +147,9 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<List<FaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
+        public async Task<ServiceResponse<List<ViewFaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
         {
-            var response = new ServiceResponse<List<FaqDto>>();
+            var response = new ServiceResponse<List<ViewFaqDto>>();
             try
             {
                 var faqs = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
@@ -158,7 +160,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var responseData = _mapper.Map<List<FaqDto>>(faqs);
+                var responseData = _mapper.Map<List<ViewFaqDto>>(faqs);
 
                 response.Success = true;
                 response.Message = "Get all faq successfully.";
@@ -201,9 +203,9 @@ namespace Application.Services
         //    return response;
         //}
 
-        public async Task<ServiceResponse<FaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto updateFaq)
+        public async Task<ServiceResponse<ViewFaqDto>> UpdateFaq(int userId, int projectId, string Question, FaqDto updateFaq)
         {
-            var response = new ServiceResponse<FaqDto>();
+            var response = new ServiceResponse<ViewFaqDto>();
             try
             {
                 var validationContext = new ValidationContext(updateFaq);
@@ -224,7 +226,7 @@ namespace Application.Services
                     return response;
                 }
 
-                var project = await _unitOfWork.ProjectRepo.GetByIdAsync(projectId);
+                var project = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
                 if (project == null)
                 {
                     response.Success = false;
@@ -240,7 +242,19 @@ namespace Application.Services
                     return response;
                 }
 
-                // Update the existing FAQ instead of deleting and recreating
+                var existFaq = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                var updateQuestion = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question.Trim().ToLower());
+                foreach (var item in existFaq)
+                {
+                    var itemQuestion = FormatUtils.TrimSpacesPreserveSingle(item.Question.Trim().ToLower());
+                    if (updateQuestion.Equals(itemQuestion, StringComparison.OrdinalIgnoreCase) /*|| updateQuestion.Contains(itemQuestion, StringComparison.OrdinalIgnoreCase) || itemQuestion.Contains(updateQuestion, StringComparison.OrdinalIgnoreCase)*/)
+                    {
+                        response.Success = false;
+                        response.Message = "This question has already existed and been answered.";
+                        return response;
+                    }
+                }
+
                 faq.Question = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question);
                 faq.Answer = updateFaq.Answer;
                 faq.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
@@ -249,6 +263,7 @@ namespace Application.Services
 
                 response.Success = true;
                 response.Message = "Faq updated successfully.";
+                response.Data = _mapper.Map<ViewFaqDto>(faq);
                 return response;
             }
             catch (Exception ex)

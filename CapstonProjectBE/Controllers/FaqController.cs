@@ -22,7 +22,7 @@ namespace CapstonProjectBE.Controllers
 
         [HttpGet("GetFaqByProjectId")]
         [AllowAnonymous]
-        public async Task<ServiceResponse<List<FaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
+        public async Task<ServiceResponse<List<ViewFaqDto>>> GetAllFaqByProjectIdAsync(int projectId)
         {
             return await _faqService.GetAllFaqByProjectIdAsync(projectId);
         }
