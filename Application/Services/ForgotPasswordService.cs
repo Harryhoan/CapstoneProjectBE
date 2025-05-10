@@ -34,6 +34,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to create code: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -62,6 +63,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to delete code: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -83,6 +85,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to check if code exists: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -131,6 +134,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to verify code: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }

@@ -84,6 +84,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get projects: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }

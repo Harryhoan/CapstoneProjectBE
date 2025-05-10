@@ -69,6 +69,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to create category: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -108,6 +109,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to delete category: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -137,6 +139,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to remove category from project: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -176,6 +179,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get categories: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -216,6 +220,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get projects: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -258,6 +263,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get categories: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -326,6 +332,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get categories: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -375,6 +382,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get category: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -444,6 +452,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to update category: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
