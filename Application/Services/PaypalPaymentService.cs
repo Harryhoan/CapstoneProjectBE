@@ -181,7 +181,7 @@ namespace Application.Services
                 {
 
                     var createdPayout = payout.Create(apiContext, false);
-                    await Task.Delay(TimeSpan.FromSeconds(20));
+                    //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
                     //var startTime = DateTime.UtcNow.AddHours(7);
@@ -256,6 +256,16 @@ namespace Application.Services
                             //    pledgeDetail.PaymentId = createdPayout.batch_header.payout_batch_id;
                             //    pledgeDetail.TransactionId = transactionId;
                             //}
+
+                            if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
+                            {
+                                var emailSend = await EmailSender.SendTransferInvoiceEmail(creator.Fullname, creator.Email, transferPledgeDetail.Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                                if (!emailSend)
+                                {
+
+                                }
+                            }
+
                         }
                         else if (payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW)
                         {
@@ -466,7 +476,7 @@ namespace Application.Services
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                     var createdPayout = payout.Create(apiContext, false);
-                    await Task.Delay(TimeSpan.FromSeconds(20));
+                    //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     //var startTime = DateTime.UtcNow.AddHours(7);
                     //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
@@ -735,7 +745,7 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
-                await Task.Delay(TimeSpan.FromSeconds(20));
+                //await Task.Delay(TimeSpan.FromSeconds(20));
 
                 //var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
                 var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);

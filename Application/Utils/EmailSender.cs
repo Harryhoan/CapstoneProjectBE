@@ -12,6 +12,95 @@ namespace Application.Utils
             return ("GameMkt", "thongsieusao3@gmail.com", "dfni ihvq panf lyjc");
         }
 
+        public static async Task<bool> SendTransferInvoiceEmail(string creatorFullname, string creatorEmail, decimal amount, string title, string url, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, TransactionStatusEnum transactionStatus, int projectId)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", creatorEmail));
+            message.Subject = "GameMkt - You've Received Funds of Project " + title;
+            message.Body = new TextPart("html")
+            {
+                Text =
+                $@"
+<html>
+    <head>
+        <style>
+            body {{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }}
+            .mailHeader {{
+                text-align: center;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .content {{
+                text-align: text-end;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='mailHeader'>
+            <h2>Your Invoice Is Here</h2>
+        </div>
+        <div class='content'>
+            <div class='details'>
+                <p> <strong>Dear {creatorFullname},</strong></p>
+                
+                <p>Funds raised for your project <strong>{title}</strong> have been sent to your registered Paypal account.</p>
+                <p><strong>Project Title:</strong> {title}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
+                <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
+                <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
+                <p><strong>Visbility:</strong> {projectStatus}</p>
+                <p><strong>Status:</strong> {transactionStatus}</p>
+                <p><strong>Transferred Amount:</strong> ${amount:F2}</p>
+                <p><strong>Invoice Url:</strong> {url}</p>
+
+                <p>To see the details of the above transaction, you can navigate to https://game-mkt.vercel.app/pledges. Should any issue arise, a report may be filed via the link https://game-mkt.vercel.app/create-report.</p>
+            </div>
+
+            <p>Best regards,</p>
+            <p><strong>GameMkt</strong></p>
+        </div>
+    </body>
+</html>
+"
+            };
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                //authenticate account email
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+
         public static async Task<bool> SendMonitorChangeEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, TransactionStatusEnum transactionStatus, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
@@ -242,10 +331,10 @@ namespace Application.Utils
             <div class='details'>
                 <p><strong>Project Title:</strong> {projectTitle}</p>
                 <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
-                <p><strong>Invoice URL:</strong> {invoiceUrl}</p>
+                <p><strong>Invoice Url:</strong> {invoiceUrl}</p>
                 <p><strong>Refunded Amount:</strong> ${amount:F2}</p>
             </div>
-            <p>To see the details of this refund, you can navigate to https://game-mkt.vercel.app/pledges.</p>
+            <p>To see the details of this refund, you can navigate to https://game-mkt.vercel.app/pledges. Should any issue arise, a report may be filed via the link https://game-mkt.vercel.app/create-report.</p>
             <p>Your support is greatly appreciated. If you have any questions, feel free to contact us.</p>
             <div class='footer'>
                 <p>GameMkt Team</p>
