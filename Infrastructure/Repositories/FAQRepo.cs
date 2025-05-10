@@ -14,7 +14,7 @@ namespace Infrastructure.Repositories
         }
         public async Task<FAQ?> GetQuestionByQuestionAndProjectId(int projectId, string question)
         {
-            return await _dbcontext.FAQs.FirstOrDefaultAsync(q => q.ProjectId == projectId || q.Question == question);
+            return await _dbcontext.FAQs.FirstOrDefaultAsync(q => q.ProjectId == projectId && q.Question.Trim().ToLower() == question.Trim().ToLower());
         }
         public async Task<List<FAQ>> GetAllQuestionsByProjectIdAsync(int projectId)
         {

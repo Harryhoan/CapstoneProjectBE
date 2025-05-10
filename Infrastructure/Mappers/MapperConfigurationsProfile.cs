@@ -46,6 +46,7 @@ namespace Infrastructure.Mappers
             CreateMap<Reward, AddReward>().ReverseMap();
             CreateMap<Reward, ViewReward>().ReverseMap();
             CreateMap<FAQ, FaqDto>().ReverseMap();
+            CreateMap<FAQ, ViewFaqDto>().ReverseMap();
             CreateMap<Domain.Entities.File, FileDTO>().ReverseMap();
             CreateMap<User, PostUserDTO>()
                 .ForMember(dest => dest.Fullname, opt => opt.MapFrom(src => src.Fullname))
