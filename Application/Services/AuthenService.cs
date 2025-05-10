@@ -175,6 +175,7 @@ namespace Application.Services
                 if (user == null)
                 {
                     response.Success = false;
+                    response.Message = "User not found.";
                     response.Error = "User not found.";
                     return response;
                 }

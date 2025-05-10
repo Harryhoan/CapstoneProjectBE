@@ -148,7 +148,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Message = $"Failed to create post: {ex.Message}";
+                response.Message = $"Failed to get post: {ex.Message}";
             }
             return response;
 

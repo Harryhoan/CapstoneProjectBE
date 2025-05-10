@@ -58,6 +58,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to create reward: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -88,6 +89,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to delete reward: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -132,6 +134,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get rewards: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -169,6 +172,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get reward: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -207,6 +211,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get rewards: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -260,6 +265,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to update reward: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }

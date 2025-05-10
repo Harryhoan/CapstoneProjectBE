@@ -1201,12 +1201,14 @@ namespace Application.Services
             catch (PayPalException payPalEx)
             {
                 response.Success = false;
-                response.Error = $"PayPal error: {payPalEx.Message}";
+                response.Message = $"PayPal error: {payPalEx.Message}";
+                response.Error = payPalEx.Message;
             }
             catch (Exception ex)
             {
                 response.Success = false;
-                response.Error = $"Failed to create payment: {ex.Message}";
+                response.Message = $"Failed to create payment: {ex.Message}";
+                response.Error = ex.Message;
             }
             return response;
         }

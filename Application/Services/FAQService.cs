@@ -74,6 +74,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to create FAQ: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -273,6 +274,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to update FAQ: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
                 return response;

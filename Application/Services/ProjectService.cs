@@ -270,6 +270,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to create project: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -366,6 +367,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to delete project: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -604,6 +606,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to get projects: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -669,6 +672,7 @@ namespace Application.Services
             {
                 response.Success = false;
                 response.Error = ex.Message;
+                response.Message = $"Failed to get project: {ex.Message}";
                 response.ErrorMessages = new List<string> { ex.ToString() };
                 return response;
             }
@@ -795,6 +799,7 @@ namespace Application.Services
             {
                 response.Success = false;
                 response.Error = ex.Message;
+                response.Message = $"Failed to get projects: {ex.Message}";
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
 
@@ -884,6 +889,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to update project: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -1092,6 +1098,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to change project status: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -1154,6 +1161,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to change project monitor: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
@@ -1179,6 +1187,7 @@ namespace Application.Services
                 if (project == null)
                 {
                     response.Success = false;
+                    response.Message = "Project not found";
                     response.Error = "Project not found!";
                     return response;
                 }
@@ -1187,6 +1196,7 @@ namespace Application.Services
                 if (category == null)
                 {
                     response.Success = false;
+                    response.Message = "Category not found";
                     response.Error = "Category not found!";
                     return response;
                 }
@@ -1197,7 +1207,8 @@ namespace Application.Services
                 if (existingProjectCategory == true)
                 {
                     response.Success = false;
-                    response.Error = "The category is already associated with the project.";
+                    response.Message = "The category is already added to the project.";
+                    response.Error = "The category is already added the project.";
                     return response;
                 }
 
@@ -1236,6 +1247,7 @@ namespace Application.Services
             catch (Exception ex)
             {
                 response.Success = false;
+                response.Message = $"Failed to add category to project: {ex.Message}";
                 response.Error = ex.Message;
                 response.ErrorMessages = new List<string> { ex.ToString() };
             }
