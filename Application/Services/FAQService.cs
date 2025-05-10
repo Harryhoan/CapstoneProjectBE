@@ -242,20 +242,24 @@ namespace Application.Services
                     return response;
                 }
 
-                var existFaq = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                var faqQuestion = FormatUtils.TrimSpacesPreserveSingle(faq.Question.Trim().ToLower());
                 var updateQuestion = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question.Trim().ToLower());
-                foreach (var item in existFaq)
+                if (updateQuestion != faqQuestion)
                 {
-                    var itemQuestion = FormatUtils.TrimSpacesPreserveSingle(item.Question.Trim().ToLower());
-                    if (updateQuestion.Equals(itemQuestion, StringComparison.OrdinalIgnoreCase) /*|| updateQuestion.Contains(itemQuestion, StringComparison.OrdinalIgnoreCase) || itemQuestion.Contains(updateQuestion, StringComparison.OrdinalIgnoreCase)*/)
+                    var existFaq = await _unitOfWork.FAQRepo.GetAllQuestionsByProjectIdAsync(projectId);
+                    foreach (var item in existFaq)
                     {
-                        response.Success = false;
-                        response.Message = "This question has already existed and been answered.";
-                        return response;
+                        var itemQuestion = FormatUtils.TrimSpacesPreserveSingle(item.Question.Trim().ToLower());
+                        if (itemQuestion != faqQuestion && (updateQuestion.Equals(itemQuestion, StringComparison.OrdinalIgnoreCase) /*|| updateQuestion.Contains(itemQuestion, StringComparison.OrdinalIgnoreCase) || itemQuestion.Contains(updateQuestion, StringComparison.OrdinalIgnoreCase)*/))
+                        {
+                            response.Success = false;
+                            response.Message = "This question has already existed and been answered.";
+                            return response;
+                        }
                     }
+                    faq.Question = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question);
                 }
 
-                faq.Question = FormatUtils.TrimSpacesPreserveSingle(updateFaq.Question);
                 faq.Answer = updateFaq.Answer;
                 faq.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
 
