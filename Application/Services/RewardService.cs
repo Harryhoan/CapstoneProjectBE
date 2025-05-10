@@ -239,7 +239,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (await _unitOfWork.RewardRepo.Any(r => r.ProjectId == existingReward.ProjectId && r.Amount == updateReward.Amount))
+                if (await _unitOfWork.RewardRepo.Any(r => r.ProjectId == existingReward.ProjectId && r.RewardId != existingReward.RewardId && r.Amount == updateReward.Amount))
                 {
                     response.Success = false;
                     response.Message = "There's already a reward with that amount for this project";

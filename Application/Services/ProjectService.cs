@@ -135,9 +135,9 @@ namespace Application.Services
         public async Task<ServiceResponse<ProjectDto>> CreateProject(int userId, CreateProjectDto createProjectDto)
         {
             var response = new ServiceResponse<ProjectDto>();
-            var user = await _unitOfWork.UserRepo.GetAllAsync();
             try
             {
+                var users = await _unitOfWork.UserRepo.GetAllAsync();
                 var specificUser = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 if (specificUser == null)
                 {
@@ -195,6 +195,7 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Start date must be later than today.";
+                    return response;
                 }
 
                 if (createProjectDto.EndDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
@@ -207,7 +208,7 @@ namespace Application.Services
                 var project = _mapper.Map<Project>(createProjectDto);
 
 
-                var staffUsers = user.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).ToList();
+                var staffUsers = users.Where(u => u.IsVerified && !u.IsDeleted && u.Role == Domain.Enums.UserEnum.STAFF && !string.IsNullOrWhiteSpace(u.Email) && new EmailAddressAttribute().IsValid(u.Email)).ToList();
                 if (!staffUsers.Any())
                 {
                     response.Success = false;
@@ -228,7 +229,7 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
-                project.UpdateDatetime = createProjectDto.StartDatetime;
+                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
@@ -236,7 +237,7 @@ namespace Application.Services
                     ProjectId = project.ProjectId,
                     Monitor = assignedStaff.Fullname,
                     CreatorId = project.CreatorId,
-                    Creator = user.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
+                    Creator = users.FirstOrDefault(u => u.UserId == userId)?.Fullname ?? string.Empty,
                     Title = project.Title,
                     Description = project.Description,
                     Status = project.Status,
@@ -828,6 +829,7 @@ namespace Application.Services
                 {
                     response.Success = false;
                     response.Message = "Start date must be later than today.";
+                    return response;
                 }
 
                 if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime.Value.Date <= DateTime.UtcNow.AddHours(7).Date)
@@ -861,13 +863,17 @@ namespace Application.Services
                     existingProject.MinimumAmount = updateProjectDto.MinimumAmount.Value;
                 }
 
-                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.INVISIBLE && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                {
                     existingProject.StartDatetime = updateProjectDto.StartDatetime.Value;
+                }
 
-                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                {
                     existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
+                }
 
-                //_mapper.Map(updateProjectDto, existingProject);
+                existingProject.UpdateDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 

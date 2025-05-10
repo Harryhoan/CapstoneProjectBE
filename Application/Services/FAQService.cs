@@ -64,7 +64,7 @@ namespace Application.Services
 
                 newFAQ.ProjectId = projectId;
                 newFAQ.CreatedDatetime = DateTime.UtcNow.AddHours(7);
-                newFAQ.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                newFAQ.UpdatedDatetime = newFAQ.CreatedDatetime;
                 await _unitOfWork.FAQRepo.AddAsync(newFAQ);
 
                 response.Data = _mapper.Map<ViewFaqDto>(newFAQ);

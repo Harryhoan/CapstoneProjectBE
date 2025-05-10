@@ -71,7 +71,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         var payoutItem = payoutDetails.items.FirstOrDefault(i => i.payout_item.sender_item_id.Equals(pledge.PledgeId.ToString()));
                                         if (payoutItem == null || !(payoutItem.transaction_status == PayoutTransactionStatus.SUCCESS || payoutItem.transaction_status == PayoutTransactionStatus.PENDING || payoutItem.transaction_status == PayoutTransactionStatus.UNCLAIMED || payoutItem.transaction_status == PayoutTransactionStatus.ONHOLD || payoutItem.transaction_status == PayoutTransactionStatus.NEW))
                                         {
-                                            pledge.TotalAmount += pledgeDetails[i].Amount;
+                                            pledge.TotalAmount += pledgeDetails[i].Amount * 100 / 95;
                                             dbContext.PledgeDetails.Remove(pledgeDetails[i]);
                                             dbContext.Pledges.Update(pledge);
                                             pledgeDetails.RemoveAt(i);
