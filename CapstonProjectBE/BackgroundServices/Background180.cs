@@ -1,9 +1,13 @@
 ﻿using Application;
 using Application.IService;
+using Application.Utils;
 using Domain;
+using Domain.Entities;
 using Domain.Enums;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using PayPal.Api;
+using System.ComponentModel.DataAnnotations;
 
 namespace CapstonProjectBE.BackgroundServices
 {
@@ -91,13 +95,33 @@ namespace CapstonProjectBE.BackgroundServices
                                             pledgeDetails[i].InvoiceId = payoutItem.transaction_id;
                                             pledgeDetails[i].InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
                                             dbContext.PledgeDetails.Update(pledgeDetails[i]);
+                                            var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == pledge.UserId);
+                                            var project = await dbContext.Projects.AsNoTracking().FirstOrDefaultAsync(p => p.ProjectId == pledge.ProjectId);
+
+                                            if (project != null && user != null && !string.IsNullOrWhiteSpace(user.Email) && new EmailAddressAttribute().IsValid(user.Email))
+                                            {
+                                                if (pledgeDetails[i].Status == PledgeDetailEnum.REFUNDED)
+                                                {
+                                                    await EmailSender.SendRefundInvoiceEmail(user.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetails[i].Amount, pledgeDetails[i].InvoiceUrl, project.ProjectId);
+                                                }
+                                                else if (pledgeDetails[i].Status == PledgeDetailEnum.TRANSFERRED)
+                                                {
+                                                    if (!string.IsNullOrWhiteSpace(user.Email) && new EmailAddressAttribute().IsValid(user.Email))
+                                                    {
+                                                        var emailSend = await EmailSender.SendTransferInvoiceEmail(user.Fullname, user.Email, pledgeDetails[i].Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetails[i].InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                                                        if (!emailSend)
+                                                        {
+                                                        }
+
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                     i++;
                                 }
                             }
                         }
-
                         await transaction.CommitAsync();
                     }
                     catch
@@ -108,7 +132,6 @@ namespace CapstonProjectBE.BackgroundServices
                 }
             }
         }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Background Service is starting.");
