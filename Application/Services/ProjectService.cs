@@ -191,17 +191,32 @@ namespace Application.Services
                     response.Message = "Start date must be earlier than end date.";
                     return response;
                 }
-                if (createProjectDto.StartDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+
+                //if (createProjectDto.StartDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                //{
+                //    response.Success = false;
+                //    response.Message = "Start date must be later than today.";
+                //    return response;
+                //}
+
+                //if (createProjectDto.EndDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                //{
+                //    response.Success = false;
+                //    response.Message = "End date must be later than today.";
+                //    return response;
+                //}
+
+                if (createProjectDto.StartDatetime <= DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
-                    response.Message = "Start date must be later than today.";
+                    response.Message = "Start datetime must be later than now.";
                     return response;
                 }
 
-                if (createProjectDto.EndDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                if (createProjectDto.EndDatetime <= DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
-                    response.Message = "End date must be later than today.";
+                    response.Message = "End datetime must be later than now.";
                     return response;
                 }
 
