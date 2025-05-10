@@ -8,6 +8,7 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace Application.Services
 {
@@ -312,6 +313,14 @@ namespace Application.Services
             var response = new ServiceResponse<UserDTO>();
             try
             {
+                var passwordPattern = @"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$";
+                if (!Regex.IsMatch(password, passwordPattern))
+                {
+                    response.Success = false;
+                    response.Message = "Password must be 8–15 characters and include at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+                    return response;
+                }
+
                 var hashedPassword = HashPassWithSHA256.HashWithSHA256(password);
                 var checkCode = await _unitOfWork.VerifyCodeRepo.FindEntityAsync(c => c.Email.Equals(email));
                 var user = await _unitOfWork.UserRepo.FindEntityAsync(u => u.Email.Equals(email) && u.UserId.Equals(id));
