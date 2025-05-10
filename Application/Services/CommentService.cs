@@ -83,9 +83,9 @@ namespace Application.Services
                     CommentId = 0,
                     Status = "Created",
                     ParentCommentId = createPostCommentDTO.ParentCommentId,
-                    CreatedDatetime = DateTime.UtcNow.AddHours(7),
-                    UpdatedDatetime = DateTime.UtcNow.AddHours(7)
+                    CreatedDatetime = DateTime.UtcNow.AddHours(7)
                 };
+                comment.UpdatedDatetime = comment.CreatedDatetime;
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
                 {
@@ -173,9 +173,9 @@ namespace Application.Services
                     CommentId = 0,
                     Status = "Created",
                     ParentCommentId = createProjectCommentDTO.ParentCommentId,
-                    CreatedDatetime = DateTime.UtcNow.AddHours(7),
-                    UpdatedDatetime = DateTime.UtcNow.AddHours(7)
+                    CreatedDatetime = DateTime.UtcNow.AddHours(7)
                 };
+                comment.UpdatedDatetime = comment.CreatedDatetime;
                 await _unitOfWork.CommentRepo.AddAsync(comment);
                 if (comment.CommentId <= 0)
                 {
