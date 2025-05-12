@@ -10,7 +10,6 @@ namespace Application.ViewModels.ProjectDTO
         public int? CreatorId { get; set; } = null;
         [StringLength(50, ErrorMessage = "Title can't be longer than 50 characters")]
         public string? Title { get; set; } = null;
-        //public string? Description { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         //[EnumDataType(typeof(ProjectStatusEnum?), ErrorMessage = "Please choose an appropriate project status")]
         public ProjectStatusEnum? ProjectStatus { get; set; } = null;
@@ -30,10 +29,14 @@ namespace Application.ViewModels.ProjectDTO
         public DateTime? MinStartDatetime { get; set; } = null;
         [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project starts")]
         public DateTime? MaxStartDatetime { get; set; } = null;
-        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project is last updated")]
-        public DateTime? MinUpdateDatetime { get; set; } = null;
-        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project is last updated")]
-        public DateTime? MaxUpdateDatetime { get; set; } = null;
+        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project was created")]
+        public DateTime? MinCreatedDatetime { get; set; } = null;
+        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project was created")]
+        public DateTime? MaxCreatedDatetime { get; set; } = null;
+        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project was last updated")]
+        public DateTime? MinUpdatedDatetime { get; set; } = null;
+        [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project was last updated")]
+        public DateTime? MaxUpdatedDatetime { get; set; } = null;
         [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project ends")]
         public DateTime? MinEndDatetime { get; set; } = null;
         [DataType(DataType.DateTime, ErrorMessage = "Invalid data type for the point of time the Project ends")]

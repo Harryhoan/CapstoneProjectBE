@@ -39,13 +39,13 @@ namespace Application.Services
                     response.Message = "Email is already existed";
                     return response;
                 }
-
                 var userAccountRegister = _mapper.Map<User>(userObject);
                 userAccountRegister.Email = userAccountRegister.Email.Trim();
                 userAccountRegister.Fullname = FormatUtils.TrimSpacesPreserveSingle(userAccountRegister.Fullname);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 userAccountRegister.Role = UserEnum.CUSTOMER;
-                userAccountRegister.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.UtcNow.AddHours(7);
+                userAccountRegister.CreatedDatetime = now;
                 await _unitOfWork.UserRepo.AddAsync(userAccountRegister);
 
                 // Create Token
@@ -53,8 +53,8 @@ namespace Application.Services
                 {
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "confirmation",
-                    CreatedAt = DateTime.UtcNow.AddHours(7),
-                    ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(10),
+                    CreatedAt = now,
+                    ExpiresAt = now.AddMinutes(10),
                     UserId = userAccountRegister.UserId
                 };
                 await _unitOfWork.TokenRepo.AddAsync(confirmationToken);
@@ -253,10 +253,11 @@ namespace Application.Services
                     response.Message = "Email is already existed";
                     return response;
                 }
+                var now = DateTime.UtcNow.AddHours(7);
                 var staffAccount = _mapper.Map<User>(register);
                 staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
-                staffAccount.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                staffAccount.CreatedDatetime = now;
                 staffAccount.IsVerified = true;
                 staffAccount.IsDeleted = false;
 
@@ -265,8 +266,8 @@ namespace Application.Services
                 var token = new Token
                 {
                     TokenValue = "success",
-                    CreatedAt = DateTime.UtcNow.AddHours(7),
-                    ExpiresAt = DateTime.UtcNow.AddHours(7),
+                    CreatedAt = now,
+                    ExpiresAt = now,
                     Type = "confirmation",
                     UserId = staffAccount.UserId
                 };

@@ -1,10 +1,12 @@
 ﻿using Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities
 {
     public class Post
     {
+        [Key]
         public int PostId { get; set; }
         public int UserId { get; set; }
         public int ProjectId { get; set; }
@@ -13,7 +15,7 @@ namespace Domain.Entities
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public PostEnum Status { get; set; }
 
-        public DateTime CreatedDatetime { get; set; }
+        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
 
         // Relationships
         public virtual User User { get; set; } = null!;

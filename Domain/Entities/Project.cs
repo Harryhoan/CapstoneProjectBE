@@ -1,10 +1,12 @@
 ﻿using Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Domain.Entities
 {
     public class Project
     {
+        [Key]
         public int ProjectId { get; set; }
         public int CreatorId { get; set; }
         public string? Thumbnail { get; set; }
@@ -18,7 +20,8 @@ namespace Domain.Entities
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
-        public DateTime UpdateDatetime { get; set; }
+        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime UpdatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
         public DateTime EndDatetime { get; set; }
         public virtual ICollection<ProjectComment> ProjectComments { get; set; } = new List<ProjectComment>();
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();

@@ -231,7 +231,7 @@ namespace Application.Services
                             {
                                 UserId = creator.UserId,
                                 ProjectId = projectId,
-                                TotalAmount = finalTotalPledgeForCreator,
+                                TotalAmount = finalTotalPledgeForCreator
                             };
 
                             await _unitOfWork.PledgeRepo.AddAsync(transferPledge);
@@ -243,7 +243,8 @@ namespace Application.Services
                                 InvoiceId = transactionId,
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = invoiceUrl ?? string.Empty,
-                                Status = PledgeDetailEnum.TRANSFERRED
+                                Status = PledgeDetailEnum.TRANSFERRED,
+                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
                             };
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
@@ -283,7 +284,8 @@ namespace Application.Services
                                 InvoiceId = string.Empty,
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = string.Empty,
-                                Status = PledgeDetailEnum.TRANSFERRING
+                                Status = PledgeDetailEnum.TRANSFERRING,
+                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
                             };
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
                             if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
@@ -519,7 +521,8 @@ namespace Application.Services
                                 PaymentId = createdPayout.batch_header.payout_batch_id,
                                 InvoiceId = string.Empty,
                                 Amount = finalTotalAmount,
-                                InvoiceUrl = string.Empty
+                                InvoiceUrl = string.Empty,
+                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -552,7 +555,8 @@ namespace Application.Services
                                 PaymentId = createdPayout.batch_header.payout_batch_id,
                                 InvoiceId = transactionId,
                                 Amount = finalTotalAmount,
-                                InvoiceUrl = invoiceUrl ?? string.Empty
+                                InvoiceUrl = invoiceUrl ?? string.Empty,
+                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -659,7 +663,6 @@ namespace Application.Services
                     response.Message = "Transferred funds cannot be refunded.";
                     return response;
                 }
-
                 var pledges = await _unitOfWork.PledgeRepo.GetPledgesByProjectIdAsync(project.ProjectId);
                 if (pledges == null || !pledges.Any())
                 {
@@ -745,6 +748,7 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
+                var now = DateTime.UtcNow.AddHours(7);
                 //await Task.Delay(TimeSpan.FromSeconds(20));
 
                 //var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -789,6 +793,7 @@ namespace Application.Services
                             detail.PaymentId = createdPayout.batch_header.payout_batch_id;
                             detail.InvoiceId = payoutItem.transaction_id;
                             detail.InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
+                            detail.CreatedDatetime = now;
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
@@ -806,6 +811,7 @@ namespace Application.Services
                         {
                             detail.PaymentId = createdPayout.batch_header.payout_batch_id;
                             detail.Status = PledgeDetailEnum.REFUNDING;
+                            detail.CreatedDatetime = now;
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
                             if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
                             var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId, project.ProjectId);
@@ -1343,7 +1349,8 @@ namespace Application.Services
                             Amount = amount,
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
-                            Status = PledgeDetailEnum.PLEDGED
+                            Status = PledgeDetailEnum.PLEDGED,
+                            CreatedDatetime = DateTime.UtcNow.AddHours(7)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
@@ -1359,7 +1366,8 @@ namespace Application.Services
                             Amount = amount,
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
-                            Status = PledgeDetailEnum.PLEDGED
+                            Status = PledgeDetailEnum.PLEDGED,
+                            CreatedDatetime = DateTime.UtcNow.AddHours(7)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }

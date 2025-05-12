@@ -244,7 +244,7 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
-                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
@@ -413,7 +413,7 @@ namespace Application.Services
                 }
 
                 project.Story = story.Trim();
-                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 response.Success = true;
@@ -489,13 +489,21 @@ namespace Application.Services
                 {
                     query = query.Where(p => p.StartDatetime <= queryProjectDto.MaxStartDatetime.Value);
                 }
-                if (queryProjectDto.MinUpdateDatetime.HasValue)
+                if (queryProjectDto.MinCreatedDatetime.HasValue)
                 {
-                    query = query.Where(p => p.UpdateDatetime >= queryProjectDto.MinUpdateDatetime.Value);
+                    query = query.Where(p => p.CreatedDatetime >= queryProjectDto.MinCreatedDatetime.Value);
                 }
-                if (queryProjectDto.MaxUpdateDatetime.HasValue)
+                if (queryProjectDto.MaxCreatedDatetime.HasValue)
                 {
-                    query = query.Where(p => p.UpdateDatetime <= queryProjectDto.MaxUpdateDatetime.Value);
+                    query = query.Where(p => p.CreatedDatetime <= queryProjectDto.MaxCreatedDatetime.Value);
+                }
+                if (queryProjectDto.MinUpdatedDatetime.HasValue)
+                {
+                    query = query.Where(p => p.UpdatedDatetime >= queryProjectDto.MinUpdatedDatetime.Value);
+                }
+                if (queryProjectDto.MaxUpdatedDatetime.HasValue)
+                {
+                    query = query.Where(p => p.UpdatedDatetime <= queryProjectDto.MaxUpdatedDatetime.Value);
                 }
                 if (queryProjectDto.CategoryIds != null && queryProjectDto.CategoryIds.Any())
                 {
@@ -549,7 +557,7 @@ namespace Application.Services
                         response.Message = "Invalid range for the queryable Start Date Time";
                         return response;
                     }
-                    if (queryProjectDto.MaxUpdateDatetime != null && queryProjectDto.MinUpdateDatetime != null && queryProjectDto.MaxUpdateDatetime < queryProjectDto.MinUpdateDatetime)
+                    if (queryProjectDto.MaxUpdatedDatetime != null && queryProjectDto.MinUpdatedDatetime != null && queryProjectDto.MaxUpdatedDatetime < queryProjectDto.MinUpdatedDatetime)
                     {
                         response.Success = false;
                         response.Message = "Invalid range for the queryable Update Date Time";
@@ -725,7 +733,7 @@ namespace Application.Services
                         response.Message = "Invalid range for the queryable Start Date Time";
                         return response;
                     }
-                    if (queryProjectDto.MaxUpdateDatetime != null && queryProjectDto.MinUpdateDatetime != null && queryProjectDto.MaxUpdateDatetime < queryProjectDto.MinUpdateDatetime)
+                    if (queryProjectDto.MaxUpdatedDatetime != null && queryProjectDto.MinUpdatedDatetime != null && queryProjectDto.MaxUpdatedDatetime < queryProjectDto.MinUpdatedDatetime)
                     {
                         response.Success = false;
                         response.Message = "Invalid range for the queryable Update Date Time";
@@ -893,7 +901,7 @@ namespace Application.Services
                     existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
                 }
 
-                existingProject.UpdateDatetime = DateTime.UtcNow.AddHours(7);
+                existingProject.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 
@@ -964,7 +972,7 @@ namespace Application.Services
 
                 // Update the thumbnail URL in the database
                 project.Thumbnail = uploadResult.SecureUrl.ToString();
-                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
 
@@ -1086,7 +1094,7 @@ namespace Application.Services
                     }
                 }
                 project.Status = projectStatus;
-                project.UpdateDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
