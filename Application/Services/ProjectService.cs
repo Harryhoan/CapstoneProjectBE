@@ -165,7 +165,7 @@ namespace Application.Services
                     return response;
                 }
 
-                string apiResponse = await CheckDescriptionAsync(createProjectDto.Description);
+                string apiResponse = await CheckContentsAsync(createProjectDto.Description);
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse.Trim(), "Có.\n\n", ""));
@@ -175,7 +175,7 @@ namespace Application.Services
                     return response;
                 }
 
-                apiResponse = await CheckDescriptionAsync(createProjectDto.Title);
+                apiResponse = await CheckContentsAsync(createProjectDto.Title);
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
@@ -244,6 +244,7 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
+                project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
@@ -402,7 +403,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                string apiResponse = await CheckDescriptionAsync(FormatUtils.SafeUrlDecode(story.Trim()));
+                string apiResponse = await CheckContentsAsync(FormatUtils.SafeUrlDecode(story.Trim()));
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
                     apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
@@ -670,6 +671,8 @@ namespace Application.Services
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
                     EndDatetime = project.EndDatetime,
+                    CreatedDatetime = project.CreatedDatetime,
+                    UpdatedDatetime = project.UpdatedDatetime,
                     Categories = categories.Select(c => new ViewCategory
                     {
                         CategoryId = c.CategoryId,
@@ -920,13 +923,13 @@ namespace Application.Services
             return response;
         }
 
-        private async Task<string> CheckDescriptionAsync(string? description)
+        private async Task<string> CheckContentsAsync(string? contents)
         {
-            if (string.IsNullOrWhiteSpace(description))
-                return "Không có mô tả";
-            var request = new { prompt = description };
             try
             {
+                if (string.IsNullOrWhiteSpace(contents))
+                    return "Không có mô tả";
+                var request = new { prompt = contents };
                 var response = await _httpClient.PostAsJsonAsync("https://geminiai-production.up.railway.app/GeminiAI/find-text-error", request);
                 var result = await response.Content.ReadAsStringAsync();
                 return result;

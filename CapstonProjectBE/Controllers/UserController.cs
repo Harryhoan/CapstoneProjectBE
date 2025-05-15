@@ -92,24 +92,46 @@ namespace CapstonProjectBE.Controllers
         /// <summary>
         /// Handles the update of user information based on the provided data and the authenticated user's context.
         /// </summary>
-        /// <param name="UpdateUser">Contains the new user information to be updated in the system.</param>
+        /// <param name="updateUser">Contains the new user information to be updated in the system.</param>
         /// <returns>Returns an action result indicating the success or failure of the update operation.</returns>
         [Authorize(Roles = "CUSTOMER, ADMIN, STAFF")]
         [HttpPost("UpdateUser")]
-        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDTO UpdateUser)
+        public async Task<IActionResult> UpdateUser([FromForm] UpdateUserDTO updateUser)
         {
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)
             {
                 return Unauthorized();
             }
-            var response = await _userService.UpdateUserAsync(UpdateUser, user.UserId);
+            var response = await _userService.UpdateUserAsync(updateUser, user.UserId);
             if (response.Success == false)
             {
                 return BadRequest(response);
             }
             return Ok(response);
         }
+
+        [Authorize(Roles = "CUSTOMER")]
+        [HttpPost("VerifyUser")]
+        public async Task<IActionResult> VerifyUser([FromForm] VerifyUserDTO verifyUserDTO)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            if (user.IsDeleted)
+            {
+                return Forbid();
+            }
+            var response = await _userService.VerifyUserAsync(verifyUserDTO, user);
+            if (response.Success == false)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
 
         [Authorize(Roles = "CUSTOMER")]
         [HttpPut("avatar")]

@@ -11,10 +11,8 @@ namespace Application.ViewModels.ProjectDTO
         [StringLength(50, ErrorMessage = "Title can't be longer than 50 characters")]
         public string? Title { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        //[EnumDataType(typeof(ProjectStatusEnum?), ErrorMessage = "Please choose an appropriate project status")]
         public ProjectStatusEnum? ProjectStatus { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        //[EnumDataType(typeof(TransactionStatusEnum?), ErrorMessage = "Please choose an appropriate transaction status")]
         public TransactionStatusEnum? TransactionStatus { get; set; } = null;
 
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]
