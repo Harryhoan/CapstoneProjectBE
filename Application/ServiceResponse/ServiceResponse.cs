@@ -4,7 +4,7 @@ namespace Application.ServiceResponse
 {
     public class ServiceResponse<T>
     {
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public T? Data { get; set; }
         public bool Success { get; set; } = false;
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
