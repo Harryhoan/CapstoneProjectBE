@@ -244,8 +244,9 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
-                project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
-                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.UtcNow.AddHours(7);
+                project.CreatedDatetime = now;
+                project.UpdatedDatetime = now;
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
