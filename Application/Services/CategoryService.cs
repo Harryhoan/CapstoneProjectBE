@@ -206,11 +206,11 @@ namespace Application.Services
 
                 if (user == null)
                 {
-                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || p.Status == ProjectStatusEnum.INVISIBLE);
+                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || p.Status == ProjectStatusEnum.APPROVED);
                 }
                 else if (user.Role == UserEnum.CUSTOMER)
                 {
-                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || (p.Status == ProjectStatusEnum.INVISIBLE && user.UserId != p.CreatorId));
+                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || (p.Status == ProjectStatusEnum.APPROVED && user.UserId != p.CreatorId));
                 }
 
                 response.Data = projectList;

@@ -76,16 +76,22 @@ namespace Application.Services
                     response.Message = "This project has not reached the minimum amount.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                if (project.Status == ProjectStatusEnum.REFUNDED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been refunded.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                if (project.Status == ProjectStatusEnum.TRANSFERRED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been transferred to the creator.";
+                    return response;
+                }
+                if (project.Status == ProjectStatusEnum.REJECTED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been rejected.";
                     return response;
                 }
                 var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
@@ -248,7 +254,7 @@ namespace Application.Services
                             };
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
-                            project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
+                            project.Status = ProjectStatusEnum.TRANSFERRED;
                             await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                             //foreach (var pledgeDetail in pledgeDetails)
@@ -389,13 +395,13 @@ namespace Application.Services
                     response.Message = "This project has been deleted.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                if (project.Status == ProjectStatusEnum.REFUNDED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been refunded.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                if (project.Status == ProjectStatusEnum.TRANSFERRED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been transferred to the creator.";
@@ -624,7 +630,7 @@ namespace Application.Services
                     response.Message = "This project has not ended yet.";
                     return response;
                 }
-                if (project.TransactionStatus != TransactionStatusEnum.PENDING)
+                if (project.Status != ProjectStatusEnum.ONGOING)
                 {
                     response.Success = false;
                     response.Message = "Funds have already been processed.";
@@ -823,7 +829,7 @@ namespace Application.Services
 
                     // Update project totals
                     project.TotalAmount -= totalRefunded;
-                    project.TransactionStatus = TransactionStatusEnum.REFUNDED;
+                    project.Status = ProjectStatusEnum.REFUNDED;
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                     response.Success = true;
@@ -1137,7 +1143,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.TransactionStatus != TransactionStatusEnum.RECEIVING)
+                if (project.Status != ProjectStatusEnum.ONGOING)
                 {
                     response.Success = false;
                     response.Message = "This project is currently not accepting any pledge.";
@@ -1350,7 +1356,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                            CreatedDatetime = DateTime.UtcNow
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
@@ -1367,7 +1373,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                            CreatedDatetime = DateTime.UtcNow
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }

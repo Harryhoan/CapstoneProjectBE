@@ -7,8 +7,14 @@
 
     public enum ProjectStatusEnum
     {
-        VISIBLE,
-        INVISIBLE,
+        PRIVATE,
+        APPROVED,
+        REJECTED,
+        ONGOING,
+        SUCCESSFUL,
+        TRANSFERRED,
+        INSUFFICIENT,
+        REFUNDED,
         DELETED
     }
     public enum TransactionStatusEnum

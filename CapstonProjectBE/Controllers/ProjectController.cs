@@ -210,6 +210,11 @@ namespace CapstonProjectBE.Controllers
             {
                 return Unauthorized();
             }
+            var check = await _authenService.CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
             var result = await _projectService.StaffApproveAsync(projectId, user.UserId, status, reason);
             if (!result.Success)
             {

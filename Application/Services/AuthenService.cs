@@ -354,12 +354,12 @@ namespace Application.Services
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
                     return new NotFoundObjectResult(result);
                 }
-                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
                 {
                     var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is invisible." };
                     return new UnauthorizedObjectResult(result);
                 }
-                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {

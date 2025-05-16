@@ -282,7 +282,7 @@ namespace Application.Services
                     continue;
                 }
 
-                if (existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                if (existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
                 {
                     if (user == null)
                     {
@@ -521,11 +521,11 @@ namespace Application.Services
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
                     return new NotFoundObjectResult(result);
                 }
-                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
                 {
                     return new UnauthorizedResult();
                 }
-                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.INVISIBLE)
+                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {

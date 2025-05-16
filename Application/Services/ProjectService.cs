@@ -243,7 +243,7 @@ namespace Application.Services
                 project.MonitorId = assignedStaff.UserId;
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
-                project.Status = ProjectStatusEnum.INVISIBLE;
+                project.Status = ProjectStatusEnum.APPROVED;
                 project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
@@ -306,72 +306,7 @@ namespace Application.Services
                     response.Message = "The project cannot be found and may have already been deleted";
                     return response;
                 }
-                //if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
-                //{
-                //    var pledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(project.CreatorId, project.ProjectId);
-                //    if (pledge == null)
-                //    {
-                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The project cannot be deleted in its current state";
-                //        return response;
-                //    }
-                //    else if (!(await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId)))
-                //    {
-                //        await _unitOfWork.PledgeRepo.RemoveAsync(pledge);
-                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The project cannot be deleted in its current state";
-                //        return response;
-                //    }
-                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRING))
-                //    {
-                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The creator needs to receive the funds first";
-                //        return response;
-                //    }
-                //    else if (await _unitOfWork.PledgeDetailRepo.Any(p => p.PledgeId == pledge.PledgeId && p.Status == PledgeDetailEnum.TRANSFERRED))
-                //    {
-                //        project.Status = ProjectStatusEnum.DELETED;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The project has been successfully deleted";
-                //        return response;
-                //    }
-                //}
-                //else if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
-                //{
-                //    if (await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDED) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == project.ProjectId && p.Status == PledgeDetailEnum.REFUNDING)))
-                //    {
-                //        project.Status = ProjectStatusEnum.DELETED;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The project has been successfully deleted";
-                //        return response;
-                //    }
-                //    else
-                //    {
-                //        response.Success = false;
-                //        response.Message = "The project needs to be fully refunded first";
-                //        return response;
-                //    }
-                //}
-                //else
-                //{
-                //    if (project.TotalAmount == 0 && !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
-                //    {
-                //        project.Status = ProjectStatusEnum.DELETED;
-                //        await _unitOfWork.ProjectRepo.UpdateAsync(project);
-                //        response.Success = false;
-                //        response.Message = "The project has been successfully deleted";
-                //        return response;
-                //    }
-                //}
-                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED || project.TransactionStatus == TransactionStatusEnum.REFUNDED || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                if (/*project.Status == ProjectStatusEnum.TRANSFERRED || project.Status == ProjectStatusEnum.REFUNDED || */project.Status == ProjectStatusEnum.PRIVATE || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
                 {
                     project.Status = ProjectStatusEnum.DELETED;
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
@@ -379,6 +314,9 @@ namespace Application.Services
                     response.Message = "The project has been successfully deleted";
                     return response;
                 }
+                response.Success = false;
+                response.Message = "The project cannot be deleted as of now";
+                return response;
             }
             catch (Exception ex)
             {
@@ -519,11 +457,11 @@ namespace Application.Services
             }
             if (user == null)
             {
-                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && p.Status != ProjectStatusEnum.INVISIBLE).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && p.Status != ProjectStatusEnum.APPROVED).AsQueryable();
             }
             else if (user.Role == UserEnum.CUSTOMER)
             {
-                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !(p.Status == ProjectStatusEnum.INVISIBLE && user.UserId != p.CreatorId)).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !(p.Status == ProjectStatusEnum.APPROVED && user.UserId != p.CreatorId)).AsQueryable();
             }
             return query;
         }
@@ -889,17 +827,17 @@ namespace Application.Services
                     existingProject.Description = updateProjectDto.Description;
                 }
 
-                if (updateProjectDto.MinimumAmount.HasValue && updateProjectDto.MinimumAmount.Value > 0 && existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                if (updateProjectDto.MinimumAmount.HasValue && updateProjectDto.MinimumAmount.Value > 0 && existingProject.Status == ProjectStatusEnum.APPROVED)
                 {
                     existingProject.MinimumAmount = updateProjectDto.MinimumAmount.Value;
                 }
 
-                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.INVISIBLE && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.APPROVED && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.StartDatetime = updateProjectDto.StartDatetime.Value;
                 }
 
-                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.APPROVED && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
                 }
@@ -1085,16 +1023,41 @@ namespace Application.Services
                     response.Message = "Creator not found.";
                     return response;
                 }
-                if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERRED)
+                //if (project.TransactionStatus != TransactionStatusEnum.REFUNDED && project.TransactionStatus != TransactionStatusEnum.TRANSFERRED)
+                //{
+                //    if (projectStatus == ProjectStatusEnum.PRIVATE)
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.RECEIVING;
+                //    }
+                //    else
+                //    {
+                //        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //    }
+                //}
+                if (projectStatus != ProjectStatusEnum.APPROVED && projectStatus != ProjectStatusEnum.REJECTED)
                 {
-                    if (projectStatus == ProjectStatusEnum.VISIBLE)
+                    response.Success = false;
+                    response.Message = "Invalid status.";
+                    return response;
+                }
+                if (projectStatus == ProjectStatusEnum.APPROVED)
+                {
+                    if (project.Status != ProjectStatusEnum.REJECTED && project.Status != ProjectStatusEnum.PRIVATE)
                     {
-                        project.TransactionStatus = TransactionStatusEnum.RECEIVING;
+                        response.Success = false;
+                        response.Message = "The project's status cannot be changed to APPROVED.";
+                        return response;
                     }
-                    else
+                }
+                else
+                {
+                    if (project.Status != ProjectStatusEnum.ONGOING && project.Status != ProjectStatusEnum.APPROVED && project.Status != ProjectStatusEnum.PRIVATE)
                     {
-                        project.TransactionStatus = TransactionStatusEnum.PENDING;
+                        response.Success = false;
+                        response.Message = "The project's status cannot be changed to REJECTED.";
+                        return response;
                     }
+
                 }
                 project.Status = projectStatus;
                 project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
