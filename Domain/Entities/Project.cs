@@ -11,9 +11,9 @@ namespace Domain.Entities
         public int CreatorId { get; set; }
         public string? Thumbnail { get; set; }
         public int MonitorId { get; set; }
-        public string? Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Story { get; set; }
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProjectStatusEnum Status { get; set; }
         public TransactionStatusEnum TransactionStatus { get; set; }

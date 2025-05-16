@@ -12,8 +12,8 @@ namespace Application.ViewModels.ProjectDTO
         public string Creator { get; set; } = string.Empty;
         public string Story { get; set; } = string.Empty;
         public int Backers { get; set; } = 0;
-        public string? Title { get; set; }
-        public string? Description { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public ProjectStatusEnum Status { get; set; }
         public TransactionStatusEnum TransactionStatus { get; set; }
         public decimal MinimumAmount { get; set; }
