@@ -1,7 +1,10 @@
-﻿namespace Domain.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Domain.Entities
 {
     public class Pledge
     {
+        [Key]
         public int PledgeId { get; set; }
         public int UserId { get; set; }
         public int ProjectId { get; set; }

@@ -6,6 +6,6 @@
         public int UserId { get; set; }
         public int ProjectId { get; set; }
         public decimal TotalAmount { get; set; }
-        public List<PledgeDetailDto> PledgeDetails { get; set; } = null!;
+        public List<PledgeDetailDto> PledgeDetails { get; set; } = new();
     }
 }

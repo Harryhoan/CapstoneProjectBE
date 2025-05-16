@@ -2,12 +2,14 @@
 using Application.IService;
 using Application.ServiceResponse;
 using Application.Utils;
+using Application.ViewModels.PostDTO;
 using Application.ViewModels.UserDTO;
 using AutoMapper;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 
 namespace Application.Services
@@ -136,11 +138,22 @@ namespace Application.Services
                 return response;
             }
         }
-        public async Task<ServiceResponse<UpdateUserDTO>> UpdateUserAsync(UpdateUserDTO UpdateUser, int userId)
+
+        public async Task<ServiceResponse<UserDTO>> UpdateUserAsync(UpdateUserDTO updateUser, int userId)
         {
-            var response = new ServiceResponse<UpdateUserDTO>();
+            var response = new ServiceResponse<UserDTO>();
             try
             {
+                var validationContext = new ValidationContext(updateUser);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(updateUser, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
                 var userEntity = await _unitOfWork.UserRepo.GetByIdAsync(userId);
                 if (userEntity == null)
                 {
@@ -148,42 +161,42 @@ namespace Application.Services
                     response.Message = "User not found";
                     return response;
                 }
-                if (!string.IsNullOrEmpty(UpdateUser.Fullname))
+                if (!string.IsNullOrEmpty(updateUser.Fullname))
                 {
                     userEntity.Fullname = FormatUtils.TrimSpacesPreserveSingle(userEntity.Fullname);
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.Email))
+                if (!string.IsNullOrWhiteSpace(updateUser.Email))
                 {
-                    userEntity.Email = UpdateUser.Email;
+                    userEntity.Email = updateUser.Email;
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.Password))
+                if (!string.IsNullOrWhiteSpace(updateUser.Password))
                 {
-                    userEntity.Password = HashPassWithSHA256.HashWithSHA256(UpdateUser.Password);
+                    userEntity.Password = HashPassWithSHA256.HashWithSHA256(updateUser.Password);
                 }
-                if (!string.IsNullOrWhiteSpace(UpdateUser.PaymentAccount))
+                //if (!string.IsNullOrWhiteSpace(updateUser.PaymentAccount))
+                //{
+                //    if (string.IsNullOrWhiteSpace(userEntity.PaymentAccount))
+                //    {
+                //        userEntity.PaymentAccount = updateUser.PaymentAccount.Trim();
+                //    }
+                //    else if (!userEntity.PaymentAccount.Trim().ToLower().Equals(updateUser.PaymentAccount.Trim().ToLower(), StringComparison.OrdinalIgnoreCase) && !(await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == userEntity.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))))
+                //    {
+                //        userEntity.PaymentAccount = updateUser.PaymentAccount.Trim();
+                //    }
+                //}
+                //if (!string.IsNullOrEmpty(updateUser.Phone))
+                //{
+                //    userEntity.Phone = updateUser.Phone;
+                //}
+                if (updateUser.Bio != null)
                 {
-                    if (string.IsNullOrWhiteSpace(userEntity.PaymentAccount))
-                    {
-                        userEntity.PaymentAccount = UpdateUser.PaymentAccount.Trim();
-                    }
-                    else if (!userEntity.PaymentAccount.Trim().ToLower().Equals(UpdateUser.PaymentAccount.Trim().ToLower(), StringComparison.OrdinalIgnoreCase) && !(await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING) && !(await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == userEntity.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))))
-                    {
-                        userEntity.PaymentAccount = UpdateUser.PaymentAccount.Trim();
-                    }
-                }
-                if (!string.IsNullOrEmpty(UpdateUser.Phone))
-                {
-                    userEntity.Phone = UpdateUser.Phone;
-                }
-                if (UpdateUser.Bio != null)
-                {
-                    userEntity.Bio = FormatUtils.FormatText(UpdateUser.Bio.Trim());
+                    userEntity.Bio = FormatUtils.FormatText(updateUser.Bio.Trim());
                 }
                 await _unitOfWork.UserRepo.UpdateAsync(userEntity);
 
                 response.Success = true;
                 response.Message = "Update User Successfully";
-                response.Data = _mapper.Map<UpdateUserDTO>(userEntity);
+                response.Data = _mapper.Map<UserDTO>(userEntity);
             }
             catch (Exception ex)
             {
@@ -192,6 +205,56 @@ namespace Application.Services
             }
             return response;
         }
+
+        public async Task<ServiceResponse<UserDTO>> VerifyUserAsync(VerifyUserDTO verifyUserDTO, Domain.Entities.User user)
+        {
+            var response = new ServiceResponse<UserDTO>();
+            try
+            {
+                var validationContext = new ValidationContext(verifyUserDTO);
+                var validationResults = new List<ValidationResult>();
+                if (!Validator.TryValidateObject(verifyUserDTO, validationContext, validationResults, true))
+                {
+                    var errorMessages = validationResults.Select(r => r.ErrorMessage);
+                    response.Success = false;
+                    response.Message = string.Join("; ", errorMessages);
+                    return response;
+                }
+
+                if ((await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING) || await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == user.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING))))
+                {
+                    response.Success = false;
+                    response.Message = "Payment account and phone number cannot be changed when there are still ongoing projects or when transactions are currently being processed.";
+                    return response;
+                }
+
+                var paymentAccount = string.IsNullOrWhiteSpace(verifyUserDTO.PaymentAccount) || !new EmailAddressAttribute().IsValid(verifyUserDTO.PaymentAccount) ? string.Empty : verifyUserDTO.PaymentAccount.Trim();
+                var phone = string.IsNullOrWhiteSpace(verifyUserDTO.Phone) || !Regex.IsMatch(verifyUserDTO.Phone, @"^\d{10}$")  ? string.Empty : verifyUserDTO.Phone.Trim();
+
+                user.PaymentAccount = paymentAccount;
+                user.Phone = phone;
+                if (string.IsNullOrWhiteSpace(user.Phone) || !new EmailAddressAttribute().IsValid(user.PaymentAccount) || string.IsNullOrWhiteSpace(user.PaymentAccount) || !Regex.IsMatch(user.Phone, @"^\d{10}$"))
+                {
+                    user.IsVerified = false;
+                }
+                else
+                {
+                    user.IsVerified = true;
+                }
+                await _userRepo.UpdateAsync(user);
+
+                response.Success = true;
+                response.Message = "Verify User Successfully";
+                response.Data = _mapper.Map<UserDTO>(user);
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = ex.Message;
+            }
+            return response;
+        }
+
         public async Task<ServiceResponse<string>> UpdateUserAvatarAsync(int userId, IFormFile avatarFile)
         {
             var response = new ServiceResponse<string>();
