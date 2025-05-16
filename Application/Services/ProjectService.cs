@@ -93,6 +93,8 @@ namespace Application.Services
                         TotalAmount = projectItem.TotalAmount,
                         StartDatetime = projectItem.StartDatetime,
                         EndDatetime = projectItem.EndDatetime,
+                        CreatedDatetime = projectItem.CreatedDatetime,
+                        UpdatedDatetime = projectItem.UpdatedDatetime,
                         Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(projectItem.ProjectId),
                         Categories = category.Select(c => new ViewCategory
                         {
@@ -244,9 +246,8 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
-                var now = DateTime.UtcNow.AddHours(7);
-                project.CreatedDatetime = now;
-                project.UpdatedDatetime = now;
+                project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = project.CreatedDatetime;
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
@@ -263,7 +264,9 @@ namespace Application.Services
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
                     Backers = 0,
-                    EndDatetime = project.EndDatetime
+                    EndDatetime = project.EndDatetime,
+                    CreatedDatetime = project.CreatedDatetime,
+                    UpdatedDatetime = project.UpdatedDatetime
                 };
 
                 var ConfirmProjectCreatedEmail = await EmailSender.SendProjectConfirmationEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, project.Title ?? "Unknown", project.StartDatetime, project.EndDatetime, project.Status);
@@ -404,6 +407,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
+
                 string apiResponse = await CheckContentsAsync(FormatUtils.SafeUrlDecode(story.Trim()));
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
@@ -597,6 +601,8 @@ namespace Application.Services
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
+                        CreatedDatetime = project.CreatedDatetime,
+                        UpdatedDatetime = project.UpdatedDatetime,
                         Backers = await _unitOfWork.PledgeRepo.GetBackersByProjectIdAsync(project.ProjectId),
                         Categories = categories.Select(c => new ViewCategory
                         {
@@ -787,6 +793,8 @@ namespace Application.Services
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
                         EndDatetime = project.EndDatetime,
+                        CreatedDatetime = project.CreatedDatetime,
+                        UpdatedDatetime = project.UpdatedDatetime,
                         Categories = categories.Select(c => new ViewCategory
                         {
                             CategoryId = c.CategoryId,
