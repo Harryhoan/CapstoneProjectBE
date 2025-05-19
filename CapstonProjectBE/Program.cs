@@ -195,6 +195,7 @@ namespace CapstonProjectBE
 
             //app.UseHttpsRedirection();
             app.UseCors("AllowSpecificOrigin");
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<ConfirmationTokenMiddleware>();
