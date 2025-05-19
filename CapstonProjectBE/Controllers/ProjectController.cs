@@ -2,11 +2,13 @@
 using Application.ViewModels.ProjectDTO;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProjectController : ControllerBase

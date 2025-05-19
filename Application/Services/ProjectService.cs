@@ -186,8 +186,14 @@ namespace Application.Services
 
                     return response;
                 }
-                createProjectDto.StartDatetime = DateTime.SpecifyKind(createProjectDto.StartDatetime.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
-                createProjectDto.EndDatetime = DateTime.SpecifyKind(createProjectDto.EndDatetime.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                if (createProjectDto.StartDatetime.Kind != DateTimeKind.Unspecified)
+                {
+                    createProjectDto.StartDatetime = DateTime.SpecifyKind(createProjectDto.StartDatetime.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                }
+                if (createProjectDto.EndDatetime.Kind != DateTimeKind.Unspecified)
+                {
+                    createProjectDto.EndDatetime = DateTime.SpecifyKind(createProjectDto.EndDatetime.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                }
                 if (createProjectDto.StartDatetime >= createProjectDto.EndDatetime)
                 {
                     response.Success = false;
@@ -861,7 +867,10 @@ namespace Application.Services
 
                 if (updateProjectDto.StartDatetime.HasValue)
                 {
-                    updateProjectDto.StartDatetime = DateTime.SpecifyKind(updateProjectDto.StartDatetime.Value.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                    if (updateProjectDto.StartDatetime.Value.Kind != DateTimeKind.Unspecified)
+                    {
+                        updateProjectDto.StartDatetime = DateTime.SpecifyKind(updateProjectDto.StartDatetime.Value.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                    }
                     if (updateProjectDto.StartDatetime.Value <= DateTime.UtcNow.AddHours(7))
                     {
                         response.Success = false;
@@ -871,7 +880,10 @@ namespace Application.Services
                 }
                 if (updateProjectDto.EndDatetime.HasValue)
                 {
-                    updateProjectDto.EndDatetime = DateTime.SpecifyKind(updateProjectDto.EndDatetime.Value.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                    if (updateProjectDto.EndDatetime.Value.Kind != DateTimeKind.Unspecified)
+                    {
+                        updateProjectDto.EndDatetime = DateTime.SpecifyKind(updateProjectDto.EndDatetime.Value.ToUniversalTime().AddHours(7), DateTimeKind.Unspecified);
+                    }
                     if (updateProjectDto.EndDatetime.Value <= DateTime.UtcNow.AddHours(7))
                     {
                         response.Success = false;

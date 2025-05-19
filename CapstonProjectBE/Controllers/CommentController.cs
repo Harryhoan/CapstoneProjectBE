@@ -2,13 +2,14 @@
 using Application.ViewModels.CommentDTO;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
-
     public class CommentController : Controller
     {
         private readonly ICommentService _commentService;

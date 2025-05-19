@@ -6,11 +6,13 @@ using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Domain;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase

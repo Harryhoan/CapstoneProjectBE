@@ -1,13 +1,14 @@
 ﻿using Application.IService;
 using Application.ViewModels.PostDTO;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
-
     public class PostController : Controller
     {
         private readonly IPostService _postService;

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
-    [EnableCors("AllowAll")]
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class CollaboratorController : ControllerBase
