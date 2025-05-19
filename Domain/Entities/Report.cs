@@ -8,7 +8,7 @@ namespace Domain.Entities
         public int ReportId { get; set; }
         public int UserId { get; set; }
         public string Detail { get; set; } = string.Empty;
-        public DateTime CreateDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreateDatetime { get; set; } = DateTime.Now;
 
         public virtual User User { get; set; } = null!;
     }

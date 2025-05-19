@@ -15,7 +15,7 @@ namespace Domain.Entities
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public PostEnum Status { get; set; }
 
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.Now;
 
         // Relationships
         public virtual User User { get; set; } = null!;

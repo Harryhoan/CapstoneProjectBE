@@ -6,7 +6,7 @@ namespace Application.ViewModels.PledgeDTO
     {
         public decimal Amount { get; set; }
         public PledgeDetailEnum Status { get; set; }
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.Now;
 
     }
 }

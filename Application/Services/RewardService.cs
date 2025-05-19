@@ -48,7 +48,7 @@ namespace Application.Services
                 }
                 reward.Details = FormatUtils.FormatText(reward.Details);
                 var newReward = _mapper.Map<Reward>(reward);
-                newReward.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                newReward.CreatedDatetime = DateTime.Now;
                 await _unitOfWork.RewardRepo.AddAsync(newReward);
 
                 response.Data = _mapper.Map<ViewReward>(newReward);
