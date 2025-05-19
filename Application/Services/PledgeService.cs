@@ -336,7 +336,7 @@ namespace Application.Services
                     // Add summary information
                     currentRow += 2;
                     worksheet.Cell(currentRow, 1).Value = "Export Date:";
-                    worksheet.Cell(currentRow, 2).Value = DateTime.Now.ToString("yyyy-MM-dd");
+                    worksheet.Cell(currentRow, 2).Value = DateTime.UtcNow.AddHours(7).ToString("yyyy-MM-dd");
 
                     currentRow++;
                     worksheet.Cell(currentRow, 1).Value = "Total Amount:";

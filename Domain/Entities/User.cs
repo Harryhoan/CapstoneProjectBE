@@ -38,7 +38,7 @@ namespace Domain.Entities
         public string Bio { get; set; } = string.Empty;
         public bool IsVerified { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
-        public DateTime CreatedDatetime { get; set; } = DateTime.Now;
+        public DateTime CreatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
 
         // Relationships
         public virtual ICollection<Post> Posts { get; set; } = new List<Post>();

@@ -58,7 +58,7 @@ namespace Application.Services
                     response.Message = "You are not allowed to do this method.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.Now)
+                if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -184,8 +184,8 @@ namespace Application.Services
                     //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                    //var startTime = DateTime.Now;
-                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.Now - startTime).TotalMinutes <= 1)
+                    //var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                     //{
                     //    await Task.Delay(TimeSpan.FromSeconds(10));
                     //    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -244,7 +244,7 @@ namespace Application.Services
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = invoiceUrl ?? string.Empty,
                                 Status = PledgeDetailEnum.TRANSFERRED,
-                                CreatedDatetime = DateTime.Now
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
@@ -285,7 +285,7 @@ namespace Application.Services
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = string.Empty,
                                 Status = PledgeDetailEnum.TRANSFERRING,
-                                CreatedDatetime = DateTime.Now
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
                             if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
@@ -371,7 +371,7 @@ namespace Application.Services
                     response.Message = "Project not found.";
                     return response;
                 }
-                if (DateTime.Now < project.EndDatetime)
+                if (DateTime.UtcNow.AddHours(7) < project.EndDatetime)
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -480,8 +480,8 @@ namespace Application.Services
                     var createdPayout = payout.Create(apiContext, false);
                     //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    //var startTime = DateTime.Now;
-                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.Now - startTime).TotalMinutes <= 1)
+                    //var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+                    //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                     //{
                     //    await Task.Delay(TimeSpan.FromSeconds(10));
                     //    payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -522,7 +522,7 @@ namespace Application.Services
                                 InvoiceId = string.Empty,
                                 Amount = finalTotalAmount,
                                 InvoiceUrl = string.Empty,
-                                CreatedDatetime = DateTime.Now
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -556,7 +556,7 @@ namespace Application.Services
                                 InvoiceId = transactionId,
                                 Amount = finalTotalAmount,
                                 InvoiceUrl = invoiceUrl ?? string.Empty,
-                                CreatedDatetime = DateTime.Now
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -618,7 +618,7 @@ namespace Application.Services
                     response.Message = "This request is invalid.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.Now)
+                if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has not ended yet.";
@@ -748,7 +748,7 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
-                var now = DateTime.Now;
+                var now = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                 //await Task.Delay(TimeSpan.FromSeconds(20));
 
                 //var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -853,12 +853,12 @@ namespace Application.Services
 
         //private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
         //{
-        //    var startTime = DateTime.Now;
+        //    var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         //    var payoutDetails = Payout.Get(apiContext, batchId);
 
         //    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
         //            payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) &&
-        //           (DateTime.Now - startTime).TotalMinutes <= 2)
+        //           (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 2)
         //    {
         //        await Task.Delay(TimeSpan.FromSeconds(10));
         //        payoutDetails = Payout.Get(apiContext, batchId);
@@ -886,7 +886,7 @@ namespace Application.Services
         //            response.Message = "This request is invalid.";
         //            return response;
         //        }
-        //        if (project.EndDatetime > DateTime.Now)
+        //        if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
         //        {
         //            response.Success = false;
         //            response.Message = "This project has not ended yet.";
@@ -951,8 +951,8 @@ namespace Application.Services
         //        var createdPayout = payout.Create(apiContext, false);
         //        await Task.Delay(TimeSpan.FromSeconds(10));
         //        var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-        //        var startTime = DateTime.Now;
-        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.Now - startTime).TotalMinutes <= 1)
+        //        var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
         //        {
         //            await Task.Delay(TimeSpan.FromSeconds(10));
         //            payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -1143,7 +1143,7 @@ namespace Application.Services
                     response.Message = "This project is currently not accepting any pledge.";
                     return response;
                 }
-                if (project.EndDatetime <= DateTime.Now)
+                if (project.EndDatetime <= DateTime.UtcNow.AddHours(7))
                 {
                     response.Success = false;
                     response.Message = "This project has ended.";
@@ -1350,7 +1350,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.Now
+                            CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
@@ -1367,7 +1367,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.Now
+                            CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }

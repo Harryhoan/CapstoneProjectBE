@@ -30,7 +30,7 @@ namespace Application.Services
                 }
 
                 // Check the number of reports created by the user in the last 5 minutes
-                var fiveMinutesAgo = DateTime.Now.AddMinutes(-5);
+                var fiveMinutesAgo = DateTime.UtcNow.AddHours(7).AddMinutes(-5);
                 var recentReports = await _unitOfWork.ReportRepo.GetReportsByUserIdAndTimeAsync(userId, fiveMinutesAgo);
 
                 const int maxReportsAllowed = 5; // Set the limit
@@ -45,7 +45,7 @@ namespace Application.Services
                 {
                     UserId = existingUser.UserId,
                     Detail = report.Detail,
-                    CreateDatetime = DateTime.Now
+                    CreateDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                 };
                 await _unitOfWork.ReportRepo.AddAsync(newReport);
 
