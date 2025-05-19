@@ -194,28 +194,28 @@ namespace Application.Services
                     return response;
                 }
 
-                //if (createProjectDto.StartDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                //if (createProjectDto.StartDatetime.Date <= DateTime.Now.Date)
                 //{
                 //    response.Success = false;
                 //    response.Message = "Start date must be later than today.";
                 //    return response;
                 //}
 
-                //if (createProjectDto.EndDatetime.Date <= DateTime.UtcNow.AddHours(7).Date)
+                //if (createProjectDto.EndDatetime.Date <= DateTime.Now.Date)
                 //{
                 //    response.Success = false;
                 //    response.Message = "End date must be later than today.";
                 //    return response;
                 //}
 
-                if (createProjectDto.StartDatetime <= DateTime.UtcNow.AddHours(7))
+                if (createProjectDto.StartDatetime <= DateTime.Now)
                 {
                     response.Success = false;
                     response.Message = "Start datetime must be later than now.";
                     return response;
                 }
 
-                if (createProjectDto.EndDatetime <= DateTime.UtcNow.AddHours(7))
+                if (createProjectDto.EndDatetime <= DateTime.Now)
                 {
                     response.Success = false;
                     response.Message = "End datetime must be later than now.";
@@ -246,7 +246,7 @@ namespace Application.Services
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
                 project.Status = ProjectStatusEnum.INVISIBLE;
-                project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                project.CreatedDatetime = DateTime.Now;
                 project.UpdatedDatetime = project.CreatedDatetime;
                 project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
@@ -419,7 +419,7 @@ namespace Application.Services
                 }
 
                 project.Story = story.Trim();
-                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.Now;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 response.Success = true;
@@ -865,14 +865,14 @@ namespace Application.Services
                     return response;
                 }
 
-                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime.Value.Date <= DateTime.UtcNow.AddHours(7).Date)
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime.Value.Date <= DateTime.Now.Date)
                 {
                     response.Success = false;
                     response.Message = "Start date must be later than today.";
                     return response;
                 }
 
-                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime.Value.Date <= DateTime.UtcNow.AddHours(7).Date)
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime.Value.Date <= DateTime.Now.Date)
                 {
                     response.Success = false;
                     response.Message = "End date must be later than today.";
@@ -903,17 +903,17 @@ namespace Application.Services
                     existingProject.MinimumAmount = updateProjectDto.MinimumAmount.Value;
                 }
 
-                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.INVISIBLE && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.Now && existingProject.Status == ProjectStatusEnum.INVISIBLE && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.StartDatetime = updateProjectDto.StartDatetime.Value;
                 }
 
-                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.Now && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.INVISIBLE && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
                 }
 
-                existingProject.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                existingProject.UpdatedDatetime = DateTime.Now;
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, existingProject);
 
@@ -984,7 +984,7 @@ namespace Application.Services
 
                 // Update the thumbnail URL in the database
                 project.Thumbnail = uploadResult.SecureUrl.ToString();
-                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.Now;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
                 await _unitOfWork.SaveChangeAsync();
 
@@ -1106,7 +1106,7 @@ namespace Application.Services
                     }
                 }
                 project.Status = projectStatus;
-                project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                project.UpdatedDatetime = DateTime.Now;
 
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 

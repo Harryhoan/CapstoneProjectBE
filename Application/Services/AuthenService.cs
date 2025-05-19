@@ -44,7 +44,7 @@ namespace Application.Services
                 userAccountRegister.Fullname = FormatUtils.TrimSpacesPreserveSingle(userAccountRegister.Fullname);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 userAccountRegister.Role = UserEnum.CUSTOMER;
-                var now = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.Now;
                 userAccountRegister.CreatedDatetime = now;
                 await _unitOfWork.UserRepo.AddAsync(userAccountRegister);
 
@@ -192,15 +192,15 @@ namespace Application.Services
                     response.Message = "Your account has been confirmed.";
                     return response;
                 }
-                if (DateTime.UtcNow.AddHours(7) > token.ExpiresAt)
+                if (DateTime.Now > token.ExpiresAt)
                 {
                     await _unitOfWork.TokenRepo.RemoveAsync(token);
                     var newToken = new Token
                     {
                         TokenValue = Guid.NewGuid().ToString(),
                         Type = "confirmation",
-                        CreatedAt = DateTime.UtcNow.AddHours(7),
-                        ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(10),
+                        CreatedAt = DateTime.Now,
+                        ExpiresAt = DateTime.Now.AddMinutes(10),
                         UserId = user.UserId
                     };
 
@@ -253,7 +253,7 @@ namespace Application.Services
                     response.Message = "Email is already existed";
                     return response;
                 }
-                var now = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.Now;
                 var staffAccount = _mapper.Map<User>(register);
                 staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
@@ -404,8 +404,8 @@ namespace Application.Services
                 {
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "password_reset",
-                    CreatedAt = DateTime.UtcNow.AddHours(7),
-                    ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(15),
+                    CreatedAt = DateTime.Now,
+                    ExpiresAt = DateTime.Now.AddMinutes(15),
                     UserId = user.UserId
                 };
 
@@ -443,7 +443,7 @@ namespace Application.Services
             {
                 // Validate the token
                 var resetToken = await _unitOfWork.TokenRepo.GetTokenByValueAsync(token);
-                if (resetToken == null || resetToken.ExpiresAt < DateTime.UtcNow.AddHours(7))
+                if (resetToken == null || resetToken.ExpiresAt < DateTime.Now)
                 {
                     response.Success = false;
                     response.Message = "Invalid or expired token.";

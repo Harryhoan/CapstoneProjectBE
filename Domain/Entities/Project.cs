@@ -20,8 +20,8 @@ namespace Domain.Entities
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
-        public DateTime UpdatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.Now;
+        public DateTime UpdatedDatetime { get; set; } = DateTime.Now;
         public DateTime EndDatetime { get; set; }
         public virtual ICollection<ProjectComment> ProjectComments { get; set; } = new List<ProjectComment>();
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
