@@ -75,7 +75,10 @@ namespace CapstonProjectBE
                             .AllowAnyHeader();
                     });
                 options.AddPolicy("AllowSpecificOrigin",
-                    builder => builder.WithOrigins("https://game-mkt.vercel.app/"));
+                    builder => builder
+                        .WithOrigins("https://game-mkt.vercel.app")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
             builder.Services.AddAuthorization(options =>
             {
