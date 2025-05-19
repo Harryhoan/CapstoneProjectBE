@@ -20,8 +20,8 @@ namespace Application.ViewModels.ProjectDTO
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
-        public DateTime CreatedDatetime { get; set; } = DateTime.Now;
-        public DateTime UpdatedDatetime { get; set; } = DateTime.Now;
+        public DateTime CreatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        public DateTime UpdatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         public List<ViewCategory> Categories { get; set; } = new List<ViewCategory>();
         public List<PlatformDTO.PlatformDTO> Platforms { get; set; } = new List<PlatformDTO.PlatformDTO>();
 

@@ -133,7 +133,7 @@ namespace Application.Utils.Vnpay
                     ? "Không xác định"
                     : vnp_CardType,
                 Timestamp = string.IsNullOrEmpty(vnp_PayDate)
-                    ? DateTime.Now
+                    ? DateTime.UtcNow.AddHours(7)
                     : DateTime.ParseExact(vnp_PayDate, "yyyyMMddHHmmss", CultureInfo.InvariantCulture),
                 TransactionStatus = new TransactionStatus
                 {
