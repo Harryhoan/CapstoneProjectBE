@@ -31,7 +31,7 @@ namespace CapstonProjectBE.Controllers
             {
                 return Forbid();
             }
-            var result = await _paypalPaymentService.CreatePaymentAsync(user.UserId, projectId, amount, "https://game-mkt.vercel.app", "https://game-mkt.vercel.app");
+            var result = await _paypalPaymentService.CreatePaymentAsync(user.UserId, projectId, amount, "https://game-mkt.vercel.app/payment/result", "https://game-mkt.vercel.app/payment/result");
 
             if (!result.Success)
             {
