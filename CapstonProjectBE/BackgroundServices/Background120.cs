@@ -37,10 +37,10 @@ namespace CapstonProjectBE.BackgroundServices
                         foreach (var project in projects)
                         {
                             //What about invisible projects? Can't the money from invisible projects be transferred as well?
-                            if (project.TransactionStatus == Domain.Enums.TransactionStatusEnum.RECEIVING && DateTime.UtcNow.AddHours(7) >= project.EndDatetime)
+                            if (project.Status == Domain.Enums.ProjectStatusEnum.ONGOING && DateTime.UtcNow.AddHours(7) >= project.EndDatetime)
                             {
-                                project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
-                                dbContext.Update(project);
+                                //project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
+                                //dbContext.Update(project);
                                 if (paypalPaymentService != null)
                                 {
                                     if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)

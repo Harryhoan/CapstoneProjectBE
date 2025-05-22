@@ -7,7 +7,7 @@
 
     public enum ProjectStatusEnum
     {
-        PRIVATE,
+        CREATED,
         APPROVED,
         REJECTED,
         ONGOING,

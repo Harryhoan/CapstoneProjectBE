@@ -12,7 +12,7 @@ namespace Application.Utils
             return ("GameMkt", "thongsieusao3@gmail.com", "dfni ihvq panf lyjc");
         }
 
-        public static async Task<bool> SendTransferInvoiceEmail(string creatorFullname, string creatorEmail, decimal amount, string title, string url, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, TransactionStatusEnum transactionStatus, int projectId)
+        public static async Task<bool> SendTransferInvoiceEmail(string creatorFullname, string creatorEmail, decimal amount, string title, string url, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -66,7 +66,6 @@ namespace Application.Utils
                 <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
                 <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
                 <p><strong>Visbility:</strong> {projectStatus}</p>
-                <p><strong>Status:</strong> {transactionStatus}</p>
                 <p><strong>Transferred Amount:</strong> ${amount:F2}</p>
                 <p><strong>Invoice Url:</strong> {url}</p>
 
@@ -101,7 +100,7 @@ namespace Application.Utils
         }
 
 
-        public static async Task<bool> SendMonitorChangeEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, TransactionStatusEnum transactionStatus, int projectId)
+        public static async Task<bool> SendMonitorChangeEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -155,7 +154,6 @@ namespace Application.Utils
                 <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
                 <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
                 <p><strong>Visbility:</strong> {projectStatus}</p>
-                <p><strong>Status:</strong> {transactionStatus}</p>
                 <p><strong>Staff:</strong> {staffFullname}</p>
                 <p><strong>Staff Email:</strong> {staffEmail}</p>
             </div>
@@ -189,7 +187,7 @@ namespace Application.Utils
         }
 
 
-        public static async Task<bool> SendMonitorAssignmentEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, TransactionStatusEnum transactionStatus, int projectId)
+        public static async Task<bool> SendMonitorAssignmentEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, int projectId)
         {
             var (userName, emailFrom, password) = GetEmailCredentials();
 
@@ -243,7 +241,6 @@ namespace Application.Utils
                 <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
                 <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
                 <p><strong>Visbility:</strong> {projectStatus}</p>
-                <p><strong>Status:</strong> {transactionStatus}</p>
                 <p><strong>Creator:</strong> {creatorFullname}</p>
                 <p><strong>Creator Email:</strong> {creatorEmail}</p>
             </div>

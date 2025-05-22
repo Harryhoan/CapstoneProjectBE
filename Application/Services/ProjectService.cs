@@ -88,7 +88,7 @@ namespace Application.Services
                         Title = projectItem.Title,
                         Description = projectItem.Description,
                         Status = projectItem.Status,
-                        TransactionStatus = projectItem.TransactionStatus,
+                        //TransactionStatus = projectItem.TransactionStatus,
                         MinimumAmount = projectItem.MinimumAmount,
                         TotalAmount = projectItem.TotalAmount,
                         StartDatetime = projectItem.StartDatetime,
@@ -246,7 +246,7 @@ namespace Application.Services
                 project.Status = ProjectStatusEnum.APPROVED;
                 project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
-                project.TransactionStatus = TransactionStatusEnum.PENDING;
+                //project.TransactionStatus = TransactionStatusEnum.PENDING;
                 await _unitOfWork.ProjectRepo.AddAsync(project);
                 var responseData = new ProjectDto
                 {
@@ -257,7 +257,7 @@ namespace Application.Services
                     Title = project.Title,
                     Description = project.Description,
                     Status = project.Status,
-                    TransactionStatus = project.TransactionStatus,
+                    //TransactionStatus = project.TransactionStatus,
                     MinimumAmount = project.MinimumAmount,
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
@@ -272,7 +272,7 @@ namespace Application.Services
                     response.Message = "Error when sending email notification.";
                     return response;
                 }
-                var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 if (!assignMonitorEmailSend)
                 {
                     response.Success = false;
@@ -306,7 +306,7 @@ namespace Application.Services
                     response.Message = "The project cannot be found and may have already been deleted";
                     return response;
                 }
-                if (/*project.Status == ProjectStatusEnum.TRANSFERRED || project.Status == ProjectStatusEnum.REFUNDED || */project.Status == ProjectStatusEnum.PRIVATE || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                if (/*project.Status == ProjectStatusEnum.TRANSFERRED || project.Status == ProjectStatusEnum.REFUNDED || */project.Status == ProjectStatusEnum.CREATED || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
                 {
                     project.Status = ProjectStatusEnum.DELETED;
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
@@ -392,10 +392,10 @@ namespace Application.Services
                 {
                     query = query.Where(p => p.Status == queryProjectDto.ProjectStatus).AsQueryable();
                 }
-                if (queryProjectDto.TransactionStatus != null)
-                {
-                    query = query.Where(p => p.TransactionStatus == queryProjectDto.TransactionStatus).AsQueryable();
-                }
+                //if (queryProjectDto.TransactionStatus != null)
+                //{
+                //    query = query.Where(p => p.TransactionStatus == queryProjectDto.TransactionStatus).AsQueryable();
+                //}
                 if (queryProjectDto.MinMinimumAmount.HasValue)
                 {
                     query = query.Where(p => p.MinimumAmount >= queryProjectDto.MinMinimumAmount.Value);
@@ -529,7 +529,7 @@ namespace Application.Services
                         Title = project.Title,
                         Description = project.Description,
                         Status = project.Status,
-                        TransactionStatus = project.TransactionStatus,
+                        //TransactionStatus = project.TransactionStatus,
                         MinimumAmount = project.MinimumAmount,
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
@@ -604,7 +604,7 @@ namespace Application.Services
                     Title = project.Title,
                     Description = project.Description,
                     Status = project.Status,
-                    TransactionStatus = project.TransactionStatus,
+                    //TransactionStatus = project.TransactionStatus,
                     MinimumAmount = project.MinimumAmount,
                     TotalAmount = project.TotalAmount,
                     StartDatetime = project.StartDatetime,
@@ -719,7 +719,7 @@ namespace Application.Services
                         Title = project.Title,
                         Description = project.Description,
                         Status = project.Status,
-                        TransactionStatus = project.TransactionStatus,
+                        //TransactionStatus = project.TransactionStatus,
                         MinimumAmount = project.MinimumAmount,
                         TotalAmount = project.TotalAmount,
                         StartDatetime = project.StartDatetime,
@@ -1042,7 +1042,7 @@ namespace Application.Services
                 }
                 if (projectStatus == ProjectStatusEnum.APPROVED)
                 {
-                    if (project.Status != ProjectStatusEnum.REJECTED && project.Status != ProjectStatusEnum.PRIVATE)
+                    if (project.Status != ProjectStatusEnum.REJECTED && project.Status != ProjectStatusEnum.CREATED)
                     {
                         response.Success = false;
                         response.Message = "The project's status cannot be changed to APPROVED.";
@@ -1051,7 +1051,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    if (project.Status != ProjectStatusEnum.ONGOING && project.Status != ProjectStatusEnum.APPROVED && project.Status != ProjectStatusEnum.PRIVATE)
+                    if (project.Status != ProjectStatusEnum.ONGOING && project.Status != ProjectStatusEnum.APPROVED && project.Status != ProjectStatusEnum.CREATED)
                     {
                         response.Success = false;
                         response.Message = "The project's status cannot be changed to REJECTED.";
@@ -1134,15 +1134,15 @@ namespace Application.Services
                 }
                 project.MonitorId = staff.UserId;
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
-                var emailSend = await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                var emailSend = await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 if (!emailSend)
                 {
-                    await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                    await EmailSender.SendMonitorAssignmentEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 }
-                emailSend = await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                emailSend = await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 if (!emailSend)
                 {
-                    await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                    await EmailSender.SendMonitorChangeEmail(creator.Fullname, creator.Email, staff.Fullname, staff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 }
                 response.Success = true;
                 response.Message = "Project monitor changed successfully.";
