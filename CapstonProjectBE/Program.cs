@@ -197,7 +197,7 @@ namespace CapstonProjectBE
             #endregion
 
             //app.UseHttpsRedirection();
-            app.UseCors("AllowSpecificOrigin");
+            //app.UseCors("AllowSpecificOrigin");
             app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
