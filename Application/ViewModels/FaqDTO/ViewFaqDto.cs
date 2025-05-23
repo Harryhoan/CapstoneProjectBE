@@ -11,8 +11,8 @@ namespace Application.ViewModels.FaqDTO
         public int ProjectId { get; set; }
         public string Question { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
-        public DateTime UpdatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        public DateTime UpdatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
 
     }
 }

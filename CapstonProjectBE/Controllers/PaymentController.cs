@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentController : ControllerBase

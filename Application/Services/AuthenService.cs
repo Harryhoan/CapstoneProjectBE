@@ -44,7 +44,7 @@ namespace Application.Services
                 userAccountRegister.Fullname = FormatUtils.TrimSpacesPreserveSingle(userAccountRegister.Fullname);
                 userAccountRegister.Password = HashPassWithSHA256.HashWithSHA256(userObject.Password);
                 userAccountRegister.Role = UserEnum.CUSTOMER;
-                var now = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                 userAccountRegister.CreatedDatetime = now;
                 await _unitOfWork.UserRepo.AddAsync(userAccountRegister);
 
@@ -126,7 +126,7 @@ namespace Application.Services
                 var userId = userLogin.UserId;
                 var avatar = userLogin.Avatar;
                 var fullName = userLogin.Fullname;
-                var tokenJWT = userLogin.GenerateJsonWebToken(_config, _config.JWTSection.SecretKey, DateTime.Now);
+                var tokenJWT = userLogin.GenerateJsonWebToken(_config, _config.JWTSection.SecretKey, DateTime.UtcNow.AddHours(7));
                 response.Success = true;
                 response.Message = "Login Successfully";
                 response.DataToken = tokenJWT;
@@ -199,8 +199,8 @@ namespace Application.Services
                     {
                         TokenValue = Guid.NewGuid().ToString(),
                         Type = "confirmation",
-                        CreatedAt = DateTime.UtcNow.AddHours(7),
-                        ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(10),
+                        CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified),
+                        ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7).AddMinutes(10), DateTimeKind.Unspecified),
                         UserId = user.UserId
                     };
 
@@ -253,7 +253,7 @@ namespace Application.Services
                     response.Message = "Email is already existed";
                     return response;
                 }
-                var now = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                 var staffAccount = _mapper.Map<User>(register);
                 staffAccount.Role = UserEnum.STAFF;
                 staffAccount.Password = HashPassWithSHA256.HashWithSHA256(register.Password);
@@ -404,8 +404,8 @@ namespace Application.Services
                 {
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "password_reset",
-                    CreatedAt = DateTime.UtcNow.AddHours(7),
-                    ExpiresAt = DateTime.UtcNow.AddHours(7).AddMinutes(15),
+                    CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified),
+                    ExpiresAt = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7).AddMinutes(15), DateTimeKind.Unspecified),
                     UserId = user.UserId
                 };
 

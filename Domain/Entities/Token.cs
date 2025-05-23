@@ -6,8 +6,8 @@ namespace Domain.Entities
     {
         [Key]
         public int Id { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow.AddHours(7);
-        public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddHours(7).AddMinutes(30);
+        public DateTime CreatedAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        public DateTime ExpiresAt { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7).AddMinutes(30), DateTimeKind.Unspecified);
         public string TokenValue { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty;
 

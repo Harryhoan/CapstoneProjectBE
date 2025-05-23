@@ -45,7 +45,7 @@ namespace Application.Services
                 {
                     UserId = existingUser.UserId,
                     Detail = report.Detail,
-                    CreateDatetime = DateTime.UtcNow.AddHours(7)
+                    CreateDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                 };
                 await _unitOfWork.ReportRepo.AddAsync(newReport);
 

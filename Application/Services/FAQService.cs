@@ -63,7 +63,7 @@ namespace Application.Services
                 var newFAQ = _mapper.Map<FAQ>(createFAQ);
 
                 newFAQ.ProjectId = projectId;
-                newFAQ.CreatedDatetime = DateTime.UtcNow.AddHours(7);
+                newFAQ.CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                 newFAQ.UpdatedDatetime = newFAQ.CreatedDatetime;
                 await _unitOfWork.FAQRepo.AddAsync(newFAQ);
 
@@ -262,7 +262,7 @@ namespace Application.Services
                 }
 
                 faq.Answer = updateFaq.Answer;
-                faq.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
+                faq.UpdatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
 
                 await _unitOfWork.FAQRepo.UpdateAsync(faq);
 

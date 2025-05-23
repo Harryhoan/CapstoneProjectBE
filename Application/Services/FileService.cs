@@ -346,7 +346,7 @@ namespace Application.Services
                                     Status = "Uploaded",
                                     Source = uploadResult.Url.ToString().Trim(),
                                     UserId = existingUser.UserId,
-                                    CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                                    CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                                 };
                                 await _unitOfWork.FileRepo.AddAsync(file);
 

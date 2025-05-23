@@ -190,7 +190,7 @@ namespace Application.Services
                     //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
                     //var invoiceUrl = payoutDetails.links.FirstOrDefault(link => link.rel == "self")?.href;
-                    //var startTime = DateTime.UtcNow.AddHours(7);
+                    //var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                     //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                     //{
                     //    await Task.Delay(TimeSpan.FromSeconds(10));
@@ -250,7 +250,7 @@ namespace Application.Services
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = invoiceUrl ?? string.Empty,
                                 Status = PledgeDetailEnum.TRANSFERRED,
-                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
@@ -291,7 +291,7 @@ namespace Application.Services
                                 Amount = finalTotalPledgeForCreator,
                                 InvoiceUrl = string.Empty,
                                 Status = PledgeDetailEnum.TRANSFERRING,
-                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
                             if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
@@ -486,7 +486,7 @@ namespace Application.Services
                     var createdPayout = payout.Create(apiContext, false);
                     //await Task.Delay(TimeSpan.FromSeconds(20));
                     var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-                    //var startTime = DateTime.UtcNow.AddHours(7);
+                    //var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                     //while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
                     //{
                     //    await Task.Delay(TimeSpan.FromSeconds(10));
@@ -528,7 +528,7 @@ namespace Application.Services
                                 InvoiceId = string.Empty,
                                 Amount = finalTotalAmount,
                                 InvoiceUrl = string.Empty,
-                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -562,7 +562,7 @@ namespace Application.Services
                                 InvoiceId = transactionId,
                                 Amount = finalTotalAmount,
                                 InvoiceUrl = invoiceUrl ?? string.Empty,
-                                CreatedDatetime = DateTime.UtcNow.AddHours(7)
+                                CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                             };
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
                             await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
@@ -755,7 +755,7 @@ namespace Application.Services
                 };
 
                 var createdPayout = payout.Create(apiContext, false);
-                var now = DateTime.UtcNow.AddHours(7);
+                var now = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
                 //await Task.Delay(TimeSpan.FromSeconds(20));
 
                 //var payoutDetails = await VerifyPayoutStatus(apiContext, createdPayout.batch_header.payout_batch_id);
@@ -860,7 +860,7 @@ namespace Application.Services
 
         //private static async Task<PayoutBatch> VerifyPayoutStatus(PayPal.Api.APIContext apiContext, string batchId)
         //{
-        //    var startTime = DateTime.UtcNow.AddHours(7);
+        //    var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         //    var payoutDetails = Payout.Get(apiContext, batchId);
 
         //    while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) ||
@@ -958,7 +958,7 @@ namespace Application.Services
         //        var createdPayout = payout.Create(apiContext, false);
         //        await Task.Delay(TimeSpan.FromSeconds(10));
         //        var payoutDetails = Payout.Get(apiContext, createdPayout.batch_header.payout_batch_id);
-        //        var startTime = DateTime.UtcNow.AddHours(7);
+        //        var startTime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         //        while ((payoutDetails.batch_header.batch_status.Equals("PENDING", StringComparison.OrdinalIgnoreCase) || payoutDetails.batch_header.batch_status.Equals("PROCESSING", StringComparison.OrdinalIgnoreCase)) && (DateTime.UtcNow.AddHours(7) - startTime).TotalMinutes <= 1)
         //        {
         //            await Task.Delay(TimeSpan.FromSeconds(10));
@@ -1357,7 +1357,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.UtcNow
+                            CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
@@ -1374,7 +1374,7 @@ namespace Application.Services
                             InvoiceId = invoiceNumber,
                             InvoiceUrl = invoiceUrl,
                             Status = PledgeDetailEnum.PLEDGED,
-                            CreatedDatetime = DateTime.UtcNow
+                            CreatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified)
                         };
                         await _unitOfWork.PledgeDetailRepo.AddAsync(pledgeDetail);
                     }
@@ -1468,7 +1468,7 @@ namespace Application.Services
         //            document.Add(customerAddress);
 
         //            // Invoice Details
-        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.UtcNow.AddHours(7):yyyy-MM-dd HH:mm:ss}")
+        //            Paragraph invoiceDetails = new Paragraph($"Invoice No: {invoiceNumber}\nDate: {DateTime.Now:yyyy-MM-dd HH:mm:ss}")
         //                .SetTextAlignment(TextAlignment.LEFT)
         //                .SetBold();
         //            document.Add(invoiceDetails);

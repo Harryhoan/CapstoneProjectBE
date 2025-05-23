@@ -6,10 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
-    [EnableCors("AllowAll")]
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
-
     public class PlatformController : ControllerBase
     {
         private readonly IPlatformService _platformService;

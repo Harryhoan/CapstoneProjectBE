@@ -10,8 +10,8 @@ namespace Domain.Entities
         public int? ParentCommentId { get; set; }
         public string Content { get; set; } = string.Empty;
         public string Status { get; set; } = "Created";
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
-        public DateTime UpdatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        public DateTime UpdatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         public virtual User User { get; set; } = null!;
         public virtual Comment? ParentComment { get; set; }
         public virtual ProjectComment? ProjectComment { get; set; }

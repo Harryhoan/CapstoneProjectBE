@@ -1,9 +1,11 @@
 ﻿using Application.IService;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
+    [EnableCors("AllowSpecificOrigin")]
     [Route("api/[controller]")]
     [ApiController]
     public class PledgeController : ControllerBase

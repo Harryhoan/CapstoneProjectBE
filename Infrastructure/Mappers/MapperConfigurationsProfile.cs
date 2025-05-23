@@ -38,6 +38,7 @@ namespace Infrastructure.Mappers
                             .ForMember(dest => dest.Thumbnail, opt => opt.MapFrom(src => src.Thumbnail))
                             .ForMember(dest => dest.TotalAmount, opt => opt.MapFrom(src => src.TotalAmount))
                             .ForMember(dest => dest.EndDatetime, opt => opt.MapFrom(src => src.EndDatetime))
+                            .ForMember(dest => dest.StartDatetime, opt => opt.MapFrom(src => src.StartDatetime))
                             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status)); CreateMap<Report, CreateReportDto>().ReverseMap();
             CreateMap<Report, ReportDto>().ReverseMap();
             CreateMap<Pledge, PledgeDto>().ReverseMap();

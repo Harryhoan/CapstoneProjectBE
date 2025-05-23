@@ -3,6 +3,7 @@ using System;
 using Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Domain.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    partial class ApiContextModelSnapshot : ModelSnapshot
+    [Migration("20250516133211_ProjectTilteAndDescriptionChanges")]
+    partial class ProjectTilteAndDescriptionChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,7 +81,7 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("ParentCommentId")
                         .HasColumnType("integer");
@@ -88,7 +91,7 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
@@ -115,10 +118,10 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("UpdatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("ProjectId", "Question");
 
@@ -134,7 +137,7 @@ namespace Domain.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FileId"));
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -212,7 +215,7 @@ namespace Domain.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("InvoiceId")
                         .IsRequired()
@@ -239,7 +242,7 @@ namespace Domain.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PostId"));
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -294,7 +297,7 @@ namespace Domain.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ProjectId"));
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreatorId")
                         .HasColumnType("integer");
@@ -304,7 +307,7 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("EndDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("MinimumAmount")
                         .HasColumnType("numeric");
@@ -313,7 +316,7 @@ namespace Domain.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("StartDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -335,7 +338,7 @@ namespace Domain.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("ProjectId");
 
@@ -403,7 +406,7 @@ namespace Domain.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ReportId"));
 
                     b.Property<DateTime>("CreateDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Detail")
                         .IsRequired()
@@ -431,7 +434,7 @@ namespace Domain.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Details")
                         .IsRequired()
@@ -459,10 +462,10 @@ namespace Domain.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("TokenValue")
                         .IsRequired()
@@ -498,7 +501,7 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedDatetime")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -548,7 +551,7 @@ namespace Domain.Migrations
                         .HasColumnType("text");
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("timestamp without time zone");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()

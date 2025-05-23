@@ -11,17 +11,17 @@ namespace Domain.Entities
         public int CreatorId { get; set; }
         public string? Thumbnail { get; set; }
         public int MonitorId { get; set; }
-        public string? Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string? Story { get; set; }
-        public string? Description { get; set; }
+        public string Description { get; set; } = string.Empty;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProjectStatusEnum Status { get; set; }
         //public TransactionStatusEnum TransactionStatus { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
-        public DateTime CreatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
-        public DateTime UpdatedDatetime { get; set; } = DateTime.UtcNow.AddHours(7);
+        public DateTime CreatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+        public DateTime UpdatedDatetime { get; set; } = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
         public DateTime EndDatetime { get; set; }
         public virtual ICollection<ProjectComment> ProjectComments { get; set; } = new List<ProjectComment>();
         public virtual ICollection<Collaborator> Collaborators { get; set; } = new List<Collaborator>();
