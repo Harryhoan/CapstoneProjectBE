@@ -15,15 +15,16 @@
         TRANSFERRED,
         INSUFFICIENT,
         REFUNDED,
-        DELETED
+        DELETED,
+        SUBMITTED
     }
-    public enum TransactionStatusEnum
-    {
-        PENDING,
-        RECEIVING,
-        REFUNDED,
-        TRANSFERRED,
-    }
+    //public enum TransactionStatusEnum
+    //{
+    //    PENDING,
+    //    RECEIVING,
+    //    REFUNDED,
+    //    TRANSFERRED,
+    //}
     public enum UserEnum
     {
         CUSTOMER,

@@ -282,7 +282,7 @@ namespace Application.Services
                     continue;
                 }
 
-                if (existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
+                if (existingProject.Status == Domain.Enums.ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
                 {
                     if (user == null)
                     {
@@ -521,11 +521,12 @@ namespace Application.Services
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
                     return new NotFoundObjectResult(result);
                 }
-                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
+                if (user == null && (existingProject.Status == Domain.Enums.ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED))
                 {
-                    return new UnauthorizedResult();
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is private." };
+                    return new UnauthorizedObjectResult(result);
                 }
-                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
+                if (user != null && user.Role == UserEnum.CUSTOMER && (existingProject.Status == Domain.Enums.ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED))
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {

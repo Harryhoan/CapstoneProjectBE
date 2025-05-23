@@ -1112,7 +1112,7 @@ namespace Application.Utils
     <body>
         <div class='content'>
             <h2>Project {projectStatus}</h2>
-            <p>Your project <strong>{projectTitle}</strong> has been set {projectStatus}.</p>
+            <p>Your project <strong>{projectTitle}</strong> has been set to {projectStatus}.</p>
         </div>
         <div class='reason'>
             <p><Strong>Reason:</strong> <Italic>{reason}</Italic></p>

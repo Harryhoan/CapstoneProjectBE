@@ -203,7 +203,13 @@ namespace CapstonProjectBE.Controllers
         {
             if (status == ProjectStatusEnum.DELETED)
             {
-                return BadRequest("Invalid status: DELETED is not allowed.");
+                var message = "Invalid status: DELETED is not allowed.";
+                return BadRequest(message);
+            }
+            if (status != ProjectStatusEnum.REJECTED && status != ProjectStatusEnum.APPROVED)
+            {
+                var message = "Invalid status: Only APPROVED and REJECTED are allowed.";
+                return BadRequest(message);
             }
             var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
             if (user == null)

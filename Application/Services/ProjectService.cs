@@ -243,7 +243,7 @@ namespace Application.Services
                 project.MonitorId = assignedStaff.UserId;
                 project.CreatorId = userId;
                 project.TotalAmount = 0;
-                project.Status = ProjectStatusEnum.APPROVED;
+                project.Status = ProjectStatusEnum.CREATED;
                 project.CreatedDatetime = DateTime.UtcNow.AddHours(7);
                 project.UpdatedDatetime = DateTime.UtcNow.AddHours(7);
                 //project.TransactionStatus = TransactionStatusEnum.PENDING;
@@ -827,17 +827,17 @@ namespace Application.Services
                     existingProject.Description = updateProjectDto.Description;
                 }
 
-                if (updateProjectDto.MinimumAmount.HasValue && updateProjectDto.MinimumAmount.Value > 0 && existingProject.Status == ProjectStatusEnum.APPROVED)
+                if (updateProjectDto.MinimumAmount.HasValue && updateProjectDto.MinimumAmount.Value > 0 && (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED))
                 {
                     existingProject.MinimumAmount = updateProjectDto.MinimumAmount.Value;
                 }
 
-                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && existingProject.Status == ProjectStatusEnum.APPROVED && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.StartDatetime.HasValue && updateProjectDto.StartDatetime != default && updateProjectDto.StartDatetime > DateTime.UtcNow.AddHours(7) && (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED) && existingProject.TotalAmount <= 0 && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.StartDatetime = updateProjectDto.StartDatetime.Value;
                 }
 
-                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && existingProject.Status == ProjectStatusEnum.APPROVED && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
+                if (updateProjectDto.EndDatetime.HasValue && updateProjectDto.EndDatetime != default && updateProjectDto.EndDatetime > DateTime.UtcNow.AddHours(7) && updateProjectDto.EndDatetime > existingProject.StartDatetime && (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED) && !await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.ProjectId == existingProject.ProjectId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     existingProject.EndDatetime = updateProjectDto.EndDatetime.Value;
                 }
@@ -1042,7 +1042,7 @@ namespace Application.Services
                 }
                 if (projectStatus == ProjectStatusEnum.APPROVED)
                 {
-                    if (project.Status != ProjectStatusEnum.REJECTED && project.Status != ProjectStatusEnum.CREATED)
+                    if (project.Status != ProjectStatusEnum.REJECTED && project.Status != ProjectStatusEnum.SUBMITTED)
                     {
                         response.Success = false;
                         response.Message = "The project's status cannot be changed to APPROVED.";
@@ -1051,7 +1051,7 @@ namespace Application.Services
                 }
                 else
                 {
-                    if (project.Status != ProjectStatusEnum.ONGOING && project.Status != ProjectStatusEnum.APPROVED && project.Status != ProjectStatusEnum.CREATED)
+                    if (project.Status != ProjectStatusEnum.ONGOING && project.Status != ProjectStatusEnum.APPROVED && project.Status != ProjectStatusEnum.SUBMITTED)
                     {
                         response.Success = false;
                         response.Message = "The project's status cannot be changed to REJECTED.";

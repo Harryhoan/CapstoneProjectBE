@@ -354,12 +354,12 @@ namespace Application.Services
                     var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
                     return new NotFoundObjectResult(result);
                 }
-                if (user == null && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
+                if (user == null && (existingProject.Status == Domain.Enums.ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED))
                 {
-                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is invisible." };
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This project is private." };
                     return new UnauthorizedObjectResult(result);
                 }
-                if (user != null && user.Role == UserEnum.CUSTOMER && existingProject.Status == Domain.Enums.ProjectStatusEnum.APPROVED)
+                if (user != null && user.Role == UserEnum.CUSTOMER && (existingProject.Status == Domain.Enums.ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED))
                 {
                     if (user.IsDeleted && !user.IsVerified)
                     {
@@ -372,7 +372,7 @@ namespace Application.Services
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null)
                         {
-                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This project is invisible." };
+                            var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This project is private." };
                             return new BadRequestObjectResult(result);
                         }
                     }

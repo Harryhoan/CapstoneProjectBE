@@ -41,39 +41,43 @@ namespace CapstonProjectBE.BackgroundServices
                             {
                                 //project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
                                 //dbContext.Update(project);
-                                if (paypalPaymentService != null)
+                                //if (paypalPaymentService != null)
+                                //{
+                                if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)
                                 {
-                                    if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)
+                                    //var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
+                                    //foreach (var pledge in pledges)
+                                    //{
+                                    //    await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
+                                    //}
+                                    project.Status = Domain.Enums.ProjectStatusEnum.INSUFFICIENT;
+                                    dbContext.Update(project);
+                                    var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
+                                    if (!emailSend)
                                     {
-                                        //var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
-                                        //foreach (var pledge in pledges)
-                                        //{
-                                        //    await paypalPaymentService.CreateRefundAsync(pledge.UserId, pledge.PledgeId);
-                                        //}
-                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, false);
-                                        if (!emailSend)
-                                        {
 
-                                        }
-                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && new EmailAddressAttribute().IsValid(project.Monitor.Email))
-                                        {
-                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
-                                        }
                                     }
-                                    else if (project.TotalAmount > 0)
+                                    if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && new EmailAddressAttribute().IsValid(project.Monitor.Email))
                                     {
-                                        await paypalPaymentService.TransferPledgeToCreatorAsync(project.CreatorId, project.ProjectId);
-                                        var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, true);
-                                        if (!emailSend)
-                                        {
-
-                                        }
-                                        if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
-                                        {
-                                            emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
-                                        }
+                                        emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
                                     }
                                 }
+                                else if (project.TotalAmount > 0)
+                                {
+                                    project.Status = Domain.Enums.ProjectStatusEnum.SUCCESSFUL;
+                                    dbContext.Update(project);
+                                    //await paypalPaymentService.TransferPledgeToCreatorAsync(project.CreatorId, project.ProjectId);
+                                    var emailSend = await EmailSender.SendHaltedProjectStatusEmailToCreator(project.User.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, true);
+                                    if (!emailSend)
+                                    {
+
+                                    }
+                                    if (project.Monitor != null && !string.IsNullOrWhiteSpace(project.Monitor.Email) && !(new EmailAddressAttribute().IsValid(project.Monitor.Email)))
+                                    {
+                                        emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, true);
+                                    }
+                                }
+                                //}
                             }
                             if (project.Monitor == null || string.IsNullOrWhiteSpace(project.Monitor.Email) || !(new EmailAddressAttribute().IsValid(project.Monitor.Email)) || project.Monitor.IsDeleted)
                             {
