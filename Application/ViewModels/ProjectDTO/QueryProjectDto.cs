@@ -12,8 +12,8 @@ namespace Application.ViewModels.ProjectDTO
         public string? Title { get; set; } = null;
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public ProjectStatusEnum? ProjectStatus { get; set; } = null;
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public TransactionStatusEnum? TransactionStatus { get; set; } = null;
+        //[JsonConverter(typeof(JsonStringEnumConverter))]
+        //public TransactionStatusEnum? TransactionStatus { get; set; } = null;
 
         [Range(0, 10000000, ErrorMessage = "The queryable Minimum Amount of a Project must be 0 or above")]
         public decimal? MinMinimumAmount { get; set; } = null;

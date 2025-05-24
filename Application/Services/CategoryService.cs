@@ -190,32 +190,62 @@ namespace Application.Services
             var response = new ServiceResponse<List<ProjectDto>>();
             try
             {
-                var projectCategories = await _unitOfWork.ProjectCategoryRepo.GetAllProjectByCategoryAsync(categoryId);
+                //var projectCategories = await _unitOfWork.ProjectCategoryRepo.GetAllProjectByCategoryAsync(categoryId);
 
-                if (projectCategories == null || !projectCategories.Any())
+                //if (projectCategories == null || !projectCategories.Any())
+                //{
+                //    response.Success = true;
+                //    response.Message = "No projects found for the given category.";
+                //    return response;
+                //}
+
+                //var projectList = projectCategories
+                //    .Where(pc => pc.Project != null)
+                //    .Select(pc => _mapper.Map<ProjectDto>(pc.Project))
+                //    .ToList();
+
+                //if (user == null)
+                //{
+                //    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || p.Status == Domain.Enums.ProjectStatusEnum.CREATED || p.Status == ProjectStatusEnum.REJECTED || p.Status == ProjectStatusEnum.SUBMITTED);
+                //}
+                //else if (user.Role == UserEnum.CUSTOMER)
+                //{
+                //    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || (p.Status == ProjectStatusEnum.APPROVED && user.UserId != p.CreatorId));
+                //}
+                if (!await _unitOfWork.ProjectRepo.Any())
                 {
                     response.Success = true;
                     response.Message = "No projects found for the given category.";
                     return response;
                 }
-
-                var projectList = projectCategories
-                    .Where(pc => pc.Project != null)
-                    .Select(pc => _mapper.Map<ProjectDto>(pc.Project))
-                    .ToList();
-
+                var query = _unitOfWork.ProjectRepo.GetAllAsNoTrackingAsQueryable();
+                if (query == null)
+                {
+                    response.Success = false;
+                    response.Message = "The projects cannot be queried.";
+                    return response;
+                }
                 if (user == null)
                 {
-                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || p.Status == ProjectStatusEnum.INVISIBLE);
+                   query = query.Where(p => p.Status == ProjectStatusEnum.DELETED || p.Status == Domain.Enums.ProjectStatusEnum.CREATED || p.Status == ProjectStatusEnum.REJECTED || p.Status == ProjectStatusEnum.SUBMITTED);
                 }
                 else if (user.Role == UserEnum.CUSTOMER)
                 {
-                    projectList.RemoveAll(p => p.Status == ProjectStatusEnum.DELETED || (p.Status == ProjectStatusEnum.INVISIBLE && user.UserId != p.CreatorId));
+                    query = query.Where(p => p.Status == ProjectStatusEnum.DELETED || ((p.Status == Domain.Enums.ProjectStatusEnum.CREATED || p.Status == ProjectStatusEnum.REJECTED || p.Status == ProjectStatusEnum.SUBMITTED) && user.UserId != p.CreatorId && (p.Collaborators == null || !p.Collaborators.Any() && !p.Collaborators.Any(c => c.UserId == user.UserId))));
                 }
+
+                var projectList = _mapper.Map<List<ProjectDto>>(query.ToList());
 
                 response.Data = projectList;
                 response.Success = true;
-                response.Message = "Projects retrieved successfully.";
+                if (response.Data.Any())
+                {
+                    response.Message = "Projects retrieved successfully.";
+                }
+                else
+                {
+                    response.Message = "No projects found for the given category.";
+                }
             }
             catch (Exception ex)
             {

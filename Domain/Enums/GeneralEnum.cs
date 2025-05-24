@@ -7,17 +7,24 @@
 
     public enum ProjectStatusEnum
     {
-        VISIBLE,
-        INVISIBLE,
-        DELETED
-    }
-    public enum TransactionStatusEnum
-    {
-        PENDING,
-        RECEIVING,
-        REFUNDED,
+        CREATED,
+        APPROVED,
+        REJECTED,
+        ONGOING,
+        SUCCESSFUL,
         TRANSFERRED,
+        INSUFFICIENT,
+        REFUNDED,
+        DELETED,
+        SUBMITTED
     }
+    //public enum TransactionStatusEnum
+    //{
+    //    PENDING,
+    //    RECEIVING,
+    //    REFUNDED,
+    //    TRANSFERRED,
+    //}
     public enum UserEnum
     {
         CUSTOMER,

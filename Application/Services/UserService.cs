@@ -221,7 +221,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if ((await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING) || await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == user.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING))))
+                if (await _unitOfWork.ProjectRepo.Any(p => p.Status == ProjectStatusEnum.ONGOING && p.CreatorId == user.UserId) || await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == user.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     response.Success = false;
                     response.Message = "Payment account and phone number cannot be changed when there are still ongoing projects or when transactions are currently being processed.";
@@ -319,10 +319,10 @@ namespace Application.Services
                     response.Message = "User not found.";
                     return response;
                 }
-                if (await _unitOfWork.ProjectRepo.Any(p => p.TransactionStatus == TransactionStatusEnum.RECEIVING && p.CreatorId == user.UserId))
+                if (await _unitOfWork.ProjectRepo.Any(p => p.Status == ProjectStatusEnum.ONGOING && p.CreatorId == user.UserId) || await _unitOfWork.PledgeDetailRepo.Any(p => p.Pledge.UserId == user.UserId && (p.Status == PledgeDetailEnum.REFUNDING || p.Status == PledgeDetailEnum.TRANSFERRING)))
                 {
                     response.Success = false;
-                    response.Message = "Campaginers whose projects are ongoing cannot be deleted.";
+                    response.Message = "An account cannot be deleted when there are still ongoing projects or when transactions are currently being processed.";
                     return response;
                 }
                 DeleteUser.IsDeleted = true;
