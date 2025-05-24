@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CapstonProjectBE.Controllers
 {
-    [EnableCors("AllowSpecificOrigin")]
+    [EnableCors("AllowAll")]
     [Route("api/[controller]")]
     [ApiController]
     public class CommentController : Controller

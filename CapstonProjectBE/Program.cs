@@ -74,7 +74,7 @@ namespace CapstonProjectBE
                             .AllowAnyMethod()
                             .AllowAnyHeader();
                     });
-                //options.AddPolicy("AllowSpecificOrigin",
+                //options.AddPolicy("AllowAll",
                 //    builder => builder
                 //        .WithOrigins("https://game-mkt.vercel.app")
                 //        .AllowAnyMethod()
@@ -197,7 +197,7 @@ namespace CapstonProjectBE
             #endregion
 
             //app.UseHttpsRedirection();
-            //app.UseCors("AllowSpecificOrigin");
+            //app.UseCors("AllowAll");
             app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
