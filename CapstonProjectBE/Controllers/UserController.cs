@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace CapstonProjectBE.Controllers
 {
-    [EnableCors("AllowSpecificOrigin")]
+    [EnableCors("AllowAll")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserController : ControllerBase
