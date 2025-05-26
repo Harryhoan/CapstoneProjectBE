@@ -171,7 +171,7 @@ namespace Application.Services
                     var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(user.UserId, existingProject.ProjectId);
                     if (existingCollaborator == null && existingProject.CreatorId != user.UserId)
                     {
-                        if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                        if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
                         {
                             return null;
                         }
@@ -186,13 +186,13 @@ namespace Application.Services
                     posts.RemoveAll(p => p.Status == PostEnum.DELETED);
                 }
             }
-            else if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+            else if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
             {
                 return null;
             }
             else
             {
-                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE || p.Project.Status == ProjectStatusEnum.INVISIBLE);
+                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE || p.Project.Status == ProjectStatusEnum.APPROVED);
             }
             return posts;
         }
@@ -229,7 +229,7 @@ namespace Application.Services
                         var existingCollaborator = await _unitOfWork.CollaboratorRepo.GetCollaboratorByUserIdAndProjectId(currentUser.UserId, existingProject.ProjectId);
                         if (existingCollaborator == null && existingProject.CreatorId != currentUser.UserId)
                         {
-                            if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                            if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
                             {
                                 posts.RemoveAll(p => p.UserId != currentUser.UserId && p.ProjectId == existingProject.ProjectId);
                                 continue;
@@ -269,7 +269,7 @@ namespace Application.Services
                         continue;
                     }
 
-                    if (existingProject.Status == ProjectStatusEnum.INVISIBLE)
+                    if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
                     {
                         posts.RemoveAll(p => p.ProjectId == existingProject.ProjectId);
                         continue;

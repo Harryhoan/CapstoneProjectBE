@@ -91,12 +91,14 @@ namespace CapstonProjectBE.BackgroundServices
                                                 if (pledgeDetails[i].Status == PledgeDetailEnum.REFUNDING)
                                                 {
                                                     pledgeDetail.Status = PledgeDetailEnum.REFUNDED;
-                                                    project.TransactionStatus = TransactionStatusEnum.REFUNDED;
+                                                    project.Status = ProjectStatusEnum.REFUNDED;
+                                                    //project.TransactionStatus = TransactionStatusEnum.REFUNDED;
                                                 }
                                                 if (pledgeDetails[i].Status == PledgeDetailEnum.TRANSFERRING)
                                                 {
                                                     pledgeDetail.Status = PledgeDetailEnum.TRANSFERRED;
-                                                    project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
+                                                    project.Status = ProjectStatusEnum.TRANSFERRED;
+                                                    //project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
                                                 }
                                                 pledgeDetail.InvoiceId = payoutItem.transaction_id;
                                                 pledgeDetail.InvoiceUrl = $"{baseUrl}/unifiedtransactions/?filter=0&query={payoutItem.transaction_id}";
@@ -114,7 +116,7 @@ namespace CapstonProjectBE.BackgroundServices
                                                     {
                                                         if (!string.IsNullOrWhiteSpace(user.Email) && new EmailAddressAttribute().IsValid(user.Email))
                                                         {
-                                                            var emailSend = await EmailSender.SendTransferInvoiceEmail(user.Fullname, user.Email, pledgeDetails[i].Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetails[i].InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                                                            var emailSend = await EmailSender.SendTransferInvoiceEmail(user.Fullname, user.Email, pledgeDetails[i].Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, pledgeDetails[i].InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                                                             if (!emailSend)
                                                             {
                                                             }

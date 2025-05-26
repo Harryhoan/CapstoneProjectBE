@@ -74,11 +74,11 @@ namespace CapstonProjectBE
                             .AllowAnyMethod()
                             .AllowAnyHeader();
                     });
-                //options.AddPolicy("AllowAll",
-                //    builder => builder
-                //        .WithOrigins("https://game-mkt.vercel.app")
-                //        .AllowAnyMethod()
-                //        .AllowAnyHeader());
+                options.AddPolicy("AllowSpecificOrigin",
+                    builder => builder
+                        .WithOrigins("https://game-mkt.vercel.app")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
             });
             builder.Services.AddAuthorization(options =>
             {
@@ -197,8 +197,8 @@ namespace CapstonProjectBE
             #endregion
 
             //app.UseHttpsRedirection();
-            //app.UseCors("AllowAll");
             app.UseCors("AllowAll");
+            app.UseCors("AllowSpecificOrigin");
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseMiddleware<ConfirmationTokenMiddleware>();

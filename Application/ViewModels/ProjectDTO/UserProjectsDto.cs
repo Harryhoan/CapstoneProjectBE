@@ -10,7 +10,7 @@ namespace Application.ViewModels.ProjectDTO
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
         public DateTime EndDatetime { get; set; }
-        public TransactionStatusEnum TransactionStatus { get; set; }
+        //public TransactionStatusEnum TransactionStatus { get; set; }
         public ProjectStatusEnum Status { get; set; }
     }
 }

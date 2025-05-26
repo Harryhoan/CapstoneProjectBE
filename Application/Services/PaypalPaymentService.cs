@@ -58,12 +58,12 @@ namespace Application.Services
                     response.Message = "You are not allowed to do this method.";
                     return response;
                 }
-                if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
-                {
-                    response.Success = false;
-                    response.Message = "This project has not ended yet.";
-                    return response;
-                }
+                //if (project.EndDatetime > DateTime.UtcNow.AddHours(7))
+                //{
+                //    response.Success = false;
+                //    response.Message = "This project has not ended yet.";
+                //    return response;
+                //}
                 if (project.Status == ProjectStatusEnum.DELETED)
                 {
                     response.Success = false;
@@ -76,16 +76,22 @@ namespace Application.Services
                     response.Message = "This project has not reached the minimum amount.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                if (project.Status == ProjectStatusEnum.REFUNDED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been refunded.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                if (project.Status == ProjectStatusEnum.TRANSFERRED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been transferred to the creator.";
+                    return response;
+                }
+                if (project.Status != ProjectStatusEnum.SUCCESSFUL)
+                {
+                    response.Success = false;
+                    response.Message = "This project is not successful.";
                     return response;
                 }
                 var creator = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
@@ -122,14 +128,14 @@ namespace Application.Services
                 }
                 var pledgeDetails = new List<PledgeDetail>();
 
-                foreach (var pledge in pledges)
-                {
-                    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
-                    if (details != null)
-                    {
-                        pledgeDetails.AddRange(details);
-                    }
-                }
+                //foreach (var pledge in pledges)
+                //{
+                //    var details = await _unitOfWork.PledgeDetailRepo.GetPledgeDetailByPledgeId(pledge.PledgeId);
+                //    if (details != null)
+                //    {
+                //        pledgeDetails.AddRange(details);
+                //    }
+                //}
 
                 //foreach (var item in pledgeDetails)
                 //{
@@ -248,7 +254,7 @@ namespace Application.Services
                             };
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(transferPledgeDetail);
-                            project.TransactionStatus = TransactionStatusEnum.TRANSFERRED;
+                            project.Status = ProjectStatusEnum.TRANSFERRED;
                             await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                             //foreach (var pledgeDetail in pledgeDetails)
@@ -260,7 +266,7 @@ namespace Application.Services
 
                             if (!string.IsNullOrWhiteSpace(creator.Email) && new EmailAddressAttribute().IsValid(creator.Email))
                             {
-                                var emailSend = await EmailSender.SendTransferInvoiceEmail(creator.Fullname, creator.Email, transferPledgeDetail.Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status, project.TransactionStatus, project.ProjectId);
+                                var emailSend = await EmailSender.SendTransferInvoiceEmail(creator.Fullname, creator.Email, transferPledgeDetail.Amount, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, transferPledgeDetail.InvoiceUrl, project.StartDatetime, project.EndDatetime, project.Status, project.ProjectId);
                                 if (!emailSend)
                                 {
 
@@ -389,13 +395,13 @@ namespace Application.Services
                     response.Message = "This project has been deleted.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.REFUNDED)
+                if (project.Status == ProjectStatusEnum.REFUNDED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been refunded.";
                     return response;
                 }
-                if (project.TransactionStatus == TransactionStatusEnum.TRANSFERRED)
+                if (project.Status == ProjectStatusEnum.TRANSFERRED)
                 {
                     response.Success = false;
                     response.Message = "The total amount of this project has been transferred to the creator.";
@@ -624,12 +630,13 @@ namespace Application.Services
                     response.Message = "This project has not ended yet.";
                     return response;
                 }
-                if (project.TransactionStatus != TransactionStatusEnum.PENDING)
+                if (project.Status == ProjectStatusEnum.REFUNDED || project.Status == ProjectStatusEnum.TRANSFERRED)
                 {
                     response.Success = false;
                     response.Message = "Funds have already been processed.";
                     return response;
                 }
+
                 var currentUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", userId);
                 if (currentUser == null)
                 {
@@ -823,7 +830,7 @@ namespace Application.Services
 
                     // Update project totals
                     project.TotalAmount -= totalRefunded;
-                    project.TransactionStatus = TransactionStatusEnum.REFUNDED;
+                    project.Status = ProjectStatusEnum.REFUNDED;
                     await _unitOfWork.ProjectRepo.UpdateAsync(project);
 
                     response.Success = true;
@@ -1137,7 +1144,7 @@ namespace Application.Services
                     return response;
                 }
 
-                if (project.TransactionStatus != TransactionStatusEnum.RECEIVING)
+                if (project.Status != ProjectStatusEnum.ONGOING)
                 {
                     response.Success = false;
                     response.Message = "This project is currently not accepting any pledge.";

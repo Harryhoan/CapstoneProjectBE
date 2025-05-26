@@ -14,7 +14,7 @@ namespace Application.ViewModels.ProjectDTO
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public ProjectStatusEnum Status { get; set; }
-        public TransactionStatusEnum TransactionStatus { get; set; }
+        //public TransactionStatusEnum TransactionStatus { get; set; }
         public decimal MinimumAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public DateTime StartDatetime { get; set; }
