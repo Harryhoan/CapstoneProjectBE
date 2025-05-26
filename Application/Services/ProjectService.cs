@@ -1161,6 +1161,15 @@ namespace Application.Services
                 //        project.TransactionStatus = TransactionStatusEnum.PENDING;
                 //    }
                 //}
+
+                var monitor = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.MonitorId);
+                if (monitor == null || string.IsNullOrWhiteSpace(monitor.Email) || !new EmailAddressAttribute().IsValid(monitor.Email))
+                {
+                    response.Success = false;
+                    response.Message = $"The project's assigned monitor is unfit and should be replaced before submission.";
+                    return response;
+                }
+
                 if (projectStatus != ProjectStatusEnum.APPROVED && projectStatus != ProjectStatusEnum.REJECTED)
                 {
                     response.Success = false;
@@ -1192,7 +1201,7 @@ namespace Application.Services
                 await _unitOfWork.ProjectRepo.UpdateProject(projectId, project);
 
                 // Send email notification
-                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Email, project.Title ?? "[No Title | ID : " + project.ProjectId + "]", projectStatus, reason);
+                var emailSend = await EmailSender.SendProjectResponseEmail(creator.Fullname, creator.Email, project.Title ?? "[No Title | ID : " + project.ProjectId + "]", projectStatus, monitor.Fullname, user.Fullname, reason);
                 if (!emailSend)
                 {
                     response.Success = false;

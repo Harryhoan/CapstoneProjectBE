@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using DocumentFormat.OpenXml.Wordprocessing;
+using Domain.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
@@ -1138,9 +1139,12 @@ namespace Application.Utils
             }
         }
         public static async Task<bool> SendProjectResponseEmail(
+            string creatorFullname,
             string toEmail,
             string projectTitle,
             ProjectStatusEnum projectStatus,
+            string staffFullname,
+            string approvedMonitor,
             string reason
         )
         {
@@ -1180,21 +1184,6 @@ namespace Application.Utils
                 border-radius: 10px;
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
             }}
-            .button {{
-                display: inline-block;
-                padding: 12px 24px;
-                background: linear-gradient(45deg, #007bff, #0056b3);
-                color: #ffffff;
-                text-decoration: none;
-                border-radius: 8px;
-                font-size: 18px;
-                font-weight: bold;
-                transition: background 0.3s ease-in-out, transform 0.2s;
-            }}
-            .button:hover {{
-                background: #ffffff;
-                transform: scale(1.05);
-            }}
         </style>
     </head>
     <body>
@@ -1203,7 +1192,14 @@ namespace Application.Utils
             <p>Your project <strong>{projectTitle}</strong> has been set to {projectStatus}.</p>
         </div>
         <div class='reason'>
-            <p><Strong>Reason:</strong> <Italic>{reason}</Italic></p>
+            <p> <strong>Dear {creatorFullname},</strong></p>
+            
+            <p>We are pleased to inform you that your project <strong>{projectTitle}</strong> has been <strong>{projectStatus}</strong>.</p>
+            <p><strong>Project Title:</strong> {projectTitle}</p>
+            <p><strong>Current Status:</strong> {projectStatus}</p>
+            <p><strong>Assigned Staff:</strong> {staffFullname}</p>
+            <p><strong>Project was approved by:</strong> {approvedMonitor}</p>
+            <p><Strong>Reason:</strong> <i>{reason}</i></p>
         </div>
     </body>
 </html>
