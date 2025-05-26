@@ -11,6 +11,7 @@ using CloudinaryDotNet.Actions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.ComponentModel.DataAnnotations;
@@ -276,13 +277,6 @@ namespace Application.Services
                     UpdatedDatetime = project.UpdatedDatetime
                 };
 
-                var ConfirmProjectCreatedEmail = await EmailSender.SendProjectConfirmationEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, project.Title ?? "Unknown", project.StartDatetime, project.EndDatetime, project.Status);
-                if (!ConfirmProjectCreatedEmail)
-                {
-                    response.Success = false;
-                    response.Message = "Error when sending email notification.";
-                    return response;
-                }
                 var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 if (!assignMonitorEmailSend)
                 {
@@ -1004,6 +998,110 @@ namespace Application.Services
                 return response;
             }
         }
+
+        public async Task<ServiceResponse<ProjectStatusDTO>> SubmitProjectAsync(int projectId, string? note = null)
+        {
+            var response = new ServiceResponse<ProjectStatusDTO>();
+
+            try
+            {
+                var project = await _unitOfWork.ProjectRepo.GetProjectById(projectId);
+                if (project == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+
+                if (project.Status == ProjectStatusEnum.DELETED)
+                {
+                    response.Success = false;
+                    response.Message = "This project has been deleted.";
+                    return response;
+                }
+
+                if (project.Status != ProjectStatusEnum.CREATED && project.Status != ProjectStatusEnum.REJECTED)
+                {
+                    response.Success = false;
+                    response.Message = $"Project with the status {project.Status} is not eligible for submission.";
+                    return response;
+                }
+                var user = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.CreatorId);
+                if (user == null || string.IsNullOrWhiteSpace(user.Email) || !new EmailAddressAttribute().IsValid(user.Email))
+                {
+                    response.Success = false;
+                    response.Message = $"The project's creator is unfit and cannot submit any project.";
+                    return response;
+                }
+
+                var monitor = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", project.MonitorId);
+                if (monitor == null || string.IsNullOrWhiteSpace(monitor.Email) || !new EmailAddressAttribute().IsValid(monitor.Email))
+                {
+                    response.Success = false;
+                    response.Message = $"The project's assigned monitor is unfit and should be replaced before submission.";
+                    return response;
+                }
+
+                project.Status = ProjectStatusEnum.SUBMITTED;
+                project.UpdatedDatetime = DateTime.SpecifyKind(DateTime.UtcNow.AddHours(7), DateTimeKind.Unspecified);
+                var dbTransaction = await _unitOfWork.BeginTransactionAsync();
+
+                if (string.IsNullOrWhiteSpace(note))
+                {
+                    note = string.Empty;
+                }
+                else
+                {
+                    note = FormatUtils.CapitalizeWords(FormatUtils.TrimSpacesPreserveSingle(note));
+                }
+
+                try
+                {
+                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                    var emailSend = await EmailSender.SendProjectSubmissionEmail(monitor.Fullname, monitor.Email, project.MinimumAmount, project.Title ?? "[No Title | ID : " + project.ProjectId + "]", project.StartDatetime, project.EndDatetime, project.Status, project.ProjectId, note ?? string.Empty);
+                    if (!emailSend)
+                    {
+                        response.Success = false;
+                        response.Message = "Error when sending email notification.";
+                        return response;
+                    }
+                    var confirmProjectCreatedEmail = await EmailSender.SendProjectConfirmationEmail(user.Fullname, user.Email, monitor.Fullname, monitor.Email, project.Title ?? "Unknown", project.StartDatetime, project.EndDatetime, project.Status);
+                    if (!confirmProjectCreatedEmail)
+                    {
+                        response.Success = false;
+                        response.Message = "Error when sending email notification.";
+                        return response;
+                    }
+
+                    var responseData = new ProjectStatusDTO
+                    {
+                        ProjectId = projectId,
+                        Reason = note ?? string.Empty,
+                        Status = project.Status.ToString()
+                    };
+                    response.Success = true;
+                    response.Data = responseData;
+                    response.Message = "Submit Project Successfully.";
+                    await _unitOfWork.CommitTransactionAsync();
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.Success = false;
+                response.Message = $"Failed to change project status: {ex.Message}";
+                response.Error = ex.Message;
+                response.ErrorMessages = new List<string> { ex.ToString() };
+            }
+
+            return response;
+        }
+
         public async Task<ServiceResponse<ProjectStatusDTO>> StaffApproveAsync(int projectId, int userId, ProjectStatusEnum projectStatus, string reason)
         {
             var response = new ServiceResponse<ProjectStatusDTO>();

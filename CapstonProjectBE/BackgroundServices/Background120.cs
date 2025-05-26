@@ -36,8 +36,13 @@ namespace CapstonProjectBE.BackgroundServices
                         var projects = await dbContext.Projects.Include(p => p.User).Include(p => p.Monitor).Where(p => p.User != null && !string.IsNullOrWhiteSpace(p.User.Email) && p.Status != Domain.Enums.ProjectStatusEnum.DELETED).ToListAsync();
                         foreach (var project in projects)
                         {
+                            if (project.Status == Domain.Enums.ProjectStatusEnum.APPROVED && DateTime.UtcNow.AddHours(7) >= project.StartDatetime)
+                            {
+                                project.Status = Domain.Enums.ProjectStatusEnum.ONGOING;
+                                dbContext.Update(project);
+                            }
                             //What about invisible projects? Can't the money from invisible projects be transferred as well?
-                            if (project.Status == Domain.Enums.ProjectStatusEnum.ONGOING && DateTime.UtcNow.AddHours(7) >= project.EndDatetime)
+                            else if (project.Status == Domain.Enums.ProjectStatusEnum.ONGOING && DateTime.UtcNow.AddHours(7) >= project.EndDatetime)
                             {
                                 //project.TransactionStatus = Domain.Enums.TransactionStatusEnum.PENDING;
                                 //dbContext.Update(project);

@@ -286,6 +286,57 @@ namespace Application.Services
             }
         }
 
+        public async Task<IActionResult?> CheckIfUserHasCreatorPermissionsToUpdateOrDeleteByProjectId(int projectId, User? user = null)
+        {
+            try
+            {
+                if (user == null || !(user.UserId > 0))
+                {
+                    var result = new { StatusCode = StatusCodes.Status401Unauthorized, Message = "This user is not authorized. Try logging in." };
+                    return new UnauthorizedObjectResult(result);
+                }
+                if (user.IsDeleted)
+                {
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is deleted." };
+                    return new BadRequestObjectResult(result);
+                }
+                if (!user.IsVerified || string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount) || string.IsNullOrWhiteSpace(user.Phone))
+                {
+                    var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is unverified." };
+                    return new BadRequestObjectResult(result);
+                }
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", projectId);
+                if (existingProject == null)
+                {
+                    var result = new { StatusCode = StatusCodes.Status404NotFound, Message = "The project associated with the request cannot be found." };
+                    return new NotFoundObjectResult(result);
+                }
+                if (user.Role == UserEnum.CUSTOMER)
+                {
+                    if (user.UserId != existingProject.CreatorId)
+                    {
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };
+                        return new BadRequestObjectResult(result);
+                    }
+                }
+                else
+                {
+                    if (user.Role == UserEnum.STAFF && user.UserId != existingProject.MonitorId)
+                    {
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current staff." };
+                        return new BadRequestObjectResult(result);
+                    }
+                }
+
+                return null;
+            }
+            catch
+            {
+            }
+            return new BadRequestResult();
+        }
+
+
         public async Task<IActionResult?> CheckIfUserHasPermissionsToUpdateOrDeleteByProjectId(int projectId, User? user = null)
         {
             try

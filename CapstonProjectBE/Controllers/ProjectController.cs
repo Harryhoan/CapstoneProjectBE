@@ -1,4 +1,5 @@
 ﻿using Application.IService;
+using Application.ServiceResponse;
 using Application.ViewModels.ProjectDTO;
 using Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +58,26 @@ namespace CapstonProjectBE.Controllers
 
             return Ok(result);
         }
+
+        [HttpPut("Submit")]
+        [Authorize(Roles = "CUSTOMER")]
+        public async Task<IActionResult> SubmitProjectAsync(int projectId, string? note = null)
+        {
+            var user = await _authenService.GetUserByTokenAsync(HttpContext.User);
+            var check = await _authenService.CheckIfUserHasCreatorPermissionsToUpdateOrDeleteByProjectId(projectId, user);
+            if (check != null)
+            {
+                return check;
+            }
+            var result = await _projectService.SubmitProjectAsync(projectId, note);
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+            return Ok(result);
+
+        }
+
 
         [HttpGet("GetProjectsPaging")]
         [AllowAnonymous]
