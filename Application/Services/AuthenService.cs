@@ -54,7 +54,7 @@ namespace Application.Services
                     TokenValue = Guid.NewGuid().ToString(),
                     Type = "confirmation",
                     CreatedAt = now,
-                    ExpiresAt = now.AddMinutes(10),
+                    ExpiresAt = now.AddMinutes(1),
                     UserId = userAccountRegister.UserId
                 };
                 await _unitOfWork.TokenRepo.AddAsync(confirmationToken);
