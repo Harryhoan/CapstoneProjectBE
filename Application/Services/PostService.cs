@@ -175,7 +175,7 @@ namespace Application.Services
                         {
                             return null;
                         }
-                        posts.RemoveAll(p => p.Status == PostEnum.PRIVATE && p.UserId != userId);
+                        posts.RemoveAll(p => (p.Status == PostEnum.PRIVATE || existingProject.Status == ProjectStatusEnum.DELETED) && p.UserId != userId);
                         var existingPledge = await _unitOfWork.PledgeRepo.GetPledgeByUserIdAndProjectIdAsync(user.UserId, existingProject.ProjectId);
                         if ((existingPledge == null || existingPledge.TotalAmount <= 0))
                         {
@@ -186,13 +186,13 @@ namespace Application.Services
                     posts.RemoveAll(p => p.Status == PostEnum.DELETED);
                 }
             }
-            else if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
+            else if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED || existingProject.Status == ProjectStatusEnum.DELETED)
             {
                 return null;
             }
             else
             {
-                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE || p.Project.Status == ProjectStatusEnum.APPROVED);
+                posts.RemoveAll(p => p.Status == PostEnum.DELETED || p.Status == PostEnum.EXCLUSIVE || p.Status == PostEnum.PRIVATE);
             }
             return posts;
         }
@@ -223,6 +223,12 @@ namespace Application.Services
                             var temp = posts.Where(p => p.ProjectId == projectId);
                             posts.RemoveAll(p => p.ProjectId == projectId);
                             await _unitOfWork.PostRepo.RemoveAll(temp);
+                            continue;
+                        }
+
+                        if (existingProject.Status == ProjectStatusEnum.DELETED)
+                        {
+                            posts.RemoveAll(p => p.ProjectId == projectId && p.UserId != currentUser.UserId);
                             continue;
                         }
 
@@ -269,7 +275,7 @@ namespace Application.Services
                         continue;
                     }
 
-                    if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED)
+                    if (existingProject.Status == ProjectStatusEnum.CREATED || existingProject.Status == ProjectStatusEnum.REJECTED || existingProject.Status == ProjectStatusEnum.SUBMITTED || existingProject.Status == ProjectStatusEnum.DELETED)
                     {
                         posts.RemoveAll(p => p.ProjectId == existingProject.ProjectId);
                         continue;
