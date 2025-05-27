@@ -20,7 +20,7 @@ namespace Application.Utils
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(userName, emailFrom));
             message.To.Add(new MailboxAddress("", staffEmail));
-            message.Subject = "GameMkt - You've Received Funds of Project " + title;
+            message.Subject = "GameMkt - Project " + title + "In Need Of Approval";
             message.Body = new TextPart("html")
             {
                 Text =
@@ -945,8 +945,8 @@ namespace Application.Utils
                 <p><strong>Staff Email:</strong> {staffEmail}</p>
             </div>
             
-            <p>Your project will be monitored by our staff member <strong>{staffFullname}</strong>. Once you have fully fullfilled your project <strong>{title}</strong>, you can ask your project monitor <strong>({staffFullname})</strong> to approve your project and start earning your money.</p>
-            <p>If you have any questions or need assistance, please feel free to reach out via your staff email {staffEmail}.</p>
+            <p>Your project will be monitored by our staff member <strong>{staffFullname}</strong>. Once you have fully fullfilled your project <strong>{title}</strong>, you can wait for your project monitor <strong>({staffFullname})</strong> to approve your project and start earning your money.</p>
+            <p>If you have any questions or need assistance, please feel free to reach out via your monitor's email {staffEmail}.</p>
             <p>Best regards,</p>
             <p><strong>GameMkt Developer Team</strong></p>
         </div>
