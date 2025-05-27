@@ -55,7 +55,7 @@ namespace Application.Utils
     </head>
     <body>
         <div class='mailHeader'>
-            <h2>Your Invoice Is Here</h2>
+            <h2>Incoming Game Project</h2>
         </div>
         <div class='content'>
             <div class='details'>
