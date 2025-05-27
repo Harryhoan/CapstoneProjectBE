@@ -191,7 +191,7 @@ namespace Application.Services
 
                 if (filteredRewards == null || !filteredRewards.Any())
                 {
-                    response.Success = false;
+                    response.Success = true;
                     response.Message = "No rewards found for the given project.";
                     return response;
                 }
