@@ -48,7 +48,7 @@ namespace CapstonProjectBE.BackgroundServices
                                 //dbContext.Update(project);
                                 //if (paypalPaymentService != null)
                                 //{
-                                if (project.TotalAmount > 0 && project.MinimumAmount > project.TotalAmount)
+                                if (project.MinimumAmount > project.TotalAmount)
                                 {
                                     //var pledges = dbContext.Pledges.Where(p => p.ProjectId == project.ProjectId && p.Amount > 0).AsNoTracking().ToList();
                                     //foreach (var pledge in pledges)
@@ -67,7 +67,7 @@ namespace CapstonProjectBE.BackgroundServices
                                         emailSend = await EmailSender.SendHaltedProjectStatusEmailToMonitor(project.Monitor.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.ProjectId, false);
                                     }
                                 }
-                                else if (project.TotalAmount > 0)
+                                else if (project.TotalAmount >= project.MinimumAmount)
                                 {
                                     project.Status = Domain.Enums.ProjectStatusEnum.SUCCESSFUL;
                                     dbContext.Update(project);
