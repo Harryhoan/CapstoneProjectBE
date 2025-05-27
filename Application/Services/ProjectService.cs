@@ -463,11 +463,11 @@ namespace Application.Services
             }
             if (user == null)
             {
-                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && p.Status != ProjectStatusEnum.APPROVED).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && p.Status != ProjectStatusEnum.REJECTED && p.Status != ProjectStatusEnum.CREATED && p.Status != ProjectStatusEnum.SUBMITTED).AsQueryable();
             }
             else if (user.Role == UserEnum.CUSTOMER)
             {
-                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !(p.Status == ProjectStatusEnum.APPROVED && user.UserId != p.CreatorId)).AsQueryable();
+                query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !((p.Status == ProjectStatusEnum.REJECTED || p.Status == ProjectStatusEnum.CREATED || p.Status == ProjectStatusEnum.SUBMITTED) && user.UserId != p.CreatorId)).AsQueryable();
             }
             return query;
         }
