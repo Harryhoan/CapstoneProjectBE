@@ -311,10 +311,17 @@ namespace Application.Services
                     response.Message = "The project cannot be found and may have already been deleted";
                     return response;
                 }
-                if (/*project.Status == ProjectStatusEnum.TRANSFERRED || project.Status == ProjectStatusEnum.REFUNDED || */project.Status == ProjectStatusEnum.CREATED || !(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
+                if (/*project.Status == ProjectStatusEnum.TRANSFERRED || project.Status == ProjectStatusEnum.REFUNDED || */!(await _unitOfWork.PledgeRepo.Any(p => p.ProjectId == project.ProjectId)))
                 {
-                    project.Status = ProjectStatusEnum.DELETED;
-                    await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                    if (project.Status == ProjectStatusEnum.CREATED)
+                    {
+                        await _unitOfWork.ProjectRepo.DeleteProject(projectId);
+                    }
+                    else
+                    {
+                        project.Status = ProjectStatusEnum.DELETED;
+                        await _unitOfWork.ProjectRepo.UpdateAsync(project);
+                    }
                     response.Success = true;
                     response.Message = "The project has been successfully deleted";
                     return response;
