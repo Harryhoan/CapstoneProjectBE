@@ -243,7 +243,19 @@ namespace Application.Services
                     response.Message = "Reward not found.";
                     return response;
                 }
-
+                var existingProject = await _unitOfWork.ProjectRepo.GetByIdNoTrackingAsync("ProjectId", existingReward.ProjectId);
+                if (existingProject == null)
+                {
+                    response.Success = false;
+                    response.Message = "Project not found.";
+                    return response;
+                }
+                if (existingProject.Status != Domain.Enums.ProjectStatusEnum.REJECTED && existingProject.Status != Domain.Enums.ProjectStatusEnum.CREATED)
+                {
+                    response.Success = false;
+                    response.Message = "Rewards for " + existingProject.Status.ToString() + " projects are not changeable.";
+                    return response;
+                }
                 if (await _unitOfWork.RewardRepo.Any(r => r.ProjectId == existingReward.ProjectId && r.RewardId != existingReward.RewardId && r.Amount == updateReward.Amount))
                 {
                     response.Success = false;

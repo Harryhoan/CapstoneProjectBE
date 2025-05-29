@@ -785,6 +785,7 @@ namespace Application.Services
                     foreach (var (pledge, detail) in refundDetails)
                     {
                         var existingUser = await _unitOfWork.UserRepo.GetByIdNoTrackingAsync("UserId", pledge.UserId);
+                        if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount)) continue;
                         var payoutItem = payoutDetails.items
                             .FirstOrDefault(i => i.payout_item.sender_item_id == pledge.PledgeId.ToString());
 
@@ -804,8 +805,8 @@ namespace Application.Services
 
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
                             await _unitOfWork.PledgeRepo.UpdateAsync(pledge);
-                            if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
 
+                            if (string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
                             var emailSend = await EmailSender.SendRefundInvoiceEmail(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, detail.InvoiceUrl, project.ProjectId);
                             if (!emailSend)
                             {
@@ -820,7 +821,7 @@ namespace Application.Services
                             detail.Status = PledgeDetailEnum.REFUNDING;
                             detail.CreatedDatetime = now;
                             await _unitOfWork.PledgeDetailRepo.AddAsync(detail);
-                            if (existingUser == null || existingUser.IsDeleted || !existingUser.IsVerified || string.IsNullOrWhiteSpace(existingUser.PaymentAccount) || !new EmailAddressAttribute().IsValid(existingUser.PaymentAccount) || string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
+                            if (string.IsNullOrWhiteSpace(existingUser.Email) || !new EmailAddressAttribute().IsValid(existingUser.Email)) continue;
                             var emailSend = await EmailSender.SendPayPalLoginEmailToBacker(existingUser.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, detail.Amount, existingUser.PaymentAccount, detail.PaymentId, project.ProjectId);
                             if (!emailSend)
                             {

@@ -856,7 +856,7 @@ namespace Application.Utils
             };
             using (var client = new SmtpClient())
             {
-                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                client.Connect("smtp.gmail.com", 2525, SecureSocketOptions.StartTls);
                 //authenticate account email
                 client.Authenticate(emailFrom, password);
 
