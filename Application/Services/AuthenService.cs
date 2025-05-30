@@ -300,7 +300,7 @@ namespace Application.Services
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is deleted." };
                     return new BadRequestObjectResult(result);
                 }
-                if (!user.IsVerified || string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount) || string.IsNullOrWhiteSpace(user.Phone))
+                if (!user.IsVerified)
                 {
                     var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is unverified." };
                     return new BadRequestObjectResult(result);
@@ -313,6 +313,13 @@ namespace Application.Services
                 }
                 if (user.Role == UserEnum.CUSTOMER)
                 {
+                    if (string.IsNullOrWhiteSpace(user.PaymentAccount) || !new EmailAddressAttribute().IsValid(user.PaymentAccount) || string.IsNullOrWhiteSpace(user.Phone))
+                    {
+                        user.IsVerified = false;
+                        await _unitOfWork.UserRepo.UpdateAsync(user);
+                        var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This account is unverified." };
+                        return new BadRequestObjectResult(result);
+                    }
                     if (user.UserId != existingProject.CreatorId)
                     {
                         var result = new { StatusCode = StatusCodes.Status403Forbidden, Message = "This request is forbidden to the current customer." };

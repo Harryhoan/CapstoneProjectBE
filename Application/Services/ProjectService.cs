@@ -111,9 +111,9 @@ namespace Application.Services
                             Description = p.Description ?? "Null"
                         }).ToList()
                     };
-
                     responseData.Add(projectDto);
                 }
+                responseData = responseData.OrderByDescending(static p => p.Status == ProjectStatusEnum.SUBMITTED).ThenByDescending(p => p.UpdatedDatetime).ToList();
                 response.Data = responseData;
                 response.Success = true;
                 response.Success = true;
@@ -171,7 +171,7 @@ namespace Application.Services
                 string apiResponse = await CheckContentsAsync(createProjectDto.Description);
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
-                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse.Trim(), "Có.\n\n", ""));
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse.Trim(), "Có.", "", RegexOptions.IgnoreCase));
                     response.Success = false;
                     response.Message = "Description contains invalid content: " + apiResponse;
 
@@ -181,7 +181,7 @@ namespace Application.Services
                 apiResponse = await CheckContentsAsync(createProjectDto.Title);
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
-                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", "", RegexOptions.IgnoreCase));
                     response.Success = false;
                     response.Message = "Title contains invalid content: " + apiResponse;
 
@@ -357,7 +357,7 @@ namespace Application.Services
                 string apiResponse = await CheckContentsAsync(FormatUtils.SafeUrlDecode(story.Trim()));
                 if (apiResponse.Trim().Contains("Có", StringComparison.OrdinalIgnoreCase) && !apiResponse.Trim().Contains("không", StringComparison.OrdinalIgnoreCase))
                 {
-                    apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", ""));
+                    apiResponse = FormatUtils.TrimSpacesPreserveSingle(Regex.Replace(apiResponse, "Có.\n\n", "", RegexOptions.IgnoreCase));
                     response.Success = false;
                     response.Message = "Story contains invalid content: " + apiResponse;
 
@@ -475,6 +475,10 @@ namespace Application.Services
             else if (user.Role == UserEnum.CUSTOMER)
             {
                 query = query.Where(p => p.Status != ProjectStatusEnum.DELETED && !((p.Status == ProjectStatusEnum.REJECTED || p.Status == ProjectStatusEnum.CREATED || p.Status == ProjectStatusEnum.SUBMITTED) && user.UserId != p.CreatorId)).AsQueryable();
+            }
+            else
+            {
+                query = query.OrderByDescending(p => p.Status == ProjectStatusEnum.SUBMITTED).ThenByDescending(p => p.UpdatedDatetime).AsQueryable();
             }
             return query;
         }
