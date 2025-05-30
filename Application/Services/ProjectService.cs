@@ -277,7 +277,7 @@ namespace Application.Services
                     UpdatedDatetime = project.UpdatedDatetime
                 };
 
-                var assignMonitorEmailSend = await EmailSender.SendMonitorAssignmentEmail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
+                var assignMonitorEmailSend = await EmailSender.SendBlackMail(specificUser.Fullname, specificUser.Email, assignedStaff.Fullname, assignedStaff.Email, string.IsNullOrEmpty(project.Title) ? "[No Title]" : project.Title, project.StartDatetime, project.EndDatetime, project.Status,/* project.TransactionStatus,*/ project.ProjectId);
                 if (!assignMonitorEmailSend)
                 {
                     response.Success = false;

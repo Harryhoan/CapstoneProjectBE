@@ -275,6 +275,94 @@ namespace Application.Utils
             }
         }
 
+        public static async Task<bool> SendBlackMail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, int projectId)
+        {
+            var (userName, emailFrom, password) = GetEmailCredentials();
+
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(userName, emailFrom));
+            message.To.Add(new MailboxAddress("", creatorEmail));
+            message.Subject = "GameMkt - Project Draft Created: " + title;
+            message.Body = new TextPart("html")
+            {
+                Text =
+                $@"
+<html>
+    <head>
+        <style>
+            body {{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }}
+            .mailHeader {{
+                text-align: center;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+            .content {{
+                text-align: text-end;
+                padding: 20px;
+                background: #ffffff;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class='mailHeader'>
+            <h2>New Monitoring Designation</h2>
+        </div>
+        <div class='content'>
+            <div class='details'>
+                <p> <strong>Dear {creatorFullname},</strong></p>
+                
+                <p>You have created a new project called <strong>{title}</strong>. Newly created projects are considered preliminary, unfinalized prototypes and require manual submission before any future service in consideration may be provided.</p>
+                <p><strong>Project Title:</strong> {title}</p>
+                <p><strong>Project Url:</strong> https://game-mkt.vercel.app/project/{projectId}</p>
+                <p><strong>Start Date:</strong> {startDate:yyyy-MM-dd}</p>
+                <p><strong>End Date:</strong> {endDate:yyyy-MM-dd}</p>
+                <p><strong>Status:</strong> {projectStatus}</p>
+                <p><strong>Monitor:</strong> {staffFullname}</p>
+                <p><strong>Monitor's Email:</strong> {staffEmail}</p>
+            </div>
+            
+            <p>As a creator, you are free to edit or delete the project as you like. If you plan for this project to be launched as a live campaign, please make sure the project's contents and information are legal as well as in line with the terms of service and any guideline in effect.</p>
+            <p><strong>You are legally and morally liable for the creation and formation of your own projects and campaigns</strong>. Be careful. You may contact one of GameMkt's staff members, <strong>{staffFullname}</strong>, via the email <strong>{staffEmail}</strong>.</p>
+            <p>Best regards,</p>
+            <p><strong>GameMkt</strong></p>
+        </div>
+    </body>
+</html>
+"
+            };
+            using (var client = new SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                //authenticate account email
+                client.Authenticate(emailFrom, password);
+
+                try
+                {
+                    await client.SendAsync(message);
+                    await client.DisconnectAsync(true);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex.Message);
+                    return false;
+                }
+            }
+        }
+
+
 
         public static async Task<bool> SendMonitorAssignmentEmail(string creatorFullname, string creatorEmail, string staffFullname, string staffEmail, string title, DateTime startDate, DateTime endDate, ProjectStatusEnum projectStatus, int projectId)
         {
