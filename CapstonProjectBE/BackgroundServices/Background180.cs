@@ -158,7 +158,7 @@ namespace CapstonProjectBE.BackgroundServices
                     _logger.LogError(ex, "Background processing per 180 seconds failed");
                     Console.WriteLine($"Background processing per 180 seconds failed: {ex.Message}");
                 }
-                await Task.Delay(TimeSpan.FromSeconds(180), stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(120), stoppingToken);
             }
 
         }
